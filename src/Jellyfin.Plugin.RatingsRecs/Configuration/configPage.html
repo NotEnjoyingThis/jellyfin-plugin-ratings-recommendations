@@ -14,6 +14,16 @@
                 <div class="verticalSection">
                     <h3 class="sectionTitle">Dependencies / Dipendenze</h3>
                     <ul id="rrDependencies"></ul>
+                    <ul id="rrHooks"></ul>
+                    <div id="rrManualInjection" class="fieldDescription" hidden style="border:1px solid currentColor;border-radius:4px;padding:.8em 1em;">
+                        <p><strong>Thumbs in the web client need File Transformation / I pollici nel client web richiedono File Transformation.</strong></p>
+                        <p>Add the repository <code>https://www.iamparadox.dev/jellyfin/plugins/manifest.json</code> (Dashboard → Plugins → Repositories), install File Transformation from the catalog and restart Jellyfin.
+                            See <a href="https://github.com/IAmParadox27/jellyfin-plugin-file-transformation" target="_blank" rel="noopener">its README</a>.</p>
+                        <p>Aggiungi il repository qui sopra (Pannello di controllo → Plugin → Repository), installa File Transformation dal catalogo e riavvia Jellyfin.</p>
+                        <p>Alternative / In alternativa: paste this tag in Dashboard → General → Custom HTML (branding) or in JavaScript Injector / incolla questo tag nel codice HTML personalizzato o in JavaScript Injector:</p>
+                        <pre style="white-space:pre-wrap;">&lt;script defer src="/RatingsRecs/Web/ratings.js"&gt;&lt;/script&gt;</pre>
+                        <p>If Jellyfin runs under a base URL, prefix it (e.g. <code>/jellyfin/RatingsRecs/Web/ratings.js</code>). After any change reload the web page with Ctrl+F5 / dopo ogni modifica ricarica la pagina con Ctrl+F5.</p>
+                    </div>
                 </div>
 
                 <form id="RatingsRecsConfigForm">
@@ -134,6 +144,26 @@
                     });
                 }
 
+                var hookNames = {
+                    WebInjection: 'Web client script / Script nel client web'
+                };
+
+                function renderStatus(status) {
+                    var list = q('#rrHooks');
+                    list.innerHTML = '';
+                    var webActive = false;
+                    (status.hooks || []).forEach(function (hook) {
+                        var li = document.createElement('li');
+                        li.textContent = (hookNames[hook.name] || hook.name) + ': ' + hook.state + (hook.message ? ' - ' + hook.message : '');
+                        list.appendChild(li);
+                        if (hook.name === 'WebInjection' && hook.state === 'Active') { webActive = true; }
+                    });
+                    q('#rrManualInjection').hidden = webActive;
+                    if (status.version) {
+                        q('#rrVersion').textContent += ' - build Jellyfin ' + status.jellyfinLine + ' (targetAbi ' + status.targetAbi + ')';
+                    }
+                }
+
                 function renderUsers(users) {
                     var select = q('#rrToolUser');
                     var current = ApiClient.getCurrentUserId();
@@ -175,11 +205,13 @@
                     Promise.all([
                         ApiClient.getPluginConfiguration(pluginId),
                         ApiClient.getJSON(ApiClient.getUrl('Plugins')),
-                        ApiClient.getJSON(ApiClient.getUrl('Users'))
+                        ApiClient.getJSON(ApiClient.getUrl('Users')),
+                        ApiClient.getJSON(ApiClient.getUrl('RatingsRecs/Status')).catch(function () { return { hooks: [] }; })
                     ]).then(function (results) {
                         loadConfig(results[0]);
                         renderPlugins(results[1]);
                         renderUsers(results[2]);
+                        renderStatus(results[3]);
                         Dashboard.hideLoadingMsg();
                     }, function () {
                         Dashboard.hideLoadingMsg();

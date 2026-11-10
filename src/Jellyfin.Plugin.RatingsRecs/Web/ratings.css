@@ -1,1 +1,181 @@
-/* Ratings & Recommendations web client styles. Placeholder: implemented in milestone M2. */
+/* Ratings & Recommendations - web client styles. Colours come from the jellyfin-web theme variables
+   (--jf-palette-*), with fallbacks, so dark and light themes both work. */
+
+.rr-hidden-heart {
+    display: none !important;
+}
+
+.rr-rating {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+}
+
+.rr-toggle {
+    cursor: pointer;
+}
+
+.rr-toggle .rr-icon {
+    width: 1.5em;
+    height: 1.5em;
+}
+
+.rr-rating.rr-compact .rr-toggle .rr-icon {
+    width: 1.25em;
+    height: 1.25em;
+}
+
+.rr-icon {
+    display: block;
+    flex: none;
+}
+
+.rr-icon.rr-down {
+    transform: rotate(180deg);
+}
+
+.rr-double {
+    display: inline-flex;
+    align-items: center;
+}
+
+.rr-double .rr-icon + .rr-icon {
+    margin-left: -0.45em;
+}
+
+.rr-toggle .rr-double .rr-icon {
+    width: 1.3em;
+    height: 1.3em;
+}
+
+.rr-val-hate,
+.rr-level.rr-hate .rr-double,
+.rr-level.rr-hate > .rr-icon {
+    color: var(--jf-palette-error-main, #c62828);
+}
+
+.rr-val-watchable,
+.rr-level.rr-watchable > .rr-icon {
+    color: var(--jf-palette-warning-main, #ffa726);
+}
+
+.rr-val-good,
+.rr-level.rr-good > .rr-icon {
+    color: var(--jf-palette-success-main, #66bb6a);
+}
+
+.rr-val-amazing,
+.rr-level.rr-amazing .rr-double {
+    color: var(--jf-palette-primary-main, #00a4dc);
+}
+
+.rr-bar {
+    position: fixed;
+    z-index: 10000;
+    display: flex;
+    gap: 0.25em;
+    padding: 0.35em;
+    border-radius: calc(var(--jf-shape-borderRadius, 4px) * 2);
+    background: var(--jf-palette-background-paper, #202020);
+    color: var(--jf-palette-text-primary, #fff);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+    white-space: nowrap;
+    font-size: 0.95rem;
+}
+
+.rr-bar[hidden] {
+    display: none !important;
+}
+
+.rr-level {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.2em;
+    min-width: 4.6em;
+    padding: 0.4em 0.5em;
+    border: 0;
+    border-radius: var(--jf-shape-borderRadius, 4px);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+
+.rr-level .rr-icon {
+    width: 1.6em;
+    height: 1.6em;
+}
+
+.rr-level:hover {
+    background: var(--jf-palette-action-hover, rgba(127, 127, 127, 0.16));
+}
+
+.rr-level:focus {
+    outline: none;
+}
+
+.rr-level:focus-visible {
+    box-shadow: 0 0 0 2px var(--jf-palette-primary-main, #00a4dc);
+}
+
+.rr-level[aria-checked="true"] {
+    background: var(--jf-palette-action-selected, rgba(127, 127, 127, 0.28));
+}
+
+.rr-label {
+    font-size: 0.75em;
+    line-height: 1.2;
+}
+
+.rr-bar.rr-compact .rr-level {
+    min-width: 3.6em;
+    padding: 0.3em 0.35em;
+}
+
+.rr-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 5em;
+    z-index: 10001;
+    max-width: min(90vw, 32em);
+    padding: 0.8em 1.2em;
+    border-radius: var(--jf-shape-borderRadius, 4px);
+    background: var(--jf-palette-error-main, #c62828);
+    color: var(--jf-palette-error-contrastText, #fff);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+    transform: translateX(-50%);
+    display: none;
+}
+
+.rr-toast.rr-toast-show {
+    display: block;
+}
+
+.rr-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .rr-bar {
+        animation: rr-pop 0.12s ease-out;
+    }
+
+    @keyframes rr-pop {
+        from {
+            opacity: 0;
+            transform: translateY(4px);
+        }
+
+        to {
+            opacity: 1;
+            transform: none;
+        }
+    }
+}

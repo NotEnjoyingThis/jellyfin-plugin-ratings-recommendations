@@ -19,3 +19,9 @@ The section of each version is used for the GitHub Release notes and the `change
 - Ratings mirrored onto Jellyfin's `Rating`/`Likes` and Favourites as in the design table.
 - A Favourite set by a client without thumbs counts as an implicit +3 (explicit ratings always win).
 - Settings page: rating names/values, Favourite options, implicit signal weights; tools to import Favourites and export/import CSV.
+- Web client: the Favourite heart is replaced (hidden, not removed) by a 4-level thumbs selector on movie and series
+  detail pages and on card overlays, in the Legacy and Modern layouts; keyboard and screen-reader friendly,
+  optimistic saving with rollback and an error message; theme colours; Italian and English texts.
+- Script injection through File Transformation (registered by reflection); without it the hook switches itself off
+  and the settings page shows how to add the script manually.
+- `GET /RatingsRecs/Status` (administrators) with the state of the integration hooks.

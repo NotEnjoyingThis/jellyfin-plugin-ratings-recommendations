@@ -38,6 +38,7 @@ Test servers (Docker, bound to 127.0.0.1; credentials in `docker/.env.example`, 
 .\docker\make-sample-library.ps1          # fictional 12 movies + 2 series (ffmpeg + .nfo)
 .\docker\setup-server.ps1 -Server 10.11   # http://localhost:8811 (jellyfin/jellyfin:10.11.11)
 .\docker\setup-server.ps1 -Server 12      # http://localhost:8812 (jellyfin/jellyfin:12.4; JF12_TAG=12.2 to change)
+.\docker\install-deps.ps1 -Server all     # File Transformation (+ -Plugins 'Plugin Pages','Home Screen Sections')
 .\docker\deploy.ps1 -Server all           # build + copy into config/plugins/RatingsRecs_<ver> + restart
 .\docker\status.ps1                       # plugin version/status, config page, log errors
 .\docker\test-api.ps1                     # end-to-end API checks on both servers (-SkipRestart to go faster)
@@ -68,5 +69,5 @@ assets/                            logo.png (render-logo.ps1)
 - `manifest.json` is only modified by the release pipeline; jf12 entry always before jf10.11 for the same version.
 
 ## Milestones (docs/DESIGN.md §9)
-M0 skeleton ✅ → M1 store + API ✅ → M2 web thumbs → M3 engine → M3b seasons → M4 home rows → M5 JF12 provider → M6 polish/release.
+M0 skeleton ✅ → M1 store + API ✅ → M2 web thumbs ✅ → M3 engine → M3b seasons → M4 home rows → M5 JF12 provider → M6 polish/release.
 Stop after each milestone and wait for the user's go-ahead.

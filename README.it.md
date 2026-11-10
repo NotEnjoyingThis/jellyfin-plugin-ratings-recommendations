@@ -51,6 +51,7 @@ Jellyfin sceglie da solo la build giusta dal repository.
    ```
 3. **Catalogo** → installa **File Transformation**, poi **Ratings & Recommendations** (e se vuoi **Home Screen Sections**) → riavvia Jellyfin.
 4. Apri **Pannello di controllo → Plugin → Ratings & Recommendations**: la pagina impostazioni mostra se le dipendenze sono state trovate.
+5. Ricarica una volta il client web con **Ctrl+F5** (il browser potrebbe tenere in cache la pagina vecchia).
 
 Gli aggiornamenti compaiono da soli nel pannello di controllo.
 

@@ -1,0 +1,15 @@
+{
+  "level.-3": "Detesto",
+  "level.-1": "Guardabile",
+  "level.1": "Bello",
+  "level.3": "Fantastico",
+  "rate": "Vota",
+  "notRated": "Nessun voto",
+  "currentRating": "Il tuo voto: {0}",
+  "ratingGroup": "Voto",
+  "removeHint": "Clicca di nuovo il livello attivo per togliere il voto",
+  "saved": "Voto salvato: {0}",
+  "removed": "Voto tolto",
+  "saveError": "Impossibile salvare il voto. Controlla la connessione e riprova.",
+  "loadError": "Impossibile caricare i tuoi voti."
+}

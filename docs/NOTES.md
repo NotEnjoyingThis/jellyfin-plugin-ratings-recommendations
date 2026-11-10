@@ -21,6 +21,35 @@ Ogni scelta che cambia o precisa `docs/DESIGN.md`. Da tenere aggiornata.
 | 11 | Segnali impliciti via `UserDataSaved` | Il listener gestisce solo il **Preferito da un client senza pollici** (implicito +3 salvato con `source: "implicit"`, tolto se il Preferito viene tolto). "Visto senza voto" (+0,5) e "abbandonato" (−0,5) si ricavano dai dati utente nativi al momento del calcolo (M3) | Visto/abbandonato dipendono dal tempo (30+ giorni fermo) e sono già nei dati nativi; salvarli duplicherebbe stato. Solo per il Preferito serve sapere *chi* l'ha impostato | M1 / M3 |
 | 12 | API sezione 6.5 | Dettagli: `GET Ratings/{id}` risponde 200 con `value: null` se non votato; `GET Ratings?itemIds=` restituisce solo i media votati (max 500 id); `userId` opzionale su tutti gli endpoint, accettato solo per amministratori/API key (403 altrimenti); `PUT` su media non visibile all'utente → 404, su episodi → 400; voti di stagione accettati dall'API solo da M3b (l'import CSV li conserva già) | Contratto preciso per lo script web e per i test | M1 |
 
+| 13 | API "esattamente" quelle della sezione 6.5 | In più: `GET /RatingsRecs/Web/ratings.js` e `ratings.css` (anonimi, richiesti dal prompt: un tag `<script>` non manda il token; nessun dato utente) e `GET /RatingsRecs/Status` (solo amministratori: stato degli agganci per la pagina impostazioni) | Servono allo script iniettato e alla pagina impostazioni ("mostrarlo nella pagina impostazioni") | M2 |
+| 14 | Nomi dei livelli configurabili | Lo script riceve nomi personalizzati e testi IT/EN tramite un prologo `window.RatingsRecsBootstrap` aggiunto a `ratings.js` dal server (nessun endpoint in più); lingua = `lang` di jellyfin-web, poi browser, poi inglese | Evita una chiamata in più a ogni caricamento | M2 |
+
+## Client web: DOM verificato (M2)
+
+Ispezionato dal vivo su 10.11.11 (Legacy), 12.4 Legacy (`desktop-legacy`) e 12.4 Modern (`auto`).
+
+- **Pagina dettaglio** (film, serie, stagione, episodio): stesso markup legacy in tutti e tre i casi, anche nel Modern.
+  Cuore: `.mainDetailButtons button[is="emby-ratingbutton"].btnUserRating` con `data-id`, `data-isfavorite`, `data-likes`
+  (nessun `data-itemtype`: il tipo si legge con `ApiClient.getItem`). Contenitore: `.page.itemDetailPage` dentro `.mainAnimatedPages`.
+  Le pagine visitate restano nel DOM con classe `.hide`: cercare sempre in `.page:not(.hide)`.
+- **Card**: `.card[data-id][data-type]` → `.cardOverlayContainer` → `.cardOverlayButton-br button[is="emby-ratingbutton"]`
+  con `data-id` e `data-itemtype`. Il contenitore dell'overlay ha `data-action="link"`: i clic nel selettore vanno fermati
+  (`stopPropagation`) o aprono il media. Le classi `itemAction` non vanno copiate.
+- jellyfin-web mette `hide` sul cuore mentre carica l'elemento: copiando le classi del cuore va esclusa.
+- **Layout**: Modern = `.MuiAppBar-root` (header MUI, drawer `.MuiDrawer-root`); Legacy = `.skinHeader` + `.mainDrawer`.
+  In 12 la scelta è in Impostazioni → Schermo → "Modalità di visualizzazione" (`auto` = Modern, `desktop-legacy`, `mobile-legacy`, `tv`),
+  salvata in `localStorage.layout`; serve ricaricare la pagina.
+- **Navigazione**: nel Modern `hashchange`/`popstate` **non** scattano; `viewbeforeshow`/`viewshow`/`pageshow` sì (sul `document`, fase di cattura)
+  in tutti i layout. Lo script usa `viewshow` + `MutationObserver` (+ `hashchange` per sicurezza).
+- **Tema**: variabili `--jf-palette-*` su `:root, [data-theme]` (es. `--jf-palette-primary-main`, `-error-main`, `-success-main`,
+  `-warning-main`, `-background-paper`, `-text-primary`, `-action-hover`, `-action-selected`), `--jf-shape-borderRadius`. Presenti in 10.11 e 12.
+- `window.ApiClient` esiste in tutti i layout: `accessToken()`, `getCurrentUserId()`, `getUrl()`, `getItem()`.
+- **Cache di `index.html`**: File Transformation non cambia l'ETag del file originale; un browser che aveva già in cache `index.html`
+  prima dell'installazione riceve 304 e non vede lo script finché non ricarica forzando (Ctrl+F5). Documentato nelle FAQ.
+- **File Transformation**: una registrazione al riavvio basta (`RegisterTransformation`); senza il plugin l'aggancio va in
+  `Unavailable` dopo circa un minuto di tentativi, `index.html` resta intatto e la pagina impostazioni mostra le istruzioni manuali.
+  Nota per i test: disattivare File Transformation dalla dashboard lo ha rimosso dalla cartella plugin (reinstallato con `install-deps.ps1`).
+
 ## Firme verificate (v10.11.11 e v12.4)
 
 Identiche nelle due versioni salvo dove indicato.

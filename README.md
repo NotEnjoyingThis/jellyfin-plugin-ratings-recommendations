@@ -50,6 +50,7 @@ Jellyfin picks the right build automatically from the repository.
    ```
 3. **Catalog** → install **File Transformation**, then **Ratings & Recommendations** (optionally **Home Screen Sections**) → restart Jellyfin.
 4. Open **Dashboard → Plugins → Ratings & Recommendations**: the settings page shows whether the dependencies are found.
+5. Reload the web client once with **Ctrl+F5** (the browser may keep the old page in its cache).
 
 Updates appear in the dashboard automatically.
 

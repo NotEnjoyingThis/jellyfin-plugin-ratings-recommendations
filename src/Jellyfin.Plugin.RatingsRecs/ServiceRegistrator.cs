@@ -2,7 +2,9 @@ using System;
 using System.IO;
 using Jellyfin.Plugin.RatingsRecs.Compat;
 using Jellyfin.Plugin.RatingsRecs.Configuration;
+using Jellyfin.Plugin.RatingsRecs.Hooks;
 using Jellyfin.Plugin.RatingsRecs.Ratings;
+using Jellyfin.Plugin.RatingsRecs.Web;
 using MediaBrowser.Common.Configuration;
 using MediaBrowser.Controller;
 using MediaBrowser.Controller.Plugins;
@@ -42,5 +44,8 @@ public class ServiceRegistrator : IPluginServiceRegistrator
         serviceCollection.AddSingleton<RatingsService>();
 
         serviceCollection.AddHostedService<UserDataListener>();
+
+        serviceCollection.AddSingleton<HookStatusRegistry>();
+        serviceCollection.AddHostedService<WebInjector>();
     }
 }

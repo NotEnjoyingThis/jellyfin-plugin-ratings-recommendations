@@ -1,0 +1,15 @@
+{
+  "level.-3": "Hate it",
+  "level.-1": "Watchable",
+  "level.1": "Good",
+  "level.3": "Amazing",
+  "rate": "Rate",
+  "notRated": "Not rated",
+  "currentRating": "Your rating: {0}",
+  "ratingGroup": "Rating",
+  "removeHint": "Click the active level again to remove the rating",
+  "saved": "Rating saved: {0}",
+  "removed": "Rating removed",
+  "saveError": "Could not save the rating. Check your connection and try again.",
+  "loadError": "Could not load your ratings."
+}
