@@ -49,6 +49,32 @@
                                 <span>Heart from other clients (TV apps) counts as a rating / Il cuore dagli altri client vale come voto</span>
                             </label>
                         </div>
+                        <div class="selectContainer">
+                            <label class="selectLabel" for="rrSeriesMode">TV series rating mode / Modalità di voto delle serie</label>
+                            <select is="emby-select" id="rrSeriesMode" class="emby-select-withcolor emby-select">
+                                <option value="Series">Whole series / Serie intera (default)</option>
+                                <option value="Season">Per season / Per stagione</option>
+                                <option value="Both">Both / Entrambe</option>
+                            </select>
+                            <div class="fieldDescription">Ratings are never deleted when the mode changes / I voti non si cancellano cambiando modalità.</div>
+                        </div>
+                        <div id="rrCreditsWarning" class="fieldDescription" hidden style="border-left:3px solid currentColor;padding-left:.8em;"></div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="rrUsersCanChooseMode" type="checkbox" is="emby-checkbox" />
+                                <span>Users can choose their own mode ("For you" page) / Gli utenti possono scegliere la propria modalità (pagina "Per te")</span>
+                            </label>
+                        </div>
+                        <div style="display:flex;gap:1em;flex-wrap:wrap;">
+                            <div class="inputContainer" style="flex:1;min-width:12em;">
+                                <label class="inputLabel inputLabelUnfocused" for="rrBestSeasonWeight">Series score: best season weight / Peso della stagione migliore</label>
+                                <input id="rrBestSeasonWeight" type="number" step="0.05" min="0" is="emby-input" />
+                            </div>
+                            <div class="inputContainer" style="flex:1;min-width:12em;">
+                                <label class="inputLabel inputLabelUnfocused" for="rrAverageSeasonWeight">Series score: average season weight / Peso della media delle stagioni</label>
+                                <input id="rrAverageSeasonWeight" type="number" step="0.05" min="0" is="emby-input" />
+                            </div>
+                        </div>
                         <div class="inputContainer">
                             <label class="inputLabel inputLabelUnfocused" for="rrImplicitFavorite">Implicit value: Favourite from other clients / Valore implicito: Preferito da altri client</label>
                             <input id="rrImplicitFavorite" type="number" step="0.1" is="emby-input" />
@@ -198,6 +224,15 @@
                         if (hook.name === 'WebInjection' && hook.state === 'Active') { webActive = true; }
                     });
                     q('#rrManualInjection').hidden = webActive;
+                    var credits = status.seasonCredits;
+                    var warning = q('#rrCreditsWarning');
+                    if (credits && credits.seasons > 0) {
+                        warning.hidden = false;
+                        warning.textContent = credits.percentWithoutCredits + '% of the seasons (' + credits.withoutCredits + '/' + credits.seasons
+                            + ') have no per-episode credits: with poor metadata the per-season mode works almost like "whole series". Refresh the TV metadata from TMDb or TVDb first. / '
+                            + 'Il ' + credits.percentWithoutCredits + '% delle stagioni (' + credits.withoutCredits + '/' + credits.seasons
+                            + ') non ha crediti per episodio: con metadati scarsi la modalità per stagione si comporta quasi come "Serie intera". Aggiorna prima i metadati da TMDb o TVDb.';
+                    }
                     if (status.version) {
                         q('#rrVersion').textContent += ' - build Jellyfin ' + status.jellyfinLine + ' (targetAbi ' + status.targetAbi + ')';
                     }
@@ -228,6 +263,10 @@
                     q('#rrImplicitWatched').value = config.ImplicitWatchedValue;
                     q('#rrImplicitAbandoned').value = config.ImplicitAbandonedValue;
                     engineFields.forEach(function (f) { q('#rrCfg' + f.key).value = config[f.key]; });
+                    q('#rrSeriesMode').value = config.SeriesRatingMode || 'Series';
+                    q('#rrUsersCanChooseMode').checked = config.UsersCanChooseSeriesMode;
+                    q('#rrBestSeasonWeight').value = config.SeriesBestSeasonWeight;
+                    q('#rrAverageSeasonWeight').value = config.SeriesAverageSeasonWeight;
                     q('#rrExcludeHatedCollections').checked = config.ExcludeHatedCollections;
                 }
 
@@ -278,6 +317,10 @@
                             config[f.key] = f.integer ? Math.round(v) : v;
                         });
                         config.ExcludeHatedCollections = q('#rrExcludeHatedCollections').checked;
+                        config.SeriesRatingMode = q('#rrSeriesMode').value;
+                        config.UsersCanChooseSeriesMode = q('#rrUsersCanChooseMode').checked;
+                        config.SeriesBestSeasonWeight = readNumber('#rrBestSeasonWeight', config.SeriesBestSeasonWeight);
+                        config.SeriesAverageSeasonWeight = readNumber('#rrAverageSeasonWeight', config.SeriesAverageSeasonWeight);
                         ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);
                         });

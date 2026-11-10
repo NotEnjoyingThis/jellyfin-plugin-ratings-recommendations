@@ -21,6 +21,7 @@ public class StatusController : ControllerBase
     private readonly HookStatusRegistry _hooks;
     private readonly IAuthorizationContext _authContext;
     private readonly IUserGateway _users;
+    private readonly Recommendations.RecommendationService _recommendations;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="StatusController"/> class.
@@ -28,8 +29,10 @@ public class StatusController : ControllerBase
     /// <param name="hooks">The hook registry.</param>
     /// <param name="authContext">The authorization context.</param>
     /// <param name="users">The user gateway.</param>
-    public StatusController(HookStatusRegistry hooks, IAuthorizationContext authContext, IUserGateway users)
+    /// <param name="recommendations">The recommendation service.</param>
+    public StatusController(HookStatusRegistry hooks, IAuthorizationContext authContext, IUserGateway users, Recommendations.RecommendationService recommendations)
     {
+        _recommendations = recommendations;
         _hooks = hooks;
         _authContext = authContext;
         _users = users;
@@ -56,6 +59,7 @@ public class StatusController : ControllerBase
             TargetAbi = BuildInfo.TargetAbi,
             JellyfinLine = BuildInfo.JellyfinLine,
             Hooks = _hooks.GetAll(),
+            SeasonCredits = _recommendations.CreditsReport,
         };
     }
 }

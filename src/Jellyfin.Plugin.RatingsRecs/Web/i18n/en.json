@@ -30,5 +30,17 @@
   "feature.studio": "Studio",
   "feature.decade": "Decade",
   "feature.collection": "Collection",
-  "feature.guestStar": "Guest star"
+  "feature.guestStar": "Guest star",
+  "prefs.seriesMode": "How you rate TV series",
+  "prefs.hint": "Your ratings are never deleted when you switch: unused ones are kept and count again if you switch back.",
+  "prefs.saved": "Preference saved: recommendations update within a minute.",
+  "mode.Series": "Whole series",
+  "mode.Season": "Per season",
+  "mode.Both": "Both",
+  "mode.default": "Server default ({0})",
+  "copySeasons": "Copy the series rating ({0}) to the seasons not rated yet",
+  "copySeasons.done": "Seasons updated: {0}",
+  "similarSeason": "Season {0} is like season {1} of {2}, which you rated {3}",
+  "sharedFeature": "same {0}: {1}",
+  "startFrom": "Start from season {0}"
 }

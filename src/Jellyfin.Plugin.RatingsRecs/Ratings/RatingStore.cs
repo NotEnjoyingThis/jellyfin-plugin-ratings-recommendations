@@ -263,6 +263,33 @@ public sealed class RatingStore : IRatingStore
         return new MergeResult(added, updated, skipped);
     }
 
+    /// <inheritdoc />
+    public UserPreferences GetPreferences(Guid userId)
+    {
+        var user = Load(userId);
+        var gate = user.Gate;
+        lock (gate)
+        {
+            return user.Preferences;
+        }
+    }
+
+    /// <inheritdoc />
+    public void SetPreferences(Guid userId, UserPreferences preferences)
+    {
+        ArgumentNullException.ThrowIfNull(preferences);
+        var user = Load(userId);
+        var gate = user.Gate;
+        lock (gate)
+        {
+            EnsureWritable(user);
+            user.Preferences = preferences;
+            Save(userId, user);
+        }
+
+        OnChanged(userId);
+    }
+
     private static bool IsKnownSource(string source)
         => source is RatingSources.Explicit or RatingSources.Implicit;
 
@@ -313,6 +340,7 @@ public sealed class RatingStore : IRatingStore
                 _logger.LogWarning("{Reason}", user.ReadOnlyReason);
             }
 
+            user.Preferences = file.Preferences ?? new UserPreferences();
             foreach (var entry in file.Ratings ?? new List<RatingEntry>())
             {
                 user.Ratings[entry.ItemId] = entry with
@@ -342,6 +370,7 @@ public sealed class RatingStore : IRatingStore
             SchemaVersion = CurrentSchemaVersion,
             UserId = userId,
             Ratings = user.Ratings.Values.OrderBy(r => r.CreatedUtc).ThenBy(r => r.ItemId).ToList(),
+            Preferences = user.Preferences.SeriesMode is null ? null : user.Preferences,
         };
 
         try
@@ -387,6 +416,8 @@ public sealed class RatingStore : IRatingStore
         public Dictionary<Guid, RatingEntry> Ratings { get; } = new();
 
         public string? ReadOnlyReason { get; set; }
+
+        public UserPreferences Preferences { get; set; } = new();
     }
 
     private sealed class RatingFile
@@ -399,5 +430,8 @@ public sealed class RatingStore : IRatingStore
 
         [JsonPropertyName("ratings")]
         public List<RatingEntry>? Ratings { get; set; }
+
+        [JsonPropertyName("preferences")]
+        public UserPreferences? Preferences { get; set; }
     }
 }

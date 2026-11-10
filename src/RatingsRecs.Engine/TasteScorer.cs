@@ -29,7 +29,7 @@ public static class TasteScorer
         foreach (var group in FeatureExtractor.ByCategory(features))
         {
             var root = Math.Sqrt(group.Count());
-            var alpha = settings.Weight(group.Key);
+            var alpha = settings.Weight(group.Key, item.Kind);
             foreach (var feature in group)
             {
                 var contribution = alpha * profile.Weight(feature) * index.Idf(feature) / root;

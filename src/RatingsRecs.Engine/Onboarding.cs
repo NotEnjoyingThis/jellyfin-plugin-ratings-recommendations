@@ -21,7 +21,7 @@ public static class Onboarding
         ArgumentNullException.ThrowIfNull(request);
         var rated = request.Ratings.Select(r => r.ItemId).ToHashSet();
         var preferred = request.Library
-            .Where(i => !rated.Contains(i.Id))
+            .Where(i => !rated.Contains(i.Id) && !string.Equals(i.Kind, "Season", StringComparison.Ordinal))
             .GroupBy(i => i.Id)
             .Select(g => g.First())
             .OrderByDescending(i => i.Played)

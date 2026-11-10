@@ -51,6 +51,12 @@ public sealed class RecomputeScheduler : IHostedService, IDisposable
     {
         _store.RatingsChanged += OnRatingsChanged;
         _taskManager.TaskCompleted += OnTaskCompleted;
+        if (Plugin.Instance is { } plugin)
+        {
+            // Settings saved by the administrator (weights, series mode...): recompute everybody shortly after.
+            plugin.ConfigurationChanged += OnConfigurationChanged;
+        }
+
         ScheduleAll(StartupDelay);
         return Task.CompletedTask;
     }
@@ -60,6 +66,11 @@ public sealed class RecomputeScheduler : IHostedService, IDisposable
     {
         _store.RatingsChanged -= OnRatingsChanged;
         _taskManager.TaskCompleted -= OnTaskCompleted;
+        if (Plugin.Instance is { } plugin)
+        {
+            plugin.ConfigurationChanged -= OnConfigurationChanged;
+        }
+
         await _stopping.CancelAsync().ConfigureAwait(false);
     }
 
@@ -105,6 +116,8 @@ public sealed class RecomputeScheduler : IHostedService, IDisposable
     }
 
     private void OnRatingsChanged(object? sender, RatingsChangedEventArgs e) => ScheduleUser(e.UserId, RatingDebounce);
+
+    private void OnConfigurationChanged(object? sender, MediaBrowser.Model.Plugins.BasePluginConfiguration e) => ScheduleAll(TimeSpan.FromSeconds(10));
 
     private void OnTaskCompleted(object? sender, TaskCompletionEventArgs e)
     {

@@ -32,3 +32,10 @@ The section of each version is used for the GitHub Release notes and the `change
 - Implicit signals: watched without rating (+0.5), abandoned (-0.5).
 - "For you" page (`#/ratingsrecs`) with Movies/Series tabs, explanations and thumbs on every card.
 - Settings page: engine coefficients, "Recompute now", recommendations preview for a user.
+- TV series rating modes: Whole series (default), Per season, Both; server default plus optional per-user choice on the
+  "For you" page; ratings are never deleted when the mode changes.
+- Per-season ratings: thumbs on season pages and on season cards; "copy the series rating to the unrated seasons".
+- Season features aggregated from episodes (directors, writers, top 5 guest stars, decade, average rating); seasons
+  without per-episode credits fall back to the series. Series score = 0.6 × best season + 0.4 × mean (configurable),
+  season-to-season explanations, "start from season N" for anthologies (tag "anthology"/"antologia").
+- Settings page: series mode options and the share of seasons without per-episode credits.

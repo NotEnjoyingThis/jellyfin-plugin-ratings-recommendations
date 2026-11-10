@@ -24,4 +24,8 @@ public sealed record PluginStatusDto
     /// <summary>Gets the hook statuses.</summary>
     [JsonPropertyName("hooks")]
     public IReadOnlyList<HookStatus> Hooks { get; init; } = [];
+
+    /// <summary>Gets the share of seasons without per-episode credits (null until the first full computation).</summary>
+    [JsonPropertyName("seasonCredits")]
+    public Jellyfin.Plugin.RatingsRecs.Recommendations.SeasonCreditsReport? SeasonCredits { get; init; }
 }

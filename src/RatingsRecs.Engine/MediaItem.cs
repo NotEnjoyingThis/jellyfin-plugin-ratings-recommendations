@@ -49,4 +49,16 @@ public sealed record MediaItem
 
     /// <summary>Gets a value indicating whether the user has watched it (for series: any episode watched).</summary>
     public bool Played { get; init; }
+
+    /// <summary>Gets the series id of a season.</summary>
+    public Guid? ParentId { get; init; }
+
+    /// <summary>Gets the series name of a season.</summary>
+    public string? ParentName { get; init; }
+
+    /// <summary>Gets the season number.</summary>
+    public int? IndexNumber { get; init; }
+
+    /// <summary>Gets a value indicating whether a series is an anthology (each season stands alone).</summary>
+    public bool IsAnthology { get; init; }
 }

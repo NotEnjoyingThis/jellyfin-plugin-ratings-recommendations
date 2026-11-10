@@ -4,8 +4,12 @@ using System.Linq;
 using Jellyfin.Data.Enums;
 using Jellyfin.Database.Implementations.Entities;
 using Jellyfin.Plugin.RatingsRecs.Compat;
+using Jellyfin.Plugin.RatingsRecs.Configuration;
+using Jellyfin.Plugin.RatingsRecs.Recommendations;
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.TV;
 using Microsoft.Extensions.Logging;
+using RatingsRecs.Engine;
 
 namespace Jellyfin.Plugin.RatingsRecs.Ratings;
 
@@ -22,6 +26,7 @@ public sealed class RatingsService
     private readonly NativeMirror _mirror;
     private readonly ILibraryGateway _library;
     private readonly TimeProvider _clock;
+    private readonly IPluginConfigProvider _config;
     private readonly ILogger<RatingsService> _logger;
 
     /// <summary>
@@ -31,15 +36,24 @@ public sealed class RatingsService
     /// <param name="mirror">The native mirror.</param>
     /// <param name="library">The library gateway.</param>
     /// <param name="clock">The clock.</param>
+    /// <param name="config">The configuration.</param>
     /// <param name="logger">The logger.</param>
-    public RatingsService(IRatingStore store, NativeMirror mirror, ILibraryGateway library, TimeProvider clock, ILogger<RatingsService> logger)
+    public RatingsService(IRatingStore store, NativeMirror mirror, ILibraryGateway library, TimeProvider clock, IPluginConfigProvider config, ILogger<RatingsService> logger)
     {
         _store = store;
         _mirror = mirror;
         _library = library;
         _clock = clock;
+        _config = config;
         _logger = logger;
     }
+
+    /// <summary>
+    /// Gets the series rating mode in effect for a user.
+    /// </summary>
+    /// <param name="userId">The user.</param>
+    /// <returns>The mode.</returns>
+    public SeriesRatingMode ModeOf(Guid userId) => SeriesModes.Effective(_config.Current, _store.GetPreferences(userId));
 
     /// <summary>
     /// Gets a rating.
@@ -80,13 +94,13 @@ public sealed class RatingsService
             return RatingOutcome.NotFound;
         }
 
-        var itemType = RateableItems.GetItemType(item);
+        var itemType = RateableItems.GetItemType(item, ModeOf(user.Id));
         if (itemType is null)
         {
             return RatingOutcome.NotRateable;
         }
 
-        entry = _store.SetExplicit(user.Id, item.Id, itemType, value);
+        entry = _store.SetExplicit(user.Id, item.Id, itemType, value, (item as Season)?.SeriesId);
         _mirror.Apply(user, item, value);
         return RatingOutcome.Ok;
     }
@@ -222,7 +236,7 @@ public sealed class RatingsService
             if (_store.Get(user.Id, entry.ItemId) is { IsExplicit: true } current && current.Value == entry.Value)
             {
                 var item = FindVisible(user, entry.ItemId);
-                if (item is not null && RateableItems.GetItemType(item) is not null)
+                if (item is not null && RateableItems.GetItemType(item, SeriesRatingMode.Both) is not null)
                 {
                     _mirror.Apply(user, item, current.Value);
                 }
@@ -245,6 +259,49 @@ public sealed class RatingsService
             unmatched.Count,
             unmatched.Take(MaxReportedUnmatched).ToList(),
             parsed.Errors.Take(MaxReportedUnmatched).ToList());
+    }
+
+    /// <summary>
+    /// Copies the explicit rating of a series onto its seasons that have no explicit rating yet
+    /// (offered when switching to the per-season mode, docs/DESIGN.md section 4.1).
+    /// </summary>
+    /// <param name="user">The user.</param>
+    /// <param name="seriesId">The series.</param>
+    /// <param name="copied">How many seasons received the rating.</param>
+    /// <returns>The outcome.</returns>
+    public RatingOutcome CopySeriesRatingToSeasons(User user, Guid seriesId, out int copied)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+        copied = 0;
+        if (!SeriesModes.SeasonsRateable(ModeOf(user.Id)))
+        {
+            return RatingOutcome.NotRateable;
+        }
+
+        var series = FindVisible(user, seriesId);
+        if (series is null || series.GetBaseItemKind() != BaseItemKind.Series)
+        {
+            return RatingOutcome.NotFound;
+        }
+
+        if (_store.Get(user.Id, seriesId) is not { IsExplicit: true } seriesRating)
+        {
+            return RatingOutcome.InvalidValue;
+        }
+
+        foreach (var season in _library.GetItems(user, [BaseItemKind.Season]).OfType<Season>().Where(s => s.SeriesId == seriesId))
+        {
+            if (_store.Get(user.Id, season.Id) is { IsExplicit: true })
+            {
+                continue;
+            }
+
+            _store.SetExplicit(user.Id, season.Id, "Season", seriesRating.Value, seriesId);
+            _mirror.Apply(user, season, seriesRating.Value);
+            copied++;
+        }
+
+        return RatingOutcome.Ok;
     }
 
     private static string? ProviderId(BaseItem? item, string key)

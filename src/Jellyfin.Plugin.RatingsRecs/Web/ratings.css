@@ -299,3 +299,52 @@
     color: inherit;
     padding: 0.3em;
 }
+
+.rr-toast.rr-toast-ok {
+    background: var(--jf-palette-success-main, #66bb6a);
+    color: var(--jf-palette-success-contrastText, #000);
+}
+
+.rr-copy-seasons {
+    display: inline-block;
+    margin: 0.6em 0 0.2em;
+    padding: 0.45em 1em;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 0.9em;
+    cursor: pointer;
+}
+
+.rr-prefs {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6em;
+    margin: 0 0 1.2em;
+}
+
+.rr-prefs-select {
+    padding: 0.35em 0.6em;
+    border-radius: var(--jf-shape-borderRadius, 4px);
+    background: var(--jf-palette-background-paper, #202020);
+    color: inherit;
+    border: 1px solid var(--jf-palette-action-selected, rgba(127, 127, 127, 0.4));
+}
+
+.rr-prefs-hint {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 0.85em;
+    opacity: 0.75;
+}
+
+.rr-ribbon-wrap {
+    flex-wrap: wrap;
+}
+
+.rr-copy-wrap {
+    flex-basis: 100%;
+}

@@ -90,8 +90,18 @@ public sealed record EngineSettings
     /// <summary>Gets the weight of the average season in a series score (section 5.7).</summary>
     public double SeriesAverageSeasonWeight { get; init; } = 0.4;
 
+    /// <summary>Gets the writer weight α for seasons (section 5.7: writers often drive a series' style).</summary>
+    public double SeasonWriterWeight { get; init; } = 1.0;
+
     /// <summary>Gets the weight of a category, 0 if missing.</summary>
     /// <param name="category">The category.</param>
     /// <returns>α.</returns>
     public double Weight(FeatureCategory category) => CategoryWeights.TryGetValue(category, out var w) ? w : 0;
+
+    /// <summary>Gets the weight of a category for an item kind (seasons weigh writers differently).</summary>
+    /// <param name="category">The category.</param>
+    /// <param name="kind">The item kind.</param>
+    /// <returns>α.</returns>
+    public double Weight(FeatureCategory category, string? kind)
+        => category == FeatureCategory.Writer && string.Equals(kind, "Season", System.StringComparison.Ordinal) ? SeasonWriterWeight : Weight(category);
 }

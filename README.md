@@ -70,6 +70,11 @@ writers, guest stars). With poor metadata — common with ripped DVDs named by h
 "Whole series". Refresh your TV metadata from TMDb or TVDb before enabling them; the settings page shows the share of
 seasons without per-episode credits.
 
+Switching mode never deletes ratings: the ratings the current mode does not use are kept and count again if you switch
+back. If users may choose, each user picks a mode on the "For you" page. For anthology series (each season stands
+alone) add the tag `anthology` (or `antologia`) to the series in the metadata editor: recommendations then suggest
+starting from the best-matching season instead of season 1.
+
 ## Privacy
 
 The plugin makes **no outgoing network calls** and collects **no usage statistics**. Ratings stay in the plugin's data

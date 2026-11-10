@@ -30,5 +30,17 @@
   "feature.studio": "Studio",
   "feature.decade": "Decennio",
   "feature.collection": "Saga",
-  "feature.guestStar": "Guest star"
+  "feature.guestStar": "Guest star",
+  "prefs.seriesMode": "Come voti le serie TV",
+  "prefs.hint": "Cambiando modalità i voti non si cancellano: quelli non usati restano salvati e tornano validi se torni indietro.",
+  "prefs.saved": "Preferenza salvata: i consigli si aggiornano entro un minuto.",
+  "mode.Series": "Serie intera",
+  "mode.Season": "Per stagione",
+  "mode.Both": "Entrambe",
+  "mode.default": "Predefinita del server ({0})",
+  "copySeasons": "Copia il voto della serie ({0}) sulle stagioni non votate",
+  "copySeasons.done": "Stagioni aggiornate: {0}",
+  "similarSeason": "La stagione {0} somiglia alla stagione {1} di {2}, che hai trovato {3}",
+  "sharedFeature": "stesso {0}: {1}",
+  "startFrom": "Inizia dalla stagione {0}"
 }

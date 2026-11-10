@@ -55,7 +55,7 @@ public static class FeatureExtractor
         Add(FeatureCategory.Genre, item.Genres, int.MaxValue);
         Add(FeatureCategory.Director, item.Directors, int.MaxValue);
         Add(FeatureCategory.Actor, item.Actors, settings.MaxActors);
-        Add(FeatureCategory.Writer, item.Writers, settings.MaxWriters);
+        Add(FeatureCategory.Writer, item.Writers, string.Equals(item.Kind, "Season", StringComparison.Ordinal) ? int.MaxValue : settings.MaxWriters);
         Add(FeatureCategory.Tag, item.Tags, int.MaxValue);
         Add(FeatureCategory.Studio, item.Studios, settings.MaxStudios);
         if (item.Year is int year && year > 0)

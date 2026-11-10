@@ -24,6 +24,18 @@ public sealed record ExplanationDto
     [JsonPropertyName("BecauseOf")]
     public ExplanationItemDto? BecauseOf { get; init; }
 
+    /// <summary>Gets the best season number (series in per-season modes).</summary>
+    [JsonPropertyName("BestSeasonNumber")]
+    public int? BestSeasonNumber { get; init; }
+
+    /// <summary>Gets the season to start from (1, or the best season of an anthology).</summary>
+    [JsonPropertyName("StartSeasonNumber")]
+    public int? StartSeasonNumber { get; init; }
+
+    /// <summary>Gets the liked season most similar to the best season.</summary>
+    [JsonPropertyName("SimilarSeason")]
+    public SimilarSeasonDto? SimilarSeason { get; init; }
+
     /// <summary>
     /// Builds the DTO from an engine explanation.
     /// </summary>
@@ -41,6 +53,11 @@ public sealed record ExplanationDto
                 .ToList(),
             BecauseOf = explanation.BecauseOfItemId is Guid id
                 ? new ExplanationItemDto(id, explanation.BecauseOfName ?? string.Empty, explanation.BecauseOfValue ?? 0)
+                : null,
+            BestSeasonNumber = explanation.BestSeasonNumber,
+            StartSeasonNumber = explanation.StartSeasonNumber,
+            SimilarSeason = explanation.SimilarSeason is { } s
+                ? new SimilarSeasonDto(s.ItemId, s.SeriesName, s.SeasonNumber, s.Value, s.SharedCategory is { } c ? JsonNamingPolicy.CamelCase.ConvertName(c.ToString()) : null, s.SharedValue)
                 : null,
         };
     }

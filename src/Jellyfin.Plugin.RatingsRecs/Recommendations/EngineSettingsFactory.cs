@@ -42,6 +42,8 @@ public static class EngineSettingsFactory
             DiversityLambda = Math.Clamp(config.DiversityLambda, 0, 1),
             ProximityPenalty = Math.Clamp(config.ProximityPenalty, 0, 1),
             ExcludeHatedCollections = config.ExcludeHatedCollections,
+            SeriesBestSeasonWeight = Math.Max(0, config.SeriesBestSeasonWeight),
+            SeriesAverageSeasonWeight = Math.Max(0, config.SeriesAverageSeasonWeight),
         };
     }
 

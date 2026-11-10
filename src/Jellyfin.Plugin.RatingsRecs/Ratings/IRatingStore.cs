@@ -82,4 +82,18 @@ public interface IRatingStore
     /// <param name="entries">The entries to merge.</param>
     /// <returns>Counts.</returns>
     MergeResult Merge(Guid userId, IEnumerable<RatingEntry> entries);
+
+    /// <summary>
+    /// Gets the preferences of a user.
+    /// </summary>
+    /// <param name="userId">The user.</param>
+    /// <returns>The preferences (defaults when never set).</returns>
+    UserPreferences GetPreferences(Guid userId);
+
+    /// <summary>
+    /// Sets the preferences of a user. Ratings are never touched.
+    /// </summary>
+    /// <param name="userId">The user.</param>
+    /// <param name="preferences">The preferences.</param>
+    void SetPreferences(Guid userId, UserPreferences preferences);
 }

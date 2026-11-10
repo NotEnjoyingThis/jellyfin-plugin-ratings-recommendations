@@ -19,4 +19,13 @@ public sealed record Explanation
 
     /// <summary>Gets the value of the rating of <see cref="BecauseOfItemId"/>.</summary>
     public double? BecauseOfValue { get; init; }
+
+    /// <summary>Gets the number of the season that scored best (series in per-season modes).</summary>
+    public int? BestSeasonNumber { get; init; }
+
+    /// <summary>Gets the season to start from: 1, or the best season for anthologies.</summary>
+    public int? StartSeasonNumber { get; init; }
+
+    /// <summary>Gets the liked season most similar to the best season, if any.</summary>
+    public SeasonReference? SimilarSeason { get; init; }
 }

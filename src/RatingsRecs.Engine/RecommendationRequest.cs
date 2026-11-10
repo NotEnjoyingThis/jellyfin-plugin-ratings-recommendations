@@ -22,4 +22,7 @@ public sealed record RecommendationRequest
 
     /// <summary>Gets the settings.</summary>
     public EngineSettings Settings { get; init; } = new();
+
+    /// <summary>Gets how series are rated; seasons (Kind "Season", ParentId = series) are used only in the per-season modes.</summary>
+    public SeriesRatingMode Mode { get; init; } = SeriesRatingMode.Series;
 }

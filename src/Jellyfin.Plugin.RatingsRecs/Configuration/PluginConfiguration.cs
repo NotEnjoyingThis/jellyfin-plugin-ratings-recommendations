@@ -78,6 +78,18 @@ public class PluginConfiguration : BasePluginConfiguration
     /// </summary>
     public double ImplicitAbandonedValue { get; set; } = -0.5;
 
+    /// <summary>Gets or sets the server default series rating mode: "Series" (default), "Season" or "Both".</summary>
+    public string SeriesRatingMode { get; set; } = "Series";
+
+    /// <summary>Gets or sets a value indicating whether users can choose their own series rating mode.</summary>
+    public bool UsersCanChooseSeriesMode { get; set; } = true;
+
+    /// <summary>Gets or sets the weight of the best season in a series score.</summary>
+    public double SeriesBestSeasonWeight { get; set; } = 0.6;
+
+    /// <summary>Gets or sets the weight of the average season in a series score.</summary>
+    public double SeriesAverageSeasonWeight { get; set; } = 0.4;
+
     /// <summary>Gets or sets the genre weight α.</summary>
     public double WeightGenre { get; set; } = 1.0;
 

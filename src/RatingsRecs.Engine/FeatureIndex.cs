@@ -99,7 +99,7 @@ public sealed class FeatureIndex
         foreach (var group in FeatureExtractor.ByCategory(Features(id)))
         {
             var count = group.Count();
-            var alpha = _settings.Weight(group.Key);
+            var alpha = _settings.Weight(group.Key, Item(id)?.Kind);
             foreach (var feature in group)
             {
                 vector[feature.FullKey] = alpha * Idf(feature) / Math.Sqrt(count);

@@ -34,6 +34,20 @@ Ogni scelta che cambia o precisa `docs/DESIGN.md`. Da tenere aggiornata.
 | 22 | Pagina "Per te" a tutto schermo | Disegnata dallo script nella vista "pagina non trovata" di jellyfin-web sul percorso `#/ratingsrecs` (`?type=Movie|Series`), con intestazione e menu normali | jellyfin-web non permette di aggiungere percorsi; il percorso sconosciuto mostra `#fallbackPage` senza reindirizzare, in 10.11 e 12 (Legacy e Modern) | M3 |
 | 23 | Ricalcolo "dopo un cambio voto" | Debounce di 30 s per utente; ricalcolo di tutti dopo la scansione della libreria (`RefreshLibrary`) e 20 s dopo l'avvio; senza cache l'endpoint risponde `Status: "Computing"` e avvia il calcolo in background | Mai calcoli pesanti nella richiesta HTTP | M3 |
 
+| 24 | Modalità personale "modificabile dalle preferenze della pagina Per te" | Preferenza salvata nel file voti dell'utente (`"preferences": { "seriesMode": ... }`, campo facoltativo, `schemaVersion` invariato); endpoint in più: `GET/PUT /RatingsRecs/Preferences` e `POST /RatingsRecs/Ratings/{seriesId}/CopyToSeasons` | Servono alla pagina "Per te" e al pulsante "Copia il voto della serie sulle stagioni non votate" | M3b |
+| 25 | Stagioni votabili "solo nelle modalità che lo prevedono" | L'API rifiuta (400) il voto a una stagione in "Serie intera" e il voto alla serie in "Per stagione"; togliere un voto è sempre possibile; i voti non usati restano salvati | Coerenza tra interfaccia e API | M3b |
+| 26 | Antologia: tag "anthology"/"antologia" "o opzione impostata a mano sulla serie" | L'opzione manuale è aggiungere uno di quei tag alla serie dall'editor dei metadati di Jellyfin | Evita un elenco di serie da mantenere nelle impostazioni del plugin | M3b |
+| 27 | Serie candidata in modalità per stagione | Esclusa se votata o se una sua stagione è votata o se un suo episodio è visto (come 5.3); il punteggio usa tutte le sue stagioni. Conteggio dei voti per la partenza a freddo: "Serie intera" esclude i voti di stagione, "Per stagione" esclude i voti delle serie divise in stagioni, "Entrambe" li conta tutti | Il design non precisa i casi misti | M3b |
+| 28 | Spiegazione stagione–stagione "stesso sceneggiatore" | Si indica la caratteristica in comune più pesante, preferendo sceneggiatori, registi, guest star e cast; se non ce ne sono (stagioni senza crediti) può essere il decennio o il genere | Con metadati scarsi la somiglianza nasce da altre caratteristiche | M3b |
+
+## Stagioni (M3b)
+- `Season.SeriesId`, `Season.IndexNumber`, `Episode.SeasonId`, `PersonKind.GuestStar`, `BaseItem.PremiereDate`: uguali in 10.11.9 e 12.0.
+- `BasePlugin<T>.ConfigurationChanged` è una **proprietà** delegato (`EventHandler<BasePluginConfiguration>`), non un evento: `+=` funziona lo stesso;
+  usata per ricalcolare tutti 10 s dopo il salvataggio delle impostazioni.
+- Libreria di prova: 4 stagioni, 1 senza crediti per episodio ("Tales from Nowhere" stagione 1) → rapporto 25% su entrambi i server.
+- La riga dei pulsanti della pagina dettaglio (`.detailRibbon`) è flex e affiancata alla copertina: per aggiungere un pulsante su una
+  nuova riga si mette `flex-wrap: wrap` sulla riga e `flex-basis: 100%` sull'elemento.
+
 ## Motore e consigli (M3)
 - Persone: `ILibraryManager.GetPeople(BaseItem)` in entrambe; 12 ha anche `GetPeopleByItems(ids)` (usato sotto `#if JF12`).
 - Saghe: `BoxSet` (è un `Folder`) → `GetLinkedChildren()`.

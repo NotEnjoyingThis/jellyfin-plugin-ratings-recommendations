@@ -15,7 +15,7 @@
 
     var BOOT = window.RatingsRecsBootstrap || {};
     var LOG_PREFIX = '[RatingsRecs]';
-    var RATEABLE = { Movie: true, Series: true };
+    var PREFS_TTL_MS = 60000;
     var LEVELS = [
         { value: -3, cls: 'hate', icon: 'down2' },
         { value: -1, cls: 'watchable', icon: 'down' },
@@ -101,10 +101,27 @@
         return BOOT.strings && BOOT.strings[code] ? code : 'en';
     }
 
-    function t(key, arg) {
+    function t(key, args) {
         var strings = BOOT.strings || {};
         var text = (strings[language()] || {})[key] || (strings.en || {})[key] || key;
-        return arg === undefined ? text : text.replace('{0}', arg);
+        if (args === undefined) {
+            return text;
+        }
+
+        var list = Array.isArray(args) ? args : [args];
+        return text.replace(/\{(\d)\}/g, function (match, index) {
+            var value = list[Number(index)];
+            return value === undefined || value === null ? '' : String(value);
+        });
+    }
+
+    function levelNameForValue(value) {
+        // Profile values may be customised: name the closest canonical level.
+        if (value >= 2) {
+            return levelName(3);
+        }
+
+        return value > 0 ? levelName(1) : (value <= -2 ? levelName(-3) : levelName(-1));
     }
 
     function levelName(value) {
@@ -166,7 +183,82 @@
             state.userId = current;
             state.ratings = {};
             state.pending = {};
+            state.prefs = null;
+            state.prefsLoadedAt = 0;
         }
+    }
+
+    /* ---------- series rating mode (docs/DESIGN.md section 4.1) ---------- */
+
+    function seriesMode() {
+        return (state.prefs && state.prefs.seriesMode) || 'Series';
+    }
+
+    function isRateable(type) {
+        var mode = seriesMode();
+        if (type === 'Movie') {
+            return true;
+        }
+
+        if (type === 'Series') {
+            return mode !== 'Season';
+        }
+
+        if (type === 'Season') {
+            return mode !== 'Series';
+        }
+
+        return false;
+    }
+
+    function loadPrefs() {
+        if (state.prefsLoading) {
+            return state.prefsLoading;
+        }
+
+        state.prefsLoading = request('GET', 'Preferences').then(function (prefs) {
+            var changed = state.prefs && state.prefs.seriesMode !== prefs.seriesMode;
+            state.prefs = prefs;
+            state.prefsLoadedAt = Date.now();
+            state.prefsLoading = null;
+            if (changed) {
+                resetAll();
+            }
+
+            return prefs;
+        }, function (err) {
+            state.prefsLoading = null;
+            // Fall back to the whole-series behaviour, retry later.
+            state.prefs = state.prefs || { seriesMode: 'Series' };
+            state.prefsLoadedAt = Date.now();
+            log('could not read preferences:', err && err.message);
+            return state.prefs;
+        });
+        return state.prefsLoading;
+    }
+
+    function resetAll() {
+        // The mode changed: give every heart back and redraw with the new rules.
+        var widgets = document.querySelectorAll('.rr-rating:not(.rr-card-rating)');
+        for (var i = 0; i < widgets.length; i++) {
+            widgets[i].parentNode.removeChild(widgets[i]);
+        }
+
+        var hearts = document.querySelectorAll('[data-rr-item]');
+        for (var j = 0; j < hearts.length; j++) {
+            if (!hearts[j].classList.contains('rr-rating')) {
+                hearts[j].classList.remove('rr-hidden-heart');
+                hearts[j].removeAttribute('data-rr-item');
+                hearts[j].removeAttribute('data-rr-skip');
+            }
+        }
+
+        var copies = document.querySelectorAll('.rr-copy-wrap');
+        for (var k = 0; k < copies.length; k++) {
+            copies[k].parentNode.removeChild(copies[k]);
+        }
+
+        schedule();
     }
 
     var queue = {};
@@ -557,7 +649,7 @@
         liveRegion().textContent = text;
     }
 
-    function toast(text) {
+    function toast(text, ok) {
         var el = document.getElementById('rr-toast');
         if (!el) {
             el = document.createElement('div');
@@ -568,6 +660,7 @@
         }
 
         el.textContent = text;
+        el.classList.toggle('rr-toast-ok', !!ok);
         el.classList.add('rr-toast-show');
         clearTimeout(el.__rrTimer);
         el.__rrTimer = setTimeout(function () { el.classList.remove('rr-toast-show'); }, 5000);
@@ -637,7 +730,11 @@
                 sibling.parentNode.removeChild(sibling);
             }
 
-            if (!RATEABLE[type]) {
+            if (type === 'Series' && seriesMode() === 'Season') {
+                addCopyToSeasonsButton(heart, itemId);
+            }
+
+            if (!isRateable(type)) {
                 // Episodes, seasons (until per-season mode), music...: keep the original heart.
                 heart.setAttribute('data-rr-skip', '');
                 heart.classList.remove('rr-hidden-heart');
@@ -652,6 +749,54 @@
             heart.removeAttribute('data-rr-pending');
             log('could not read item type, keeping the heart:', err && err.message);
         });
+    }
+
+    function addCopyToSeasonsButton(heart, seriesId) {
+        // Per-season mode: offer to copy an existing series rating onto the seasons not rated yet.
+        if (state.copiedSeries && state.copiedSeries[seriesId]) {
+            return;
+        }
+
+        request('GET', 'Ratings/' + seriesId).then(function (rating) {
+            if (!rating || rating.value === null || rating.value === undefined || rating.source !== 'explicit') {
+                return;
+            }
+
+            // On its own line inside the ribbon (which is already offset next to the poster).
+            var anchor = heart.parentNode;
+            if (!anchor || !anchor.parentNode || anchor.parentNode.querySelector('.rr-copy-seasons[data-rr-item="' + seriesId + '"]')) {
+                return;
+            }
+
+            anchor.parentNode.classList.add('rr-ribbon-wrap');
+            var wrapper = document.createElement('div');
+            wrapper.className = 'rr-copy-wrap';
+
+            var button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'rr-copy-seasons';
+            button.setAttribute('data-rr-item', seriesId);
+            button.textContent = t('copySeasons', levelName(rating.value));
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                button.disabled = true;
+                request('POST', 'Ratings/' + seriesId + '/CopyToSeasons').then(function (result) {
+                    toast(t('copySeasons.done', String(result.copied)), true);
+                    state.copiedSeries = state.copiedSeries || {};
+                    state.copiedSeries[seriesId] = true;
+                    state.ratings = {};
+                    wrapper.parentNode.removeChild(wrapper);
+                    resetAll();
+                }, function (err) {
+                    button.disabled = false;
+                    log('copy to seasons failed:', err && err.message);
+                    toast(t('saveError'));
+                });
+            });
+            wrapper.appendChild(button);
+            anchor.parentNode.insertBefore(wrapper, anchor.nextSibling);
+        }, function () { /* no rating: nothing to offer */ });
     }
 
     function scanDetail(adapter, root) {
@@ -739,15 +884,29 @@
         }
 
         var parts = [];
-        if (explanation.BecauseOf && explanation.BecauseOf.Name) {
+        if (explanation.SimilarSeason) {
+            var similar = explanation.SimilarSeason;
+            var sentence = t('similarSeason', [explanation.BestSeasonNumber, similar.SeasonNumber, similar.SeriesName, levelNameForValue(similar.Value)]);
+            if (similar.SharedCategory && similar.SharedValue) {
+                sentence += ' — ' + t('sharedFeature', [t('feature.' + similar.SharedCategory).toLowerCase(), similar.SharedValue]);
+            }
+
+            parts.push(sentence);
+        } else if (explanation.BecauseOf && explanation.BecauseOf.Name) {
             parts.push(t(explanation.BecauseOf.Value >= 3 ? 'becauseLoved' : 'becauseLiked', explanation.BecauseOf.Name));
         }
 
+        var shared = explanation.SimilarSeason || {};
         (explanation.Features || []).forEach(function (feature) {
-            if (parts.length < 2) {
+            var duplicate = feature.Category === shared.SharedCategory && feature.Value === shared.SharedValue;
+            if (parts.length < 2 && !duplicate) {
                 parts.push(t('feature.' + feature.Category) + ': ' + feature.Value);
             }
         });
+        if (explanation.StartSeasonNumber && explanation.StartSeasonNumber !== 1) {
+            parts.push(t('startFrom', explanation.StartSeasonNumber));
+        }
+
         return parts.join(' · ');
     }
 
@@ -776,7 +935,7 @@
             card.appendChild(el('div', 'rr-card-why', why));
         }
 
-        if (RATEABLE[item.Type]) {
+        if (isRateable(item.Type)) {
             var fakeHeart = { className: 'paper-icon-button-light' };
             var widget = createWidget(id, fakeHeart, true);
             widget.classList.add('rr-card-rating');
@@ -800,6 +959,41 @@
         });
         section.appendChild(grid);
         container.appendChild(section);
+    }
+
+    function preferencesBlock() {
+        var block = el('div', 'rr-prefs');
+        var prefs = state.prefs;
+        if (!prefs || !prefs.canChooseSeriesMode) {
+            return block;
+        }
+
+        var label = el('label', 'rr-prefs-label', t('prefs.seriesMode'));
+        var select = el('select', 'rr-prefs-select');
+        select.id = 'rr-series-mode';
+        label.htmlFor = select.id;
+        var options = [['', t('mode.default', t('mode.' + prefs.defaultSeriesMode))], ['Series', t('mode.Series')], ['Season', t('mode.Season')], ['Both', t('mode.Both')]];
+        options.forEach(function (o) {
+            var option = el('option', null, o[1]);
+            option.value = o[0];
+            option.selected = (prefs.userSeriesMode || '') === o[0];
+            select.appendChild(option);
+        });
+        select.addEventListener('change', function () {
+            request('PUT', 'Preferences', { seriesMode: select.value || null }).then(function (updated) {
+                state.prefs = updated;
+                state.prefsLoadedAt = Date.now();
+                toast(t('prefs.saved'), true);
+                resetAll();
+            }, function (err) {
+                log('could not save preferences:', err && err.message);
+                toast(t('saveError'));
+            });
+        });
+        block.appendChild(label);
+        block.appendChild(select);
+        block.appendChild(el('p', 'rr-prefs-hint', t('prefs.hint')));
+        return block;
     }
 
     function renderForYou(root) {
@@ -842,6 +1036,7 @@
             tabs.appendChild(a);
         });
         page.appendChild(tabs);
+        page.appendChild(preferencesBlock());
         var body = el('div', 'rr-foryou-body');
         body.appendChild(el('p', 'rr-foryou-status', '…'));
         page.appendChild(body);
@@ -897,6 +1092,13 @@
             }
 
             checkUser();
+            if (!state.prefs || Date.now() - state.prefsLoadedAt > PREFS_TTL_MS) {
+                loadPrefs().then(function () { schedule(); });
+                if (!state.prefs) {
+                    return;
+                }
+            }
+
             var adapter = currentAdapter();
             var root = activePage(adapter);
             renderForYou(root);

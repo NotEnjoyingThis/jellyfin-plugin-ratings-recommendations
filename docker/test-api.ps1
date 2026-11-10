@@ -203,6 +203,37 @@ foreach ($name in $targets) {
     $median = ($times | Sort-Object)[3]
     Check "recommendations answer from cache in < 200 ms (median $median ms)" ($median -lt 200)
 
+    # Series rating modes and season ratings (design section 4.1).
+    $seasons = Invoke-Jf -Srv $srv -Method Get -Path ('/Items?Recursive=true&IncludeItemTypes=Season&ParentId=' + $series + '&userId=' + $family.Id) -Token $family.Token
+    $season1 = @($seasons.Items | Sort-Object IndexNumber)[0].Id
+    $season2 = @($seasons.Items | Sort-Object IndexNumber)[1].Id
+    foreach ($id in @($season1, $season2, $series)) { Invoke-Jf -Srv $srv -Method Delete -Path ('/RatingsRecs/Ratings/' + $id) -Token $family.Token | Out-Null }
+    Invoke-Jf -Srv $srv -Method Put -Path '/RatingsRecs/Preferences' -Token $family.Token -Body @{ seriesMode = $null } | Out-Null
+    $prefs = Invoke-Jf -Srv $srv -Method Get -Path '/RatingsRecs/Preferences' -Token $family.Token
+    Check 'default series mode is whole series' ($prefs.defaultSeriesMode -eq 'Series' -and $prefs.canChooseSeriesMode)
+    $status = Get-Status { Invoke-Jf -Srv $srv -Method Put -Path ('/RatingsRecs/Ratings/' + $season1) -Token $family.Token -Body @{ value = 3 } }
+    Check 'whole-series mode: a season cannot be rated (400)' ($status -eq 400) "got $status"
+    Invoke-Jf -Srv $srv -Method Put -Path '/RatingsRecs/Preferences' -Token $family.Token -Body @{ seriesMode = 'Both' } | Out-Null
+    Invoke-Jf -Srv $srv -Method Put -Path ('/RatingsRecs/Ratings/' + $series) -Token $family.Token -Body @{ value = 1 } | Out-Null
+    $s1 = Invoke-Jf -Srv $srv -Method Put -Path ('/RatingsRecs/Ratings/' + $season1) -Token $family.Token -Body @{ value = 3 }
+    Check 'both mode: series and seasons can be rated' ($s1.value -eq 3 -and $s1.itemType -eq 'Season')
+    $prefs = Invoke-Jf -Srv $srv -Method Put -Path '/RatingsRecs/Preferences' -Token $family.Token -Body @{ seriesMode = 'Season' }
+    Check 'user can switch to per-season mode' ($prefs.seriesMode -eq 'Season' -and $prefs.userSeriesMode -eq 'Season')
+    $status = Get-Status { Invoke-Jf -Srv $srv -Method Put -Path ('/RatingsRecs/Ratings/' + $series) -Token $family.Token -Body @{ value = 3 } }
+    Check 'per-season mode: the series itself cannot be rated (400)' ($status -eq 400) "got $status"
+    $copy = Invoke-Jf -Srv $srv -Method Post -Path ('/RatingsRecs/Ratings/' + $series + '/CopyToSeasons') -Token $family.Token
+    $s2 = Invoke-Jf -Srv $srv -Method Get -Path ('/RatingsRecs/Ratings/' + $season2) -Token $family.Token
+    $s1 = Invoke-Jf -Srv $srv -Method Get -Path ('/RatingsRecs/Ratings/' + $season1) -Token $family.Token
+    Check 'copy series rating fills only unrated seasons' ($copy.copied -eq 1 -and $s2.value -eq 1 -and $s1.value -eq 3) "copied=$($copy.copied) s1=$($s1.value) s2=$($s2.value)"
+    Invoke-Jf -Srv $srv -Method Put -Path '/RatingsRecs/Preferences' -Token $family.Token -Body @{ seriesMode = $null } | Out-Null
+    $kept = @(Invoke-Jf -Srv $srv -Method Get -Path ('/RatingsRecs/Ratings?itemIds=' + $series + ',' + $season1 + ',' + $season2) -Token $family.Token | ForEach-Object { $_ })
+    Check 'switching mode never deletes ratings' ($kept.Count -eq 3) "kept $($kept.Count)"
+    $status = Get-Status { Invoke-Jf -Srv $srv -Method Put -Path '/RatingsRecs/Preferences' -Token $family.Token -Body @{ seriesMode = 'Weekly' } }
+    Check 'invalid mode -> 400' ($status -eq 400) "got $status"
+    foreach ($id in @($season1, $season2)) { Invoke-Jf -Srv $srv -Method Delete -Path ('/RatingsRecs/Ratings/' + $id) -Token $family.Token | Out-Null }
+    $statusInfo = Invoke-Jf -Srv $srv -Method Get -Path '/RatingsRecs/Status' -Token $admin.Token
+    Check 'status reports seasons without per-episode credits' ($null -ne $statusInfo.seasonCredits -and $statusInfo.seasonCredits.seasons -ge 4) "report: $($statusInfo.seasonCredits | ConvertTo-Json -Compress)"
+
     # Persistence after restart.
     if (-not $SkipRestart) {
         Invoke-Native docker @('compose', '-f', $srv.Compose, 'restart')

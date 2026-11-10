@@ -72,6 +72,11 @@ Le modalità "Per stagione" ed "Entrambe" danno risultati migliori solo se le st
 quasi come "Serie intera". Aggiorna i metadati delle serie da TMDb o TVDb prima di attivarle; la pagina impostazioni
 mostra la percentuale di stagioni senza crediti per episodio.
 
+Cambiare modalità non cancella mai i voti: quelli che la modalità attiva non usa restano salvati e tornano validi se
+torni indietro. Se gli utenti possono scegliere, ognuno sceglie la modalità dalla pagina "Per te". Per le serie
+antologiche (ogni stagione è a sé) aggiungi il tag `antologia` (o `anthology`) alla serie dall'editor dei metadati:
+i consigli indicheranno da quale stagione partire invece della stagione 1.
+
 ## Privacy
 
 Il plugin **non fa chiamate di rete in uscita** e **non raccoglie statistiche d'uso**. I voti restano nella cartella

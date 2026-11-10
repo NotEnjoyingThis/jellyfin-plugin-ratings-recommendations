@@ -54,6 +54,11 @@ public sealed class RecommendationService : IDisposable
     }
 
     /// <summary>
+    /// Gets the latest season credits report (computed with every full recomputation).
+    /// </summary>
+    public SeasonCreditsReport? CreditsReport { get; private set; }
+
+    /// <summary>
     /// Gets the cached recommendations of a user, or <c>null</c> if not computed yet.
     /// </summary>
     /// <param name="userId">The user.</param>
@@ -94,6 +99,15 @@ public sealed class RecommendationService : IDisposable
     /// <returns>A task.</returns>
     public async Task ComputeAllAsync(IProgress<double>? progress, CancellationToken cancellationToken)
     {
+        try
+        {
+            CreditsReport = _snapshots.CreditsReport();
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            _logger.LogWarning(ex, "Could not compute the season credits report");
+        }
+
         var users = _users.GetUsers();
         for (var i = 0; i < users.Count; i++)
         {
@@ -119,7 +133,9 @@ public sealed class RecommendationService : IDisposable
         var total = Stopwatch.StartNew();
         var config = _config.Current;
         var now = _clock.GetUtcNow().UtcDateTime;
-        var snapshot = _snapshots.Build(user);
+        var mode = SeriesModes.Effective(config, _store.GetPreferences(user.Id));
+        var settings = EngineSettingsFactory.From(config);
+        var snapshot = _snapshots.Build(user, SeriesModes.SeasonsRateable(mode), settings);
         var signals = SignalBuilder.Build(_store.GetAll(user.Id), snapshot.Facts, config, now);
         var request = new RecommendationRequest
         {
@@ -127,7 +143,8 @@ public sealed class RecommendationService : IDisposable
             Ratings = signals,
             UserKey = user.Id.ToString("N", CultureInfo.InvariantCulture),
             NowUtc = now,
-            Settings = EngineSettingsFactory.From(config),
+            Settings = settings,
+            Mode = mode,
         };
 
         var engine = Stopwatch.StartNew();
