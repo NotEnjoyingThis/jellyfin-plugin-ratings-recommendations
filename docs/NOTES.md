@@ -16,6 +16,10 @@ Ogni scelta che cambia o precisa `docs/DESIGN.md`. Da tenere aggiornata.
 | 6 | `LibraryOptions.SimilarItemProviders` | In 12.4 l'elenco è `TypeOptions.SimilarItemProviders` / `SimilarItemProviderOrder` (`string[]`, per tipo di media); i provider **locali sono sempre attivi** | Verificato nel codice `v12.4` (`MediaBrowser.Model/Configuration/TypeOptions.cs`, `SimilarItemsManager.cs`). "Attivabile per libreria" andrà fatto con un elenco librerie nelle impostazioni del plugin: da confermare prima di M5 | M5 |
 | 7 | Righe Home Screen Sections con 20 card | HSS **ignora `limit`** (forza 1 nel registro, la quantità la decide il risultato), mostra le sezioni esterne **solo in landscape** e richiede che l'utente attivi "Modular Home" | Verificato nel codice HSS 2.5.11 e 3.0.4 (`PluginDefinedSection`). Da confermare in M4 | M4 |
 | 8 | Script per Docker in `.ps1`/`.sh` | Script dei server di prova solo in PowerShell (5.1 e 7, anche `pwsh` su Linux/macOS); `build.sh` resta per CI/release | Evita di duplicare la libreria di esempio in bash senza `jq` | M0 |
+| 9 | Voti in `<cartella dati del plugin>/ratings/<userId>.json` | Percorso `<PluginConfigurationsPath>/Jellyfin.Plugin.RatingsRecs/ratings/<userId>.json` (es. `/config/plugins/configurations/…`) | `BasePlugin.DataFolderPath` è la cartella **versionata** del plugin (`plugins/RatingsRecs_1.0.0.0`), sostituita a ogni aggiornamento: i voti andrebbero persi. `configurations/` sopravvive ad aggiornamenti e disinstallazione | M1 |
+| 10 | "Valori modificabili dall'amministratore" | Archivio e API usano sempre il **livello canonico** (-3, -1, 1, 3); il valore configurato (`ValueHate`…`ValueAmazing`) lo applica solo il motore | Cambiare i valori nelle impostazioni non deve riscrivere né invalidare i voti salvati, e l'API resta stabile (`{ "value": -3 }`) | M1 |
+| 11 | Segnali impliciti via `UserDataSaved` | Il listener gestisce solo il **Preferito da un client senza pollici** (implicito +3 salvato con `source: "implicit"`, tolto se il Preferito viene tolto). "Visto senza voto" (+0,5) e "abbandonato" (−0,5) si ricavano dai dati utente nativi al momento del calcolo (M3) | Visto/abbandonato dipendono dal tempo (30+ giorni fermo) e sono già nei dati nativi; salvarli duplicherebbe stato. Solo per il Preferito serve sapere *chi* l'ha impostato | M1 / M3 |
+| 12 | API sezione 6.5 | Dettagli: `GET Ratings/{id}` risponde 200 con `value: null` se non votato; `GET Ratings?itemIds=` restituisce solo i media votati (max 500 id); `userId` opzionale su tutti gli endpoint, accettato solo per amministratori/API key (403 altrimenti); `PUT` su media non visibile all'utente → 404, su episodi → 400; voti di stagione accettati dall'API solo da M3b (l'import CSV li conserva già) | Contratto preciso per lo script web e per i test | M1 |
 
 ## Firme verificate (v10.11.11 e v12.4)
 
@@ -40,6 +44,19 @@ Identiche nelle due versioni salvo dove indicato.
   (+ generico `<TItemType>`), `IBatchLocalSimilarItemsProvider`, `ISimilarItemsManager` (anche `GetMovieRecommendationsAsync`),
   `SimilarItemsQuery { User, Limit, DtoOptions, ExcludeItemIds, ExcludeArtistIds }`, `MetadataPluginType.LocalSimilarityProvider`.
   Registrazione per scansione degli export (`ApplicationHost`: `AddParts(GetExports<ISimilarItemsProvider>())`).
+
+## Dati utente e voti (verificato in M1)
+- `UserItemData.Likes` **è calcolato** da `Rating` (`Rating >= 6.5`); il setter di `Likes` scrive `Rating = 10` o `1`.
+  Quindi il plugin scrive solo `Rating` (2, 4, 7, 10) e `Likes` segue da solo; scrivere `Likes` dopo `Rating` lo sovrascriverebbe.
+- `UserDataSaved` viene sollevato **in modo sincrono** dentro `SaveUserData` → per ignorare le proprie scritture basta un marcatore
+  attivo durante la chiamata (`SelfWriteGuard`).
+- Il cuore dei client (`POST/DELETE /UserFavoriteItems/{id}`) salva con `UserDataSaveReason.UpdateUserRating` (10.11 e 12).
+- Utente dal token: `IAuthorizationContext.GetAuthorizationInfo(HttpContext)` → `AuthorizationInfo { User, IsApiKey }`;
+  amministratore: `user.HasPermission(PermissionKind.IsAdministrator)` (`Jellyfin.Data`, enum in `Jellyfin.Database.Implementations.Enums`).
+- Visibilità (librerie + parental control): `BaseItem.IsVisibleStandalone(User)`.
+- Namespace: `User` in `Jellyfin.Database.Implementations.Entities`, `BaseItemKind` in `Jellyfin.Data.Enums` (uguali in 10.11.9 e 12.0).
+- Le risposte JSON di Jellyfin **omettono le proprietà null** e scrivono gli id **senza trattini**: i DTO del plugin forzano `value`
+  anche quando è null; lo script web dovrà confrontare gli id normalizzati.
 
 ## Caricamento dei plugin
 - Il server carica un plugin se `versione server ≥ targetAbi` (nessun limite superiore) — `PluginManager.ReadManifest`.
@@ -66,3 +83,5 @@ Repository dei plugin: `https://www.iamparadox.dev/jellyfin/plugins/manifest.jso
 - La pagina impostazioni (pagina classica `data-role="page"`) si apre sia in 10.11.11 sia nel layout Modern di 12.4.
 - In 12 l'header `Authorization: MediaBrowser Client=..., Token=...` funziona (le rotte `/emby/*` sono state rimosse).
 - Jellyfin risponde 503 per alcuni secondi dopo l'avvio: gli script ritentano.
+- Su 12.4 aggiungere una libreria con `refreshLibrary=true` non sempre avvia la scansione: `setup-server.ps1` chiama `POST /Library/Refresh` e aspetta i media.
+- `docker/test-api.ps1` verifica i criteri di accettazione dell'API (26 controlli per server, incluso il riavvio).

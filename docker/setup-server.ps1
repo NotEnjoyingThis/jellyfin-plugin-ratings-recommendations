@@ -76,4 +76,18 @@ foreach ($lib in $libraries) {
     Invoke-Jf -Srv $srv -Method Post -Path $query -Token $token -Body (New-LibraryOptions $lib.Path $lib.Types) | Out-Null
 }
 
+# Jellyfin 12 does not always scan right after adding a library: ask for a scan and wait for the items.
+$adminId = (Invoke-Jf -Srv $srv -Method Get -Path '/Users/Me' -Token $token).Id
+$count = (Invoke-Jf -Srv $srv -Method Get -Path ('/Items?Recursive=true&IncludeItemTypes=Movie,Series&Limit=0&userId=' + $adminId) -Token $token).TotalRecordCount
+if ($count -lt 14) {
+    Write-Host '==> Scanning the libraries'
+    Invoke-Jf -Srv $srv -Method Post -Path '/Library/Refresh' -Token $token | Out-Null
+    $deadline = (Get-Date).AddSeconds(180)
+    while ($count -lt 14 -and (Get-Date) -lt $deadline) {
+        Start-Sleep -Seconds 3
+        $count = (Invoke-Jf -Srv $srv -Method Get -Path ('/Items?Recursive=true&IncludeItemTypes=Movie,Series&Limit=0&userId=' + $adminId) -Token $token).TotalRecordCount
+    }
+}
+Write-Host "    Library: $count movies and series"
+
 Write-Host "Ready: http://localhost:$($srv.Port)  (credentials in docker/.env or docker/.env.example)"

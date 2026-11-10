@@ -23,12 +23,57 @@
                             <span>Enabled / Attivo</span>
                         </label>
                     </div>
+
+                    <div class="verticalSection">
+                        <h3 class="sectionTitle">Ratings / Voti</h3>
+                        <div id="rrLevels"></div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="rrAmazingSetsFavorite" type="checkbox" is="emby-checkbox" />
+                                <span>"Amazing" adds to Favourites / "Fantastico" aggiunge ai Preferiti</span>
+                            </label>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="rrFavoriteFromOtherClients" type="checkbox" is="emby-checkbox" />
+                                <span>Heart from other clients (TV apps) counts as a rating / Il cuore dagli altri client vale come voto</span>
+                            </label>
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="rrImplicitFavorite">Implicit value: Favourite from other clients / Valore implicito: Preferito da altri client</label>
+                            <input id="rrImplicitFavorite" type="number" step="0.1" is="emby-input" />
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="rrImplicitWatched">Implicit value: watched without rating / Valore implicito: visto senza voto</label>
+                            <input id="rrImplicitWatched" type="number" step="0.1" is="emby-input" />
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="rrImplicitAbandoned">Implicit value: abandoned / Valore implicito: abbandonato</label>
+                            <input id="rrImplicitAbandoned" type="number" step="0.1" is="emby-input" />
+                        </div>
+                    </div>
+
                     <div>
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">
                             <span>Save</span>
                         </button>
                     </div>
                 </form>
+
+                <div class="verticalSection">
+                    <h3 class="sectionTitle">Tools / Strumenti</h3>
+                    <div class="selectContainer">
+                        <label class="selectLabel" for="rrToolUser">User / Utente</label>
+                        <select is="emby-select" id="rrToolUser" class="emby-select-withcolor emby-select"></select>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:.5em;">
+                        <button is="emby-button" type="button" id="rrImportFavorites" class="raised emby-button"><span>Import Favourites as +3 / Importa Preferiti come +3</span></button>
+                        <button is="emby-button" type="button" id="rrExportCsv" class="raised emby-button"><span>Export CSV / Esporta CSV</span></button>
+                        <button is="emby-button" type="button" id="rrImportCsvButton" class="raised emby-button"><span>Import CSV / Importa CSV</span></button>
+                        <input type="file" id="rrImportCsvFile" accept=".csv,text/csv" style="display:none" />
+                    </div>
+                    <pre id="rrToolResult" class="fieldDescription" style="white-space:pre-wrap;"></pre>
+                </div>
             </div>
         </div>
         <script type="text/javascript">
@@ -39,16 +84,47 @@
                     { id: 'b8298e01-2697-407a-b44d-aa8dc795e850', name: 'Home Screen Sections', required: false },
                     { id: '5b6550fa-a014-4f4c-8a2c-59a43680ac6d', name: 'Plugin Pages', required: false }
                 ];
+                var levels = [
+                    { key: 'Hate', label: 'Hate it / Detesto (-3)' },
+                    { key: 'Watchable', label: 'Watchable / Guardabile (-1)' },
+                    { key: 'Good', label: 'Good / Bello (+1)' },
+                    { key: 'Amazing', label: 'Amazing / Fantastico (+3)' }
+                ];
                 var page = document.querySelector('#RatingsRecsConfigPage');
+
+                function q(sel) { return page.querySelector(sel); }
 
                 function normalize(id) {
                     return (id || '').replace(/-/g, '').toLowerCase();
                 }
 
+                function authHeaders(extra) {
+                    var headers = { 'Authorization': 'MediaBrowser Token="' + ApiClient.accessToken() + '"' };
+                    Object.keys(extra || {}).forEach(function (k) { headers[k] = extra[k]; });
+                    return headers;
+                }
+
+                function showResult(text) {
+                    q('#rrToolResult').textContent = text;
+                }
+
+                function renderLevels() {
+                    var html = '';
+                    levels.forEach(function (l) {
+                        html += '<div style="display:flex;gap:1em;flex-wrap:wrap;">'
+                            + '<div class="inputContainer" style="flex:2;min-width:12em;"><label class="inputLabel inputLabelUnfocused" for="rrName' + l.key + '">' + l.label + ' - name / nome</label>'
+                            + '<input id="rrName' + l.key + '" type="text" is="emby-input" placeholder="(default)" /></div>'
+                            + '<div class="inputContainer" style="flex:1;min-width:8em;"><label class="inputLabel inputLabelUnfocused" for="rrValue' + l.key + '">value / valore</label>'
+                            + '<input id="rrValue' + l.key + '" type="number" step="0.1" is="emby-input" /></div>'
+                            + '</div>';
+                    });
+                    q('#rrLevels').innerHTML = html;
+                }
+
                 function renderPlugins(plugins) {
                     var self = plugins.filter(function (p) { return normalize(p.Id) === normalize(pluginId); })[0];
-                    page.querySelector('#rrVersion').textContent = self ? ('Version ' + self.Version + ' - ' + self.Status) : '';
-                    var list = page.querySelector('#rrDependencies');
+                    q('#rrVersion').textContent = self ? ('Version ' + self.Version + ' - ' + self.Status) : '';
+                    var list = q('#rrDependencies');
                     list.innerHTML = '';
                     dependencies.forEach(function (dep) {
                         var found = plugins.filter(function (p) { return normalize(p.Id) === normalize(dep.id); })[0];
@@ -58,30 +134,117 @@
                     });
                 }
 
+                function renderUsers(users) {
+                    var select = q('#rrToolUser');
+                    var current = ApiClient.getCurrentUserId();
+                    select.innerHTML = '';
+                    users.forEach(function (u) {
+                        var option = document.createElement('option');
+                        option.value = u.Id;
+                        option.textContent = u.Name;
+                        if (normalize(u.Id) === normalize(current)) { option.selected = true; }
+                        select.appendChild(option);
+                    });
+                }
+
+                function loadConfig(config) {
+                    q('#rrEnabled').checked = config.Enabled;
+                    levels.forEach(function (l) {
+                        q('#rrName' + l.key).value = config['Name' + l.key] || '';
+                        q('#rrValue' + l.key).value = config['Value' + l.key];
+                    });
+                    q('#rrAmazingSetsFavorite').checked = config.AmazingSetsFavorite;
+                    q('#rrFavoriteFromOtherClients').checked = config.FavoriteFromOtherClientsCounts;
+                    q('#rrImplicitFavorite').value = config.ImplicitFavoriteValue;
+                    q('#rrImplicitWatched').value = config.ImplicitWatchedValue;
+                    q('#rrImplicitAbandoned').value = config.ImplicitAbandonedValue;
+                }
+
+                function readNumber(sel, fallback) {
+                    var v = parseFloat(q(sel).value);
+                    return isNaN(v) ? fallback : v;
+                }
+
+                function toolUrl(path) {
+                    return ApiClient.getUrl('RatingsRecs/' + path, { userId: q('#rrToolUser').value });
+                }
+
                 page.addEventListener('pageshow', function () {
+                    renderLevels();
                     Dashboard.showLoadingMsg();
                     Promise.all([
                         ApiClient.getPluginConfiguration(pluginId),
-                        ApiClient.getJSON(ApiClient.getUrl('Plugins'))
+                        ApiClient.getJSON(ApiClient.getUrl('Plugins')),
+                        ApiClient.getJSON(ApiClient.getUrl('Users'))
                     ]).then(function (results) {
-                        page.querySelector('#rrEnabled').checked = results[0].Enabled;
+                        loadConfig(results[0]);
                         renderPlugins(results[1]);
+                        renderUsers(results[2]);
                         Dashboard.hideLoadingMsg();
                     }, function () {
                         Dashboard.hideLoadingMsg();
                     });
                 });
 
-                page.querySelector('#RatingsRecsConfigForm').addEventListener('submit', function (e) {
+                q('#RatingsRecsConfigForm').addEventListener('submit', function (e) {
                     e.preventDefault();
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(pluginId).then(function (config) {
-                        config.Enabled = page.querySelector('#rrEnabled').checked;
+                        config.Enabled = q('#rrEnabled').checked;
+                        levels.forEach(function (l) {
+                            config['Name' + l.key] = q('#rrName' + l.key).value.trim();
+                            config['Value' + l.key] = readNumber('#rrValue' + l.key, config['Value' + l.key]);
+                        });
+                        config.AmazingSetsFavorite = q('#rrAmazingSetsFavorite').checked;
+                        config.FavoriteFromOtherClientsCounts = q('#rrFavoriteFromOtherClients').checked;
+                        config.ImplicitFavoriteValue = readNumber('#rrImplicitFavorite', config.ImplicitFavoriteValue);
+                        config.ImplicitWatchedValue = readNumber('#rrImplicitWatched', config.ImplicitWatchedValue);
+                        config.ImplicitAbandonedValue = readNumber('#rrImplicitAbandoned', config.ImplicitAbandonedValue);
                         ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);
                         });
                     });
                     return false;
+                });
+
+                q('#rrImportFavorites').addEventListener('click', function () {
+                    fetch(toolUrl('ImportFavorites'), { method: 'POST', headers: authHeaders() })
+                        .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+                        .then(function (res) { showResult('Imported / Importati: ' + res.imported + ' - already rated / già votati: ' + res.alreadyRated); },
+                              function (status) { showResult('Error / Errore ' + status); });
+                });
+
+                q('#rrExportCsv').addEventListener('click', function () {
+                    fetch(toolUrl('Export'), { headers: authHeaders() })
+                        .then(function (r) { return r.ok ? r.blob() : Promise.reject(r.status); })
+                        .then(function (blob) {
+                            var a = document.createElement('a');
+                            a.href = URL.createObjectURL(blob);
+                            a.download = 'ratings-' + q('#rrToolUser').selectedOptions[0].textContent + '.csv';
+                            document.body.appendChild(a);
+                            a.click();
+                            setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+                            showResult('Exported / Esportato');
+                        }, function (status) { showResult('Error / Errore ' + status); });
+                });
+
+                q('#rrImportCsvButton').addEventListener('click', function () {
+                    q('#rrImportCsvFile').click();
+                });
+
+                q('#rrImportCsvFile').addEventListener('change', function (e) {
+                    var file = e.target.files[0];
+                    if (!file) { return; }
+                    file.text().then(function (text) {
+                        return fetch(toolUrl('Import'), { method: 'POST', headers: authHeaders({ 'Content-Type': 'text/csv' }), body: text });
+                    }).then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+                      .then(function (res) {
+                          var lines = ['Added / Aggiunti: ' + res.added, 'Updated / Aggiornati: ' + res.updated, 'Skipped / Ignorati: ' + res.skipped, 'Not found / Non trovati: ' + res.unmatched];
+                          if (res.unmatchedNames.length) { lines.push('  ' + res.unmatchedNames.join(', ')); }
+                          res.errors.forEach(function (err) { lines.push('Line / Riga ' + err.line + ': ' + err.message); });
+                          showResult(lines.join('\n'));
+                      }, function (status) { showResult('Error / Errore ' + status); });
+                    e.target.value = '';
                 });
             })();
         </script>
