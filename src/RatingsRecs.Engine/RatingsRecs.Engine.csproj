@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Pure recommendation engine. MUST NOT reference any Jellyfin package.
+    The plugin compiles these sources into its own assembly, so the shipped zip
+    contains a single DLL; this project exists for isolation and unit tests.
+  -->
+  <PropertyGroup>
+    <TargetFrameworks>net9.0;net10.0</TargetFrameworks>
+    <RootNamespace>RatingsRecs.Engine</RootNamespace>
+    <AssemblyName>RatingsRecs.Engine</AssemblyName>
+  </PropertyGroup>
+
+</Project>

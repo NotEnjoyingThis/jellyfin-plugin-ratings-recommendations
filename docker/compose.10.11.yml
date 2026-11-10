@@ -1,0 +1,17 @@
+# Jellyfin 10.11.11 test server. Reachable only from this machine: http://localhost:8811
+# Start:  docker compose -f docker/compose.10.11.yml up -d
+# State lives in docker/.data/10.11 (git-ignored); the sample library is mounted read-only.
+name: rr-jf1011
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:10.11.11
+    container_name: rr-jellyfin-10.11
+    ports:
+      - "127.0.0.1:8811:8096"
+    environment:
+      - TZ=UTC
+    volumes:
+      - ./.data/10.11/config:/config
+      - ./.data/10.11/cache:/cache
+      - ./sample-library:/media:ro
+    restart: "no"

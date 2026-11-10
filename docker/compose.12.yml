@@ -1,0 +1,19 @@
+# Jellyfin 12.x test server. Reachable only from this machine: http://localhost:8812
+# Start:  docker compose -f docker/compose.12.yml up -d
+# Another 12.x version:  JF12_TAG=12.2 docker compose -f docker/compose.12.yml up -d
+#   (PowerShell: $env:JF12_TAG='12.2'; docker compose -f docker/compose.12.yml up -d)
+# State lives in docker/.data/12 (git-ignored); the sample library is mounted read-only.
+name: rr-jf12
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:${JF12_TAG:-12.4}
+    container_name: rr-jellyfin-12
+    ports:
+      - "127.0.0.1:8812:8096"
+    environment:
+      - TZ=UTC
+    volumes:
+      - ./.data/12/config:/config
+      - ./.data/12/cache:/cache
+      - ./sample-library:/media:ro
+    restart: "no"

@@ -1,0 +1,44 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    One source, two builds:
+      net9.0  -> Jellyfin 10.11.x (packages pinned to 10.11.9, targetAbi 10.11.9.0), symbol JF10_11
+      net10.0 -> Jellyfin 12.x    (packages pinned to 12.0.0, targetAbi 12.0.0.0), symbol JF12
+    Jellyfin packages are compile-only: the server provides them at runtime.
+  -->
+  <PropertyGroup>
+    <TargetFrameworks>net9.0;net10.0</TargetFrameworks>
+    <RootNamespace>Jellyfin.Plugin.RatingsRecs</RootNamespace>
+    <AssemblyName>Jellyfin.Plugin.RatingsRecs</AssemblyName>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <!-- JellyfinPackageVersion, PluginTargetAbi and JF10_11/JF12 come from Directory.Build.targets. -->
+
+  <ItemGroup>
+    <PackageReference Include="Jellyfin.Controller" Version="$(JellyfinPackageVersion)" ExcludeAssets="runtime" />
+    <PackageReference Include="Jellyfin.Model" Version="$(JellyfinPackageVersion)" ExcludeAssets="runtime" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <!-- The engine is compiled into this assembly so the zip ships a single DLL. -->
+  <ItemGroup>
+    <Compile Include="..\RatingsRecs.Engine\**\*.cs" Exclude="..\RatingsRecs.Engine\obj\**;..\RatingsRecs.Engine\bin\**" Link="Engine\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>TargetAbi</_Parameter1>
+      <_Parameter2>$(PluginTargetAbi)</_Parameter2>
+    </AssemblyAttribute>
+    <InternalsVisibleTo Include="RatingsRecs.Plugin.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Configuration\configPage.html" />
+    <EmbeddedResource Include="Configuration\configPage.html" />
+    <None Remove="Web\**" />
+    <EmbeddedResource Include="Web\**" />
+  </ItemGroup>
+
+</Project>

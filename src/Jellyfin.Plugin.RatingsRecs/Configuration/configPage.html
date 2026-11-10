@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Ratings &amp; Recommendations</title>
+</head>
+<body>
+    <div id="RatingsRecsConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+        <div data-role="content">
+            <div class="content-primary">
+                <h2 class="sectionTitle">Ratings &amp; Recommendations</h2>
+                <p id="rrVersion" class="fieldDescription"></p>
+
+                <div class="verticalSection">
+                    <h3 class="sectionTitle">Dependencies / Dipendenze</h3>
+                    <ul id="rrDependencies"></ul>
+                </div>
+
+                <form id="RatingsRecsConfigForm">
+                    <div class="checkboxContainer checkboxContainer-withDescription">
+                        <label class="emby-checkbox-label">
+                            <input id="rrEnabled" type="checkbox" is="emby-checkbox" />
+                            <span>Enabled / Attivo</span>
+                        </label>
+                    </div>
+                    <div>
+                        <button is="emby-button" type="submit" class="raised button-submit block emby-button">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <script type="text/javascript">
+            (function () {
+                var pluginId = '4d56ae7e-38cb-431c-bff8-e135c2087aa5';
+                var dependencies = [
+                    { id: '5e87cc92-571a-4d8d-8d98-d2d4147f9f90', name: 'File Transformation', required: true },
+                    { id: 'b8298e01-2697-407a-b44d-aa8dc795e850', name: 'Home Screen Sections', required: false },
+                    { id: '5b6550fa-a014-4f4c-8a2c-59a43680ac6d', name: 'Plugin Pages', required: false }
+                ];
+                var page = document.querySelector('#RatingsRecsConfigPage');
+
+                function normalize(id) {
+                    return (id || '').replace(/-/g, '').toLowerCase();
+                }
+
+                function renderPlugins(plugins) {
+                    var self = plugins.filter(function (p) { return normalize(p.Id) === normalize(pluginId); })[0];
+                    page.querySelector('#rrVersion').textContent = self ? ('Version ' + self.Version + ' - ' + self.Status) : '';
+                    var list = page.querySelector('#rrDependencies');
+                    list.innerHTML = '';
+                    dependencies.forEach(function (dep) {
+                        var found = plugins.filter(function (p) { return normalize(p.Id) === normalize(dep.id); })[0];
+                        var li = document.createElement('li');
+                        li.textContent = dep.name + ': ' + (found ? (found.Version + ' (' + found.Status + ')') : (dep.required ? 'NOT INSTALLED / NON INSTALLATO' : 'not installed / non installato'));
+                        list.appendChild(li);
+                    });
+                }
+
+                page.addEventListener('pageshow', function () {
+                    Dashboard.showLoadingMsg();
+                    Promise.all([
+                        ApiClient.getPluginConfiguration(pluginId),
+                        ApiClient.getJSON(ApiClient.getUrl('Plugins'))
+                    ]).then(function (results) {
+                        page.querySelector('#rrEnabled').checked = results[0].Enabled;
+                        renderPlugins(results[1]);
+                        Dashboard.hideLoadingMsg();
+                    }, function () {
+                        Dashboard.hideLoadingMsg();
+                    });
+                });
+
+                page.querySelector('#RatingsRecsConfigForm').addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(pluginId).then(function (config) {
+                        config.Enabled = page.querySelector('#rrEnabled').checked;
+                        ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
+                            Dashboard.processPluginConfigurationUpdateResult(result);
+                        });
+                    });
+                    return false;
+                });
+            })();
+        </script>
+    </div>
+</body>
+</html>

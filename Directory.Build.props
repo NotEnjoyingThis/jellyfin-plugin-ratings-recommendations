@@ -1,0 +1,32 @@
+<Project>
+  <!-- Version is single-sourced from build.yaml (same for both builds). -->
+  <PropertyGroup>
+    <_BuildYamlText>$([System.IO.File]::ReadAllText('$(MSBuildThisFileDirectory)build.yaml'))</_BuildYamlText>
+    <PluginVersion>$([System.Text.RegularExpressions.Regex]::Match($(_BuildYamlText), '(?m)(?&lt;=^version:\s*")[0-9.]+').Value)</PluginVersion>
+    <Version Condition="'$(Version)' == ''">$(PluginVersion)</Version>
+    <AssemblyVersion>$(Version)</AssemblyVersion>
+    <FileVersion>$(Version)</FileVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <Authors>NotEnjoyingThis</Authors>
+    <Product>Ratings &amp; Recommendations</Product>
+    <RepositoryUrl>https://github.com/NotEnjoyingThis/jellyfin-plugin-ratings-recommendations</RepositoryUrl>
+    <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <!-- Analyzers from the official plugin template: build-time only, never shipped. -->
+  <ItemGroup>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" PrivateAssets="All" />
+    <PackageReference Include="SerilogAnalyzer" Version="0.15.0" PrivateAssets="All" />
+    <PackageReference Include="SmartAnalyzers.MultithreadingAnalyzer" Version="1.1.31" PrivateAssets="All" />
+  </ItemGroup>
+</Project>

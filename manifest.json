@@ -1,0 +1,12 @@
+[
+  {
+    "guid": "4d56ae7e-38cb-431c-bff8-e135c2087aa5",
+    "name": "Ratings & Recommendations",
+    "description": "Thumbs ratings that drive personalised recommendations. Requires Jellyfin 10.11.9+ or 12.0+.",
+    "overview": "Replace the favourite heart with a 4-level rating and get recommendations based on what you liked and disliked. Requires Jellyfin 10.11.9+ or 12.0+.",
+    "owner": "NotEnjoyingThis",
+    "category": "General",
+    "imageUrl": "https://raw.githubusercontent.com/NotEnjoyingThis/jellyfin-plugin-ratings-recommendations/main/assets/logo.png",
+    "versions": []
+  }
+]

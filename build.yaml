@@ -1,0 +1,25 @@
+---
+# Plugin metadata. Single source of truth for name, GUID and version.
+# The GUID must NEVER change: Jellyfin uses it to recognise updates.
+# The version is the same for both builds; only targetAbi/framework differ.
+name: "Ratings & Recommendations"
+guid: "4d56ae7e-38cb-431c-bff8-e135c2087aa5"
+version: "1.0.0.0"
+owner: "NotEnjoyingThis"
+category: "General"
+overview: "Replace the favourite heart with a 4-level rating and get recommendations based on what you liked and disliked. Requires Jellyfin 10.11.9+ or 12.0+."
+description: >
+  Thumbs ratings (-3, -1, +1, +3) that drive personalised, fully local,
+  content-based recommendations. Requires Jellyfin 10.11.9+ or 12.0+.
+imageUrl: "https://raw.githubusercontent.com/NotEnjoyingThis/jellyfin-plugin-ratings-recommendations/main/assets/logo.png"
+artifacts:
+  - "Jellyfin.Plugin.RatingsRecs.dll"
+builds:
+  - id: "jf10.11"
+    framework: "net9.0"
+    targetAbi: "10.11.9.0"
+  - id: "jf12"
+    framework: "net10.0"
+    targetAbi: "12.0.0.0"
+changelog: >
+  See CHANGELOG.md.

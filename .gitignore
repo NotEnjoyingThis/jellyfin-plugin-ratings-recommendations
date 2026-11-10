@@ -1,0 +1,21 @@
+# Build output
+bin/
+obj/
+artifacts/
+TestResults/
+*.user
+
+# IDEs
+.vs/
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Docker test servers (local state and credentials)
+docker/.env
+docker/.data/
+docker/sample-library/
+
+# OS
+Thumbs.db
+.DS_Store
