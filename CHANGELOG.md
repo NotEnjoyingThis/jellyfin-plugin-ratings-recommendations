@@ -25,3 +25,10 @@ The section of each version is used for the GitHub Release notes and the `change
 - Script injection through File Transformation (registered by reflection); without it the hook switches itself off
   and the settings page shows how to add the script manually.
 - `GET /RatingsRecs/Status` (administrators) with the state of the integration hooks.
+- Recommendation engine (content-based): taste profile with IDF, smoothing and time decay; taste + quality + daily
+  exploration score; exclusions, proximity penalty, MMR diversity, saga cap, explanations, cold start and "Rate these".
+- Background computation with in-memory cache: scheduled task every 6 hours, recomputation 30 s after a rating change
+  and after library scans; `GET /RatingsRecs/Recommendations` and `GET /RatingsRecs/Onboarding` answer from the cache.
+- Implicit signals: watched without rating (+0.5), abandoned (-0.5).
+- "For you" page (`#/ratingsrecs`) with Movies/Series tabs, explanations and thumbs on every card.
+- Settings page: engine coefficients, "Recompute now", recommendations preview for a user.

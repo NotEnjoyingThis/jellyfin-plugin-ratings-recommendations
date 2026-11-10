@@ -63,6 +63,18 @@
                         </div>
                     </div>
 
+                    <div class="verticalSection">
+                        <h3 class="sectionTitle">Engine / Motore</h3>
+                        <div id="rrEngine" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(14em,1fr));gap:0 1em;"></div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="rrExcludeHatedCollections" type="checkbox" is="emby-checkbox" />
+                                <span>Exclude other chapters of a saga rated -3 / Escludi gli altri capitoli di una saga votata -3</span>
+                            </label>
+                        </div>
+                        <div class="fieldDescription">Changes apply at the next computation (Recompute now, or within 6 hours) / Le modifiche valgono dal prossimo calcolo (Ricalcola ora, o entro 6 ore).</div>
+                    </div>
+
                     <div>
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">
                             <span>Save</span>
@@ -81,6 +93,8 @@
                         <button is="emby-button" type="button" id="rrExportCsv" class="raised emby-button"><span>Export CSV / Esporta CSV</span></button>
                         <button is="emby-button" type="button" id="rrImportCsvButton" class="raised emby-button"><span>Import CSV / Importa CSV</span></button>
                         <input type="file" id="rrImportCsvFile" accept=".csv,text/csv" style="display:none" />
+                        <button is="emby-button" type="button" id="rrRecompute" class="raised emby-button"><span>Recompute now / Ricalcola ora</span></button>
+                        <button is="emby-button" type="button" id="rrPreview" class="raised emby-button"><span>Preview recommendations / Anteprima consigli</span></button>
                     </div>
                     <pre id="rrToolResult" class="fieldDescription" style="white-space:pre-wrap;"></pre>
                 </div>
@@ -99,6 +113,25 @@
                     { key: 'Watchable', label: 'Watchable / Guardabile (-1)' },
                     { key: 'Good', label: 'Good / Bello (+1)' },
                     { key: 'Amazing', label: 'Amazing / Fantastico (+3)' }
+                ];
+                var engineFields = [
+                    { key: 'WeightGenre', label: 'α Genres / Generi' },
+                    { key: 'WeightDirector', label: 'α Directors / Registi' },
+                    { key: 'WeightActor', label: 'α Actors / Attori' },
+                    { key: 'WeightWriter', label: 'α Writers / Sceneggiatori' },
+                    { key: 'WeightTag', label: 'α Tags' },
+                    { key: 'WeightStudio', label: 'α Studios / Studi' },
+                    { key: 'WeightDecade', label: 'α Decade / Decennio' },
+                    { key: 'WeightCollection', label: 'α Collections / Saghe' },
+                    { key: 'SmoothingK', label: 'k (smoothing / smorzamento)' },
+                    { key: 'HalfLifeDays', label: 'Half-life days / Emivita giorni (0 = off)' },
+                    { key: 'TasteWeight', label: 'Taste / Gusto' },
+                    { key: 'QualityWeight', label: 'Quality / Qualità' },
+                    { key: 'ExplorationWeight', label: 'Exploration / Esplorazione' },
+                    { key: 'DiversityLambda', label: 'Diversity λ / λ diversità' },
+                    { key: 'ProximityPenalty', label: 'Proximity penalty / Penalità di vicinanza' },
+                    { key: 'ColdStartThreshold', label: 'Cold start below N ratings / Partenza a freddo sotto N voti', integer: true },
+                    { key: 'OnboardingHideAfter', label: '"Rate these" hidden after N ratings / "Valuta questi" nascosto dopo N voti', integer: true }
                 ];
                 var page = document.querySelector('#RatingsRecsConfigPage');
 
@@ -129,6 +162,12 @@
                             + '</div>';
                     });
                     q('#rrLevels').innerHTML = html;
+                    var engineHtml = '';
+                    engineFields.forEach(function (f) {
+                        engineHtml += '<div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="rrCfg' + f.key + '">' + f.label + '</label>'
+                            + '<input id="rrCfg' + f.key + '" type="number" step="' + (f.integer ? '1' : '0.05') + '" min="0" is="emby-input" /></div>';
+                    });
+                    q('#rrEngine').innerHTML = engineHtml;
                 }
 
                 function renderPlugins(plugins) {
@@ -188,6 +227,8 @@
                     q('#rrImplicitFavorite').value = config.ImplicitFavoriteValue;
                     q('#rrImplicitWatched').value = config.ImplicitWatchedValue;
                     q('#rrImplicitAbandoned').value = config.ImplicitAbandonedValue;
+                    engineFields.forEach(function (f) { q('#rrCfg' + f.key).value = config[f.key]; });
+                    q('#rrExcludeHatedCollections').checked = config.ExcludeHatedCollections;
                 }
 
                 function readNumber(sel, fallback) {
@@ -232,6 +273,11 @@
                         config.ImplicitFavoriteValue = readNumber('#rrImplicitFavorite', config.ImplicitFavoriteValue);
                         config.ImplicitWatchedValue = readNumber('#rrImplicitWatched', config.ImplicitWatchedValue);
                         config.ImplicitAbandonedValue = readNumber('#rrImplicitAbandoned', config.ImplicitAbandonedValue);
+                        engineFields.forEach(function (f) {
+                            var v = readNumber('#rrCfg' + f.key, config[f.key]);
+                            config[f.key] = f.integer ? Math.round(v) : v;
+                        });
+                        config.ExcludeHatedCollections = q('#rrExcludeHatedCollections').checked;
                         ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);
                         });
@@ -257,6 +303,32 @@
                             a.click();
                             setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
                             showResult('Exported / Esportato');
+                        }, function (status) { showResult('Error / Errore ' + status); });
+                });
+
+                q('#rrRecompute').addEventListener('click', function () {
+                    ApiClient.getJSON(ApiClient.getUrl('ScheduledTasks')).then(function (tasks) {
+                        var task = tasks.filter(function (x) { return x.Key === 'RatingsRecsRecompute'; })[0];
+                        if (!task) { return Promise.reject('task not found'); }
+                        return fetch(ApiClient.getUrl('ScheduledTasks/Running/' + task.Id), { method: 'POST', headers: authHeaders() });
+                    }).then(function () {
+                        showResult('Recomputation started (Dashboard → Scheduled tasks) / Ricalcolo avviato (Pannello di controllo → Operazioni pianificate)');
+                    }, function (err) { showResult('Error / Errore ' + err); });
+                });
+
+                q('#rrPreview').addEventListener('click', function () {
+                    fetch(toolUrl('Recommendations') + '&limit=20', { headers: authHeaders() })
+                        .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
+                        .then(function (res) {
+                            if (res.Status === 'Computing') { showResult('Still computing, try again in a few seconds / Calcolo in corso, riprova tra qualche secondo'); return; }
+                            var lines = ['Computed / Calcolati: ' + res.ComputedUtc + ' - ratings / voti: ' + res.ExplicitRatingCount + (res.IsColdStart ? ' (cold start)' : '')];
+                            res.Items.forEach(function (item, i) {
+                                var e = res.Explanations[i] || {};
+                                var why = (e.Features || []).map(function (f) { return f.Category + ': ' + f.Value; });
+                                if (e.BecauseOf) { why.unshift('because / perché ' + e.BecauseOf.Name); }
+                                lines.push((i + 1) + '. ' + item.Name + ' (' + item.Type + (item.ProductionYear ? ', ' + item.ProductionYear : '') + ') - ' + why.join('; '));
+                            });
+                            showResult(lines.join('\n'));
                         }, function (status) { showResult('Error / Errore ' + status); });
                 });
 

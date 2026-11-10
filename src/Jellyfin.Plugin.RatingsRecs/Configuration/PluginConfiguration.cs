@@ -77,4 +77,58 @@ public class PluginConfiguration : BasePluginConfiguration
     /// Gets or sets the implicit value of an abandoned item (progress below 20%, idle for 30+ days).
     /// </summary>
     public double ImplicitAbandonedValue { get; set; } = -0.5;
+
+    /// <summary>Gets or sets the genre weight α.</summary>
+    public double WeightGenre { get; set; } = 1.0;
+
+    /// <summary>Gets or sets the director weight α.</summary>
+    public double WeightDirector { get; set; } = 1.2;
+
+    /// <summary>Gets or sets the actor weight α.</summary>
+    public double WeightActor { get; set; } = 0.8;
+
+    /// <summary>Gets or sets the writer weight α.</summary>
+    public double WeightWriter { get; set; } = 0.6;
+
+    /// <summary>Gets or sets the tag weight α.</summary>
+    public double WeightTag { get; set; } = 0.5;
+
+    /// <summary>Gets or sets the studio weight α.</summary>
+    public double WeightStudio { get; set; } = 0.3;
+
+    /// <summary>Gets or sets the decade weight α.</summary>
+    public double WeightDecade { get; set; } = 0.4;
+
+    /// <summary>Gets or sets the collection (saga) weight α.</summary>
+    public double WeightCollection { get; set; } = 1.0;
+
+    /// <summary>Gets or sets the smoothing constant k.</summary>
+    public double SmoothingK { get; set; } = 2;
+
+    /// <summary>Gets or sets the rating half-life in days (0 = no decay).</summary>
+    public double HalfLifeDays { get; set; } = 365;
+
+    /// <summary>Gets or sets the taste coefficient.</summary>
+    public double TasteWeight { get; set; } = 0.75;
+
+    /// <summary>Gets or sets the quality coefficient.</summary>
+    public double QualityWeight { get; set; } = 0.15;
+
+    /// <summary>Gets or sets the exploration coefficient.</summary>
+    public double ExplorationWeight { get; set; } = 0.10;
+
+    /// <summary>Gets or sets the explicit ratings needed to leave the cold start.</summary>
+    public int ColdStartThreshold { get; set; } = 5;
+
+    /// <summary>Gets or sets the diversity λ (MMR).</summary>
+    public double DiversityLambda { get; set; } = 0.8;
+
+    /// <summary>Gets or sets the proximity penalty factor.</summary>
+    public double ProximityPenalty { get; set; } = 0.5;
+
+    /// <summary>Gets or sets a value indicating whether other chapters of a saga rated -3 are excluded.</summary>
+    public bool ExcludeHatedCollections { get; set; } = true;
+
+    /// <summary>Gets or sets the number of explicit ratings after which "Rate these" disappears.</summary>
+    public int OnboardingHideAfter { get; set; } = 15;
 }

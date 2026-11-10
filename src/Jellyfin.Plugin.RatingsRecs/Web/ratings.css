@@ -179,3 +179,123 @@
         }
     }
 }
+
+/* "For you" page (#/ratingsrecs), drawn inside jellyfin-web's own page container. */
+
+.rr-foryou-host > :not(.rr-foryou) {
+    display: none !important;
+}
+
+.rr-foryou {
+    padding-top: 1em;
+    padding-bottom: 3em;
+}
+
+.rr-foryou-title {
+    margin: 0.2em 0 0.6em;
+}
+
+.rr-tabs {
+    display: flex;
+    gap: 0.5em;
+    margin-bottom: 1.2em;
+}
+
+.rr-tab {
+    padding: 0.45em 1.1em;
+    border-radius: 999px;
+    color: inherit;
+    text-decoration: none;
+    background: var(--jf-palette-action-hover, rgba(127, 127, 127, 0.16));
+}
+
+.rr-tab-active {
+    background: var(--jf-palette-primary-main, #00a4dc);
+    color: var(--jf-palette-primary-contrastText, #000);
+}
+
+.rr-foryou-status,
+.rr-foryou-note {
+    opacity: 0.85;
+}
+
+.rr-section {
+    margin-bottom: 2em;
+}
+
+.rr-section-title {
+    font-size: 1.3em;
+    margin: 0.4em 0 0.8em;
+}
+
+.rr-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(9.5em, 1fr));
+    gap: 1.2em 1em;
+}
+
+.rr-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.rr-card-link {
+    color: inherit;
+    text-decoration: none;
+}
+
+.rr-card-image {
+    position: relative;
+    aspect-ratio: 2 / 3;
+    border-radius: var(--jf-shape-borderRadius, 4px);
+    background-color: var(--jf-palette-background-paper, #202020);
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.rr-card-placeholder {
+    padding: 0.5em;
+    text-align: center;
+    opacity: 0.7;
+}
+
+.rr-card-title {
+    margin-top: 0.4em;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.rr-card-meta,
+.rr-card-why {
+    font-size: 0.85em;
+    opacity: 0.75;
+}
+
+.rr-card-why {
+    margin-top: 0.2em;
+    line-height: 1.3;
+}
+
+.rr-card-rating {
+    position: absolute;
+    top: 0.35em;
+    right: 0.35em;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+}
+
+.rr-card-rating .rr-toggle {
+    background: transparent;
+    border: 0;
+    color: inherit;
+    padding: 0.3em;
+}

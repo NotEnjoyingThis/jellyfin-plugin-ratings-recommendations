@@ -24,6 +24,25 @@ Ogni scelta che cambia o precisa `docs/DESIGN.md`. Da tenere aggiornata.
 | 13 | API "esattamente" quelle della sezione 6.5 | In più: `GET /RatingsRecs/Web/ratings.js` e `ratings.css` (anonimi, richiesti dal prompt: un tag `<script>` non manda il token; nessun dato utente) e `GET /RatingsRecs/Status` (solo amministratori: stato degli agganci per la pagina impostazioni) | Servono allo script iniettato e alla pagina impostazioni ("mostrarlo nella pagina impostazioni") | M2 |
 | 14 | Nomi dei livelli configurabili | Lo script riceve nomi personalizzati e testi IT/EN tramite un prologo `window.RatingsRecsBootstrap` aggiunto a `ratings.js` dal server (nessun endpoint in più); lingua = `lang` di jellyfin-web, poi browser, poi inglese | Evita una chiamata in più a ogni caricamento | M2 |
 
+| 15 | "I tre termini sono portati tra 0 e 1" (5.3) | Gusto: normalizzazione **min-max sui candidati dell'utente** (tutti uguali → 0,5); qualità = `CommunityRating/10` (mancante → media della libreria); ε già in [0,1) | Il design non dice come normalizzare; min-max conserva l'ordine del gusto e rende confrontabili i tre termini | M3 |
+| 16 | Penalità di vicinanza: "punteggio di gusto × 0,5" (5.4) | Applicata al gusto **normalizzato** | Moltiplicare per 0,5 un gusto grezzo negativo lo alzerebbe (−1 → −0,5), l'opposto dell'intento | M3 |
+| 17 | "Altri capitoli di una saga votata -3 (opzione)" | Opzione `ExcludeHatedCollections`, **attiva** di default | È elencata tra le esclusioni dure; il default non è indicato | M3 |
+| 18 | "Esclusioni: media votati" | Esclusi anche i media con un segnale implicito (Preferito da altri client, visto, abbandonato) | Sono già visti o iniziati; un Preferito implicito equivale a un voto | M3 |
+| 19 | "Valuta questi": i più noti per "CommunityRating e numero di voti" | Ordine: visti non votati, poi `CommunityRating`; giro a turno per genere principale (un titolo per genere prima di ripetere) | Jellyfin non ha il numero di voti; il giro a turno realizza "coprire generi diversi" | M3 |
+| 20 | Serie "abbandonata" | Quota di episodi visti < 20% e ultimo episodio visto da 30+ giorni (stessa regola della stagione in 4.1) | Le serie non hanno una posizione di riproduzione | M3 |
+| 21 | Risposta consigli = `BaseItemDto` + "un campo con la spiegazione" | `{ Items: BaseItemDto[], Explanations: [...] }` con le spiegazioni nello stesso ordine, più `Status`, `TotalRecordCount`, `IsColdStart` | Aggiungere un campo dentro `BaseItemDto` richiederebbe di riserializzarlo; così i `BaseItemDto` restano standard | M3 |
+| 22 | Pagina "Per te" a tutto schermo | Disegnata dallo script nella vista "pagina non trovata" di jellyfin-web sul percorso `#/ratingsrecs` (`?type=Movie|Series`), con intestazione e menu normali | jellyfin-web non permette di aggiungere percorsi; il percorso sconosciuto mostra `#fallbackPage` senza reindirizzare, in 10.11 e 12 (Legacy e Modern) | M3 |
+| 23 | Ricalcolo "dopo un cambio voto" | Debounce di 30 s per utente; ricalcolo di tutti dopo la scansione della libreria (`RefreshLibrary`) e 20 s dopo l'avvio; senza cache l'endpoint risponde `Status: "Computing"` e avvia il calcolo in background | Mai calcoli pesanti nella richiesta HTTP | M3 |
+
+## Motore e consigli (M3)
+- Persone: `ILibraryManager.GetPeople(BaseItem)` in entrambe; 12 ha anche `GetPeopleByItems(ids)` (usato sotto `#if JF12`).
+- Saghe: `BoxSet` (è un `Folder`) → `GetLinkedChildren()`.
+- Visti: `InternalItemsQuery { IsPlayed = true }` per film, serie ed episodi (una serie con un episodio visto non è candidata); in corso: `IsResumable = true`.
+- Fine scansione libreria: `ITaskManager.TaskCompleted` con chiave `RefreshLibrary` (uguale in 10.11.9 e 12.0).
+- Task pianificato: `IScheduledTask` scoperto da Jellyfin, chiave `RatingsRecsRecompute`, `IntervalTrigger` 6 h.
+- Tempi misurati sui server di prova (14 media): motore 1–170 ms, totale 0,2–2 s (il primo calcolo dopo l'avvio include il JIT);
+  endpoint da cache 20–45 ms. Test con 2000 media sintetici: ~0,5 s.
+
 ## Client web: DOM verificato (M2)
 
 Ispezionato dal vivo su 10.11.11 (Legacy), 12.4 Legacy (`desktop-legacy`) e 12.4 Modern (`auto`).

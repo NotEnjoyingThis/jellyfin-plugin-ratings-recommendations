@@ -40,8 +40,17 @@ function Get-Status([scriptblock]$call) {
 }
 
 function Login($srv, [string]$user, [string]$password) {
-    $auth = Invoke-Jf -Srv $srv -Method Post -Path '/Users/AuthenticateByName' -Body @{ Username = $user; Pw = $password }
-    return New-Object PSObject -Property @{ Token = $auth.AccessToken; Id = $auth.User.Id }
+    # Right after a restart Jellyfin may refuse logins (400) for a few seconds: retry.
+    for ($attempt = 1; ; $attempt++) {
+        try {
+            $auth = Invoke-Jf -Srv $srv -Method Post -Path '/Users/AuthenticateByName' -Body @{ Username = $user; Pw = $password }
+            return New-Object PSObject -Property @{ Token = $auth.AccessToken; Id = $auth.User.Id }
+        }
+        catch {
+            if ($attempt -ge 30) { throw }
+            Start-Sleep -Seconds 2
+        }
+    }
 }
 
 function Find-Item($srv, $session, [string]$type, [string]$name) {
@@ -160,6 +169,39 @@ foreach ($name in $targets) {
     $importName = Invoke-RestMethod -UseBasicParsing -Method Post -Uri ('http://localhost:' + $srv.Port + '/RatingsRecs/Import') -Headers (Get-AuthHeader $family.Token) -ContentType 'text/csv' -Body ([System.Text.Encoding]::UTF8.GetBytes($byName))
     $matched = Invoke-Jf -Srv $srv -Method Get -Path ('/RatingsRecs/Ratings/' + $movie2) -Token $family.Token
     Check 'Import CSV matches by name and year' ($matched.value -eq -1) ("added=$($importName.added) unmatched=$($importName.unmatched)")
+
+    # Recommendations (served from the background cache).
+    $deadline = (Get-Date).AddSeconds(90)
+    do {
+        $recs = Invoke-Jf -Srv $srv -Method Get -Path '/RatingsRecs/Recommendations?limit=200' -Token $family.Token
+        if ($recs.Status -ne 'Ready') { Start-Sleep -Seconds 3 }
+    } while ($recs.Status -ne 'Ready' -and (Get-Date) -lt $deadline)
+    Check 'recommendations are computed in the background (Ready)' ($recs.Status -eq 'Ready') "status $($recs.Status)"
+    $ids = @($recs.Items | ForEach-Object { $_.Id })
+    Check 'recommendations have one explanation per item' ($ids.Count -gt 0 -and @($recs.Explanations).Count -eq $ids.Count) "items=$($ids.Count) total=$($recs.TotalRecordCount)"
+    if ($ids.Count -eq 0) { continue }
+    $ratedOnes = @(Invoke-Jf -Srv $srv -Method Get -Path ('/RatingsRecs/Ratings?itemIds=' + ($ids -join ',')) -Token $family.Token | ForEach-Object { $_ })
+    Check 'no rated item among the recommendations' ($ratedOnes.Count -eq 0) "found $($ratedOnes.Count)"
+    $target = $ids[0]
+    Invoke-Jf -Srv $srv -Method Put -Path ('/RatingsRecs/Ratings/' + $target) -Token $family.Token -Body @{ value = -3 } | Out-Null
+    $after = Invoke-Jf -Srv $srv -Method Get -Path '/RatingsRecs/Recommendations?limit=200' -Token $family.Token
+    Check 'an item rated -3 disappears at once' (-not (@($after.Items | ForEach-Object { $_.Id }) -contains $target))
+    Invoke-Jf -Srv $srv -Method Delete -Path ('/RatingsRecs/Ratings/' + $target) -Token $family.Token | Out-Null
+    $seriesRecs = Invoke-Jf -Srv $srv -Method Get -Path '/RatingsRecs/Recommendations?type=Series&limit=50' -Token $family.Token
+    Check 'type=Series returns only series' (@($seriesRecs.Items | Where-Object { $_.Type -ne 'Series' }).Count -eq 0)
+    $status = Get-Status { Invoke-Jf -Srv $srv -Method Get -Path ('/RatingsRecs/Recommendations?userId=' + $admin.Id) -Token $family.Token }
+    Check 'non-admin cannot read recommendations of another user (403)' ($status -eq 403) "got $status"
+    $onboarding = Invoke-Jf -Srv $srv -Method Get -Path '/RatingsRecs/Onboarding?limit=20' -Token $family.Token
+    Check 'onboarding answers (items or hidden)' ($onboarding.Hidden -or @($onboarding.Items).Count -gt 0)
+    $times = @()
+    for ($i = 0; $i -lt 7; $i++) {
+        $sw = [Diagnostics.Stopwatch]::StartNew()
+        Invoke-Jf -Srv $srv -Method Get -Path '/RatingsRecs/Recommendations?limit=20' -Token $family.Token | Out-Null
+        $sw.Stop()
+        $times += $sw.ElapsedMilliseconds
+    }
+    $median = ($times | Sort-Object)[3]
+    Check "recommendations answer from cache in < 200 ms (median $median ms)" ($median -lt 200)
 
     # Persistence after restart.
     if (-not $SkipRestart) {

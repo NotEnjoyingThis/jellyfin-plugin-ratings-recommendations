@@ -702,6 +702,194 @@
         return queryFirst(document, adapter.pageRoot) || document.body;
     }
 
+    /* ---------- "For you" page (#/ratingsrecs) ---------- */
+
+    /*
+     * jellyfin-web has no API to add routes. An unknown route such as #/ratingsrecs shows its own
+     * "page not found" view (.fallbackPage) inside the normal header and menu, in both layouts:
+     * the page is drawn inside that view, whose own content is hidden.
+     */
+    var FOR_YOU_ROUTE = /^#\/ratingsrecs(?:[/?]|$)/;
+
+    function isForYouRoute() {
+        return FOR_YOU_ROUTE.test(location.hash || '');
+    }
+
+    function forYouType() {
+        var match = /[?&]type=(Movie|Series)/i.exec(location.hash || '');
+        return match && match[1].toLowerCase() === 'series' ? 'Series' : 'Movie';
+    }
+
+    function el(tag, className, text) {
+        var node = document.createElement(tag);
+        if (className) {
+            node.className = className;
+        }
+
+        if (text !== undefined && text !== null) {
+            node.textContent = text;
+        }
+
+        return node;
+    }
+
+    function explanationText(explanation) {
+        if (!explanation) {
+            return '';
+        }
+
+        var parts = [];
+        if (explanation.BecauseOf && explanation.BecauseOf.Name) {
+            parts.push(t(explanation.BecauseOf.Value >= 3 ? 'becauseLoved' : 'becauseLiked', explanation.BecauseOf.Name));
+        }
+
+        (explanation.Features || []).forEach(function (feature) {
+            if (parts.length < 2) {
+                parts.push(t('feature.' + feature.Category) + ': ' + feature.Value);
+            }
+        });
+        return parts.join(' · ');
+    }
+
+    function itemCard(item, explanation, serverId) {
+        var id = normId(item.Id);
+        var card = el('div', 'rr-card');
+        var link = el('a', 'rr-card-link');
+        link.href = '#/details?id=' + id + (serverId ? '&serverId=' + serverId : '');
+        var poster = el('div', 'rr-card-image');
+        var tag = item.ImageTags && item.ImageTags.Primary;
+        if (tag) {
+            poster.style.backgroundImage = 'url("' + apiClient().getScaledImageUrl(item.Id, { type: 'Primary', maxWidth: 300, tag: tag }) + '")';
+        } else {
+            poster.appendChild(el('span', 'rr-card-placeholder', item.Name));
+        }
+
+        link.appendChild(poster);
+        link.appendChild(el('div', 'rr-card-title', item.Name));
+        if (item.ProductionYear) {
+            link.appendChild(el('div', 'rr-card-meta', String(item.ProductionYear)));
+        }
+
+        card.appendChild(link);
+        var why = explanationText(explanation);
+        if (why) {
+            card.appendChild(el('div', 'rr-card-why', why));
+        }
+
+        if (RATEABLE[item.Type]) {
+            var fakeHeart = { className: 'paper-icon-button-light' };
+            var widget = createWidget(id, fakeHeart, true);
+            widget.classList.add('rr-card-rating');
+            card.appendChild(widget);
+            loadRatings([id]);
+        }
+
+        return card;
+    }
+
+    function renderSection(container, title, response, withExplanations) {
+        var section = el('section', 'rr-section');
+        if (title) {
+            section.appendChild(el('h2', 'rr-section-title', title));
+        }
+
+        var grid = el('div', 'rr-grid');
+        var serverId = apiClient().serverId ? apiClient().serverId() : '';
+        (response.Items || []).forEach(function (item, i) {
+            grid.appendChild(itemCard(item, withExplanations ? (response.Explanations || [])[i] : null, serverId));
+        });
+        section.appendChild(grid);
+        container.appendChild(section);
+    }
+
+    function renderForYou(root) {
+        if (!isForYouRoute()) {
+            return;
+        }
+
+        // The "not found" view is <div id="fallbackPage" class="page ..."> in 10.11 and 12 (both layouts).
+        var host = document.querySelector('#fallbackPage:not(.hide), .fallbackPage:not(.hide)');
+        if (!host && root && root.classList && root.classList.contains('page')) {
+            host = root;
+        }
+
+        if (!host) {
+            return;
+        }
+
+        var key = location.hash + '|' + state.userId;
+        if (host.getAttribute('data-rr-foryou') === key) {
+            return;
+        }
+
+        host.setAttribute('data-rr-foryou', key);
+        host.classList.add('rr-foryou-host');
+        var old = host.querySelector('.rr-foryou');
+        if (old) {
+            old.parentNode.removeChild(old);
+        }
+
+        var type = forYouType();
+        var page = el('div', 'rr-foryou padded-left padded-right');
+        page.appendChild(el('h1', 'rr-foryou-title', t('forYou.title')));
+        var tabs = el('div', 'rr-tabs');
+        tabs.setAttribute('role', 'tablist');
+        [['Movie', 'tab.movies'], ['Series', 'tab.series']].forEach(function (tab) {
+            var a = el('a', 'rr-tab' + (tab[0] === type ? ' rr-tab-active' : ''), t(tab[1]));
+            a.href = '#/ratingsrecs?type=' + tab[0];
+            a.setAttribute('role', 'tab');
+            a.setAttribute('aria-selected', tab[0] === type ? 'true' : 'false');
+            tabs.appendChild(a);
+        });
+        page.appendChild(tabs);
+        var body = el('div', 'rr-foryou-body');
+        body.appendChild(el('p', 'rr-foryou-status', '…'));
+        page.appendChild(body);
+        host.appendChild(page);
+        document.title = t('forYou.title');
+
+        Promise.all([
+            request('GET', 'Recommendations?limit=100&type=' + type),
+            request('GET', 'Onboarding?limit=20').catch(function () { return { Hidden: true }; })
+        ]).then(function (results) {
+            if (host.getAttribute('data-rr-foryou') !== key) {
+                return;
+            }
+
+            var recs = results[0];
+            var onboarding = results[1];
+            body.innerHTML = '';
+            if (recs.Status === 'Computing') {
+                body.appendChild(el('p', 'rr-foryou-status', t('forYou.computing')));
+                setTimeout(function () {
+                    if (host.getAttribute('data-rr-foryou') === key) {
+                        host.removeAttribute('data-rr-foryou');
+                        schedule();
+                    }
+                }, 5000);
+                return;
+            }
+
+            if (recs.IsColdStart) {
+                body.appendChild(el('p', 'rr-foryou-note', t('forYou.coldStart', String(recs.ExplicitRatingCount || 0))));
+            }
+
+            if (!onboarding.Hidden && onboarding.Items && onboarding.Items.length) {
+                renderSection(body, t('rateThese'), onboarding, false);
+            }
+
+            if (recs.Items && recs.Items.length) {
+                renderSection(body, t('forYou.recommended'), recs, true);
+            } else {
+                body.appendChild(el('p', 'rr-foryou-status', t('forYou.empty')));
+            }
+        }, function (err) {
+            body.innerHTML = '';
+            body.appendChild(el('p', 'rr-foryou-status', t('loadError')));
+            log('could not load recommendations:', err && err.message);
+        });
+    }
+
     function scan() {
         try {
             if (!ready() || BOOT.enabled === false) {
@@ -711,6 +899,7 @@
             checkUser();
             var adapter = currentAdapter();
             var root = activePage(adapter);
+            renderForYou(root);
             scanDetail(adapter, root);
             scanCards(adapter, root);
         } catch (err) {

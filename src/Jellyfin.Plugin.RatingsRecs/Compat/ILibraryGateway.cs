@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Jellyfin.Data.Enums;
 using Jellyfin.Database.Implementations.Entities;
 using MediaBrowser.Controller.Entities;
-using MediaBrowser.Model.Entities;
 
 namespace Jellyfin.Plugin.RatingsRecs.Compat;
 
@@ -25,6 +24,15 @@ public interface ILibraryGateway
     /// <param name="user">The user whose library access and parental control apply, or <c>null</c> for all items.</param>
     /// <param name="kinds">Item kinds.</param>
     /// <param name="isFavorite">Optional favourite filter (requires <paramref name="user"/>).</param>
+    /// <param name="isPlayed">Optional played filter (requires <paramref name="user"/>).</param>
+    /// <param name="isResumable">Optional "in progress" filter (requires <paramref name="user"/>).</param>
     /// <returns>The items.</returns>
-    IReadOnlyList<BaseItem> GetItems(User? user, IReadOnlyList<BaseItemKind> kinds, bool? isFavorite = null);
+    IReadOnlyList<BaseItem> GetItems(User? user, IReadOnlyList<BaseItemKind> kinds, bool? isFavorite = null, bool? isPlayed = null, bool? isResumable = null);
+
+    /// <summary>
+    /// Gets the people (cast and crew) of several items.
+    /// </summary>
+    /// <param name="items">The items.</param>
+    /// <returns>People by item id.</returns>
+    IReadOnlyDictionary<Guid, IReadOnlyList<PersonInfo>> GetPeople(IReadOnlyList<BaseItem> items);
 }

@@ -7,9 +7,7 @@ using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
 using Jellyfin.Database.Implementations.Entities;
-using Jellyfin.Plugin.RatingsRecs.Compat;
 using Jellyfin.Plugin.RatingsRecs.Ratings;
-using MediaBrowser.Controller.Net;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -30,20 +28,17 @@ public class RatingsController : ControllerBase
     private const long MaxCsvBytes = 10 * 1024 * 1024;
 
     private readonly RatingsService _ratings;
-    private readonly IAuthorizationContext _authContext;
-    private readonly IUserGateway _users;
+    private readonly RequestUserResolver _resolver;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RatingsController"/> class.
     /// </summary>
     /// <param name="ratings">The ratings service.</param>
-    /// <param name="authContext">The authorization context.</param>
-    /// <param name="users">The user gateway.</param>
-    public RatingsController(RatingsService ratings, IAuthorizationContext authContext, IUserGateway users)
+    /// <param name="resolver">The request user resolver.</param>
+    public RatingsController(RatingsService ratings, RequestUserResolver resolver)
     {
         _ratings = ratings;
-        _authContext = authContext;
-        _users = users;
+        _resolver = resolver;
     }
 
     /// <summary>
@@ -239,27 +234,5 @@ public class RatingsController : ControllerBase
         return new string(name.Select(c => invalid.Contains(c) || c == ' ' ? '_' : c).ToArray());
     }
 
-    private async Task<(User? User, ActionResult? Error)> ResolveUserAsync(Guid? requestedUserId)
-    {
-        var auth = await _authContext.GetAuthorizationInfo(HttpContext).ConfigureAwait(false);
-        var caller = auth.User;
-
-        if (requestedUserId is null || requestedUserId == Guid.Empty || (caller is not null && requestedUserId == caller.Id))
-        {
-            return caller is null
-                ? (null, Problem(statusCode: StatusCodes.Status400BadRequest, detail: "userId is required when authenticating with an API key."))
-                : (caller, null);
-        }
-
-        var isAdmin = auth.IsApiKey || (caller is not null && _users.IsAdministrator(caller));
-        if (!isAdmin)
-        {
-            return (null, Problem(statusCode: StatusCodes.Status403Forbidden, detail: "Only administrators can access other users' ratings."));
-        }
-
-        var target = _users.GetUser(requestedUserId.Value);
-        return target is null
-            ? (null, Problem(statusCode: StatusCodes.Status404NotFound, detail: "User not found."))
-            : (target, null);
-    }
+    private Task<(User? User, ActionResult? Error)> ResolveUserAsync(Guid? requestedUserId) => _resolver.ResolveAsync(this, requestedUserId);
 }
