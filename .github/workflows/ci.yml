@@ -26,7 +26,7 @@ jobs:
         run: node --check src/Jellyfin.Plugin.RatingsRecs/Web/ratings.js
 
       - name: Test the release scripts
-        run: node --test scripts/
+        run: node --test scripts/release.test.mjs
 
       - name: Check formatting
         run: dotnet format Jellyfin.Plugin.RatingsRecommendations.sln --verify-no-changes --no-restore

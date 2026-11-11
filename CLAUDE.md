@@ -56,7 +56,7 @@ tests/RatingsRecs.Plugin.Tests/    xUnit, integration (store, API)
 docker/                            compose files + scripts for the test servers
 assets/                            logo.png (render-logo.ps1)
 .github/                           ci.yml, release.yml (tag vX.Y.Z), issue/PR templates
-scripts/                           release.mjs (+ tests: node --test scripts/)
+scripts/                           release.mjs (+ tests: node --test scripts/release.test.mjs)
 ```
 
 ## Conventions

@@ -1,4 +1,4 @@
-// Tests for scripts/release.mjs: node --test scripts/
+// Tests for scripts/release.mjs: node --test scripts/release.test.mjs
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';

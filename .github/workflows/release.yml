@@ -47,7 +47,7 @@ jobs:
 
       - name: Test
         run: |
-          node --test scripts/
+          node --test scripts/release.test.mjs
           dotnet test Jellyfin.Plugin.RatingsRecommendations.sln -c Release
 
       - name: Package (both zips, reproducible)

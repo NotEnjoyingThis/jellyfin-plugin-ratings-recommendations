@@ -73,4 +73,4 @@ tests, builds both zips (version `X.Y.Z.0`, reproducible), publishes the GitHub 
 and finally downloads the zips again to check their MD5 against the manifest. Never edit `manifest.json` by hand.
 The workflow needs permission to push to `main` (allow GitHub Actions in the branch protection rules, if any).
 
-The helpers are in `scripts/release.mjs` (Node, no dependencies); `node --test scripts/` runs their tests.
+The helpers are in `scripts/release.mjs` (Node, no dependencies); `node --test scripts/release.test.mjs` runs their tests.
