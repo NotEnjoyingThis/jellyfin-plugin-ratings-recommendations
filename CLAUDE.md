@@ -59,6 +59,7 @@ assets/                            logo.png (render-logo.ps1)
 ```
 
 ## Conventions
+- **Always reply to the user in Italian** (code, identifiers, comments and commit messages stay in English).
 - Code, identifiers and comments in English; UI strings in Italian and English via translation files.
 - Analyzers from the official template (StyleCop, Serilog, Multithreading) with `TreatWarningsAsErrors`.
 - Tests first for engine and rating store. Never mark a milestone done unless both builds compile and all tests pass.

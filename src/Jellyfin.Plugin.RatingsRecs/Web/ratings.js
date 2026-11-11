@@ -865,6 +865,22 @@
         return match && match[1].toLowerCase() === 'series' ? 'Series' : 'Movie';
     }
 
+    // Home row titles link to one section of the page: #/ratingsrecs?section=recommended | rate.
+    var SECTION_LINK = { recommended: '#/ratingsrecs?section=recommended', rate: '#/ratingsrecs?section=rate' };
+
+    function forYouSection() {
+        var match = /[?&]section=(recommended|rate)\b/i.exec(location.hash || '');
+        return match ? match[1].toLowerCase() : null;
+    }
+
+    function scrollToSection(host, name) {
+        var target = name && host.querySelector('#rr-section-' + name);
+        if (target && target.scrollIntoView) {
+            // scroll-margin-top in ratings.css keeps the title below the fixed header.
+            target.scrollIntoView({ block: 'start' });
+        }
+    }
+
     function el(tag, className, text) {
         var node = document.createElement(tag);
         if (className) {
@@ -1013,11 +1029,11 @@
             var block = el('div', 'rr-home-rows');
             block.setAttribute('data-rr-user', state.userId);
             if (results[0].Items && results[0].Items.length) {
-                block.appendChild(rowSection('rr-home-recommended', t('forYou.recommended'), '#/ratingsrecs', results[0], true));
+                block.appendChild(rowSection('rr-home-recommended', t('forYou.recommended'), SECTION_LINK.recommended, results[0], true));
             }
 
             if (!results[1].Hidden && results[1].Items && results[1].Items.length) {
-                block.appendChild(rowSection('rr-home-ratethese', t('rateThese'), '#/ratingsrecs', results[1], false));
+                block.appendChild(rowSection('rr-home-ratethese', t('rateThese'), SECTION_LINK.rate, results[1], false));
             }
 
             var old = container.querySelector('.rr-home-rows');
@@ -1052,7 +1068,7 @@
             section.classList.add(kind === 'recommended' ? 'rr-home-recommended' : 'rr-home-ratethese');
             if (!title.closest('a')) {
                 var link = el('a', 'rr-section-link');
-                link.href = '#/ratingsrecs';
+                link.href = kind === 'recommended' ? SECTION_LINK.recommended : SECTION_LINK.rate;
                 title.parentNode.insertBefore(link, title);
                 link.appendChild(title);
             }
@@ -1265,8 +1281,12 @@
         }
     }
 
-    function renderSection(container, title, response, withExplanations) {
+    function renderSection(container, title, response, withExplanations, name) {
         var section = el('section', 'rr-section');
+        if (name) {
+            section.id = 'rr-section-' + name;
+        }
+
         if (title) {
             section.appendChild(el('h2', 'rr-section-title', title));
         }
@@ -1330,6 +1350,12 @@
             return;
         }
 
+        // Legacy header title of the "not found" view (jellyfin-web may write it again on viewshow).
+        var headerTitle = document.querySelector('.skinHeader .pageTitle');
+        if (headerTitle && headerTitle.textContent !== t('forYou.title')) {
+            headerTitle.textContent = t('forYou.title');
+        }
+
         var key = location.hash + '|' + state.userId;
         if (host.getAttribute('data-rr-foryou') === key) {
             return;
@@ -1389,14 +1415,16 @@
             }
 
             if (!onboarding.Hidden && onboarding.Items && onboarding.Items.length) {
-                renderSection(body, t('rateThese'), onboarding, false);
+                renderSection(body, t('rateThese'), onboarding, false, 'rate');
             }
 
             if (recs.Items && recs.Items.length) {
-                renderSection(body, t('forYou.recommended'), recs, true);
+                renderSection(body, t('forYou.recommended'), recs, true, 'recommended');
             } else {
                 body.appendChild(el('p', 'rr-foryou-status', t('forYou.empty')));
             }
+
+            scrollToSection(host, forYouSection());
         }, function (err) {
             body.innerHTML = '';
             body.appendChild(el('p', 'rr-foryou-status', t('loadError')));

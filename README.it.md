@@ -91,7 +91,8 @@ non attivato). "Valuta questi" sparisce dopo 15 voti (configurabile).
 | Modern, finestra larga (predefinito in 12) | barra in alto, prima delle librerie, e menu dell'avatar |
 | Modern, finestra stretta / telefono | menu laterale (☰), sotto Home |
 
-Ci si arriva anche dal titolo delle righe. Le pagine di film e serie hanno la riga **Simili, scelti per te** sotto
+Ci si arriva anche dal titolo delle righe, che porta alla sezione corrispondente (`#/ratingsrecs?section=recommended`
+oppure `?section=rate`). Le pagine di film e serie hanno la riga **Simili, scelti per te** sotto
 "Altri come questo".
 
 ## Configurazione
@@ -135,6 +136,15 @@ Ctrl+F5. Apri la console del browser (F12) e cerca le righe che iniziano con `[R
 
 **Le app TV e mobile mostrano i pollici?** No: lì resta il cuore, che vale +3. Su Jellyfin 12 gli elenchi "Simili"
 di quelle app usano i tuoi voti.
+
+**"Modular Home" (o un'altra voce di Plugin Pages) mostra "Pagina non trovata" e l'indirizzo è
+`#/userpluginsettings?pageUrl=…` senza `.html`.** Non dipende da questo plugin: il browser sta usando una copia del
+client web che non contiene la pagina aggiunta da Plugin Pages (`userpluginsettings.html`), e il client web di Jellyfin
+riscrive gli indirizzi `….html` sconosciuti togliendo `.html`. Succede se la pagina è stata caricata mentre Jellyfin si
+stava avviando (per qualche secondo i plugin non hanno ancora modificato il client web) o prima di installare Plugin
+Pages. Soluzione: aspetta che il server sia avviato del tutto e ricarica con **Ctrl+F5**; se resta, cancella i dati del
+sito per l'indirizzo di Jellyfin nel browser e accedi di nuovo. Rimedio veloce: aggiungi `.html` dopo
+`userpluginsettings` nella barra degli indirizzi.
 
 **Gli altri utenti vedono i miei voti?** No. Ogni utente ha voti e consigli separati; solo gli amministratori possono
 esportare i voti degli altri.

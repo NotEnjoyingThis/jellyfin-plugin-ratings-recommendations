@@ -49,3 +49,6 @@ The section of each version is used for the GitHub Release notes and the `change
 - The web script was not injected when another plugin (Home Screen Sections, Plugin Pages) also transformed `index.html`.
 - "For you" was unreachable in the Jellyfin 12 Modern layout on wide windows: it now has a top-bar button and an
   avatar-menu entry; the Plugin Pages entry is shown in the user's language and is not duplicated in the side menu.
+- The "Recommended for you" and "Rate these" row titles now open the matching section of the "For you" page
+  (`#/ratingsrecs?section=recommended|rate`) instead of its top.
+- The Legacy header showed "Page not found" on the "For you" page.

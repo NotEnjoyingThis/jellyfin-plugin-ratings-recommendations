@@ -71,6 +71,32 @@ Stato dei server di prova: File Transformation, Plugin Pages e Home Screen Secti
   attivarla da sé. Scheda *Section Settings*: sezioni, ordine, "Let the user override this section". Pagina utente
   (`/ModularHomeViews/settings`): `Enable "Modular Home"`, `Enabled Sections`, `Save`. Passaggi documentati nei README.
 
+**Seconda tornata di prove (11/11/2026):** "Per te" e la pagina funzionano su 10.11 e 12; i titoli delle righe portano ora alla
+sezione giusta (`#/ratingsrecs?section=recommended|rate`, scroll con `scroll-margin-top`), verificato su 10.11, 12 Legacy e 12 Modern.
+Corretto anche il titolo "Pagina non trovata" nell'intestazione Legacy (`.skinHeader .pageTitle`).
+
+**"Modular Home" → "Pagina non trovata" su 12 Modern (`#/userpluginsettings?pageUrl=…` senza `.html`): non dipende da noi.**
+- Versioni su entrambi i server: Plugin Pages **3.0.3.0**, Home Screen Sections **3.0.4.0**, File Transformation 3.0.3.0.
+- Plugin Pages genera sempre `#/userpluginsettings.html?pageUrl=…` (`/PluginPages/inject.js`, menu utente Modern e menu laterale) e
+  aggiunge la rotta `userpluginsettings.html` modificando `main.jellyfin.bundle.js` (presente sia nell'app Legacy sia in quella Modern).
+- jellyfin-web 10.11 e 12 hanno un `FallbackRoute`: un indirizzo `….html` che non corrisponde a nessuna rotta viene riscritto **senza
+  `.html`** ("deprecated URL format") e poi mostra "Pagina non trovata" (provato: `#/qualcosa.html?x=1` → `#/qualcosa?x=1`). Quindi
+  l'indirizzo visto dall'utente compare solo se **nel browser manca la rotta di Plugin Pages**.
+- Riavviando 12, per circa 3 s il client web viene servito **senza** le modifiche dei plugin (né la rotta né `inject.js`): chi carica la
+  pagina in quel momento (o prima dell'installazione di Plugin Pages) ottiene un client senza la rotta. ETag costante di File
+  Transformation (`"e3b0c44298fc1c14"`) ma il server risponde 200 alle richieste condizionali; nel browser di prova, però, una
+  navigazione normale ha riusato `index.html` e lo script dalla cache finché non sono stati ricaricati a forza.
+- Con il nostro plugin **disattivato** (12, Modern e Legacy) "Modular Home" funziona; con il nostro plugin attivo pure. Il nostro script
+  non tocca quei link (rietichetta solo la voce di Plugin Pages del nostro "Per te").
+- Rimedio documentato nei README (FAQ): attendere l'avvio completo e Ctrl+F5, altrimenti cancellare i dati del sito; rimedio veloce:
+  aggiungere `.html` nell'indirizzo. Non modifichiamo il comportamento di Plugin Pages / HSS.
+
+**Home modulare vuota (rotellina) sui server di prova: problema di Home Screen Sections.** Su 10.11 `rrfamily` ha Modular Home attiva
+(MyMedia, ContinueWatching, LatestMovies + le nostre due sezioni). `GET /HomeScreen/Sections` risponde alla prima chiamata dopo l'avvio
+(`Items: []`) e dalla seconda resta appeso (> 20 s) **anche togliendo le nostre sezioni** (provato riavviando con il file
+`ModularHomeSettings.json` senza di esse, poi ripristinato). Le singole sezioni (`/HomeScreen/Section/{id}`) rispondono subito (nostre ~60 ms).
+Per provare le righe dello script su 10.11 usare `rradmin` (Modular Home non attiva).
+
 ## Home, menu e righe (M4)
 - **File Transformation raggruppa le trasformazioni per testo del pattern** e cerca prima la chiave esatta (`WebFileTransformationService.RunTransformation`):
   HSS e Plugin Pages usano `index.html`, quindi il nostro pattern deve essere **esattamente `index.html`** (con `index\.html$` la nostra

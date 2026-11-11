@@ -89,7 +89,8 @@ enabled). "Rate these" disappears after 15 ratings (configurable).
 | Modern, wide window (12 default) | top bar, before the libraries, and the avatar menu |
 | Modern, narrow window / phone | side menu (☰), under Home |
 
-The row titles open it too. Movie and series pages get a **Similar, picked for you** row under "More like this".
+The row titles open it too, scrolled to the matching section (`#/ratingsrecs?section=recommended` or
+`?section=rate`). Movie and series pages get a **Similar, picked for you** row under "More like this".
 
 ## Configuration
 
@@ -131,6 +132,15 @@ Ctrl+F5. Open the browser console (F12) and look for lines starting with `[Ratin
 
 **Do TV/mobile apps show the thumbs?** No: they keep the heart, which counts as +3. On Jellyfin 12 the "Similar" lists
 in those apps use your ratings.
+
+**"Modular Home" (or another Plugin Pages entry) shows "Page not found", and the address is
+`#/userpluginsettings?pageUrl=…` without `.html`.** This is not caused by this plugin: the browser is running a copy of
+the web client that does not contain the route added by Plugin Pages (`userpluginsettings.html`), and Jellyfin's web
+client rewrites unknown `….html` addresses without `.html`. It happens when the page was loaded while Jellyfin was still
+starting (for a few seconds the plugins have not modified the web client yet) or before Plugin Pages was installed.
+Fix: wait until the server has fully started and reload with **Ctrl+F5**; if it persists, clear the site data of your
+Jellyfin address in the browser and sign in again. Quick workaround: add `.html` after `userpluginsettings` in the
+address bar.
 
 **Can other users see my ratings?** No. Every user has separate ratings and recommendations; only administrators can
 export other users' ratings.

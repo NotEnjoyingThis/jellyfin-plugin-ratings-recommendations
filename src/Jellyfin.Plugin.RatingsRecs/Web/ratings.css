@@ -394,3 +394,8 @@
 .rr-hidden-duplicate {
     display: none !important;
 }
+
+/* Target of #/ratingsrecs?section=...: keep the title below the fixed header. */
+.rr-section[id] {
+    scroll-margin-top: 5.5em;
+}
