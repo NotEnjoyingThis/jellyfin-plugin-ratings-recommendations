@@ -7,8 +7,6 @@
 
 *[Read in English](README.md)*
 
-> **Stato: in sviluppo.** La prima versione pubblica sarà la v1.0.0. Fino ad allora il catalogo non contiene versioni installabili.
-
 Sostituisce il cuore dei Preferiti con un voto a 4 livelli — **Detesto (-3)**, **Guardabile (-1)**, **Bello (+1)**,
 **Fantastico (+3)** — e propone consigli costruiti su ciò che ti è piaciuto *e* su ciò che non ti è piaciuto.
 Tutto viene calcolato sul tuo server.

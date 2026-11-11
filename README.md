@@ -7,8 +7,6 @@
 
 *[Leggi in italiano](README.it.md)*
 
-> **Status: in development.** The first public release is v1.0.0. Until then the catalog has no installable version.
-
 Replace the Favourite heart with a 4-level rating — **Hate it (-3)**, **Watchable (-1)**, **Good (+1)**, **Amazing (+3)** —
 and get recommendations built from what you liked *and* what you disliked. Everything is computed on your server.
 

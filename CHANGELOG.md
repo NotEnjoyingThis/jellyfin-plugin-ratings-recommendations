@@ -8,6 +8,8 @@ The section of each version is used for the GitHub Release notes and the `change
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-11
+
 First release. Requires Jellyfin 10.11.9+ or 12.0+.
 
 ### Added

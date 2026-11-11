@@ -71,8 +71,9 @@ scripts/                           release.mjs (+ tests: node --test scripts/)
 - `manifest.json` is only modified by the release pipeline; jf12 entry always before jf10.11 for the same version.
 
 ## Current status
-- Last milestone committed: M6 (polish). Only the v1.0.0 release is left: the user tags and pushes (see CONTRIBUTING →
-  Releases); then the M6 acceptance test (install from the catalog on clean 10.11 and 12, v1.0.1 shows as an update).
+- Last milestone committed: M6 (polish). Release v1.0.0 prepared (CHANGELOG section, READMEs): the user pushes `main` and
+  the tag `v1.0.0` (see CONTRIBUTING → Releases); then the M6 acceptance test (install from the catalog on clean 10.11
+  and 12, v1.0.1 shows as an update).
 - M6: 10.11 override (`Override/`, registered only in the 10.11 build), `Compatibility` hook, settings page texts in
   `Web/i18n/config-<lang>.json`, release tooling in `scripts/release.mjs` + `.github/workflows/release.yml`.
 - M5 design: per-library switch in the plugin settings (`SimilarProviderLibraryIds`); `SimilarProviderSync` puts our provider

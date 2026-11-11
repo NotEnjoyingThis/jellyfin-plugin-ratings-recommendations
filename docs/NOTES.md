@@ -99,8 +99,9 @@ Ogni scelta che cambia o precisa `docs/DESIGN.md`. Da tenere aggiornata.
 
 ## Stato attuale (11/11/2026)
 
-Milestone completate e committate: M0, M1, M2, M3, M3b, M4 (`2cd8810`), M5 (`a01ddd0`), M6 (rifinitura). Resta la **release v1.0.0**
-(tag e push decisi dall'utente) con il controllo di accettazione di M6: installazione dal catalogo su server puliti 10.11 e 12, e una
+Milestone completate e committate: M0, M1, M2, M3, M3b, M4 (`2cd8810`), M5 (`a01ddd0`), M6 (`7855508`). Rilascio v1.0.0 **preparato**
+(sezione `[1.0.0] - 2026-11-11` nel CHANGELOG, nota "in sviluppo" tolta dai README); restano push di `main` e tag `v1.0.0`
+(decisi dall'utente) con il controllo di accettazione di M6: installazione dal catalogo su server puliti 10.11 e 12, e una
 seconda release di prova (v1.0.1) che compare come aggiornamento.
 
 Esito delle prove manuali dell'utente su M4:
