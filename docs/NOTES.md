@@ -40,6 +40,29 @@ Ogni scelta che cambia o precisa `docs/DESIGN.md`. Da tenere aggiornata.
 | 27 | Serie candidata in modalità per stagione | Esclusa se votata o se una sua stagione è votata o se un suo episodio è visto (come 5.3); il punteggio usa tutte le sue stagioni. Conteggio dei voti per la partenza a freddo: "Serie intera" esclude i voti di stagione, "Per stagione" esclude i voti delle serie divise in stagioni, "Entrambe" li conta tutti | Il design non precisa i casi misti | M3b |
 | 28 | Spiegazione stagione–stagione "stesso sceneggiatore" | Si indica la caratteristica in comune più pesante, preferendo sceneggiatori, registi, guest star e cast; se non ce ne sono (stagioni senza crediti) può essere il decennio o il genere | Con metadati scarsi la somiglianza nasce da altre caratteristiche | M3b |
 
+| 29 | Titolo della riga in home cliccabile (HSS) | Le sezioni sono registrate **senza `route`**; il titolo lo rende cliccabile lo script (link a `#/ratingsrecs`), che lo rietichetta anche nella lingua dell'utente (HSS registra un solo testo, scelto con la lingua del server) e aggiunge la spiegazione sotto le card | `route` in HSS passa da `appRouter.getRouteUrl()`, che non conosce percorsi di plugin | M4 |
+| 30 | "Riga home: auto / Home Screen Sections / script / off" | Con "Auto" o "Home Screen Sections" lo script disegna comunque le righe **se la home non è resa da HSS** (nessuna sezione HSS `[data-page]` nella pagina): HSS non installato, disattivato o non funzionante; se la home è di HSS non aggiunge nulla (le sezioni le aggiunge l'utente) | Degradare senza rompere | M4 |
+| 31 | "Simili": "candidati limitati ai 200 media con più caratteristiche in comune, poi punteggio col profilo di gusto" | Profilo e indice tenuti in cache dal calcolo in background (nessuna lettura della libreria nella richiesta); i 200 candidati con più caratteristiche in comune sono ordinati con la formula di 5.3 (gusto normalizzato sui 200, penalità di vicinanza, qualità, esplorazione); esclusi il media aperto e i media votati negativamente (anche dopo l'ultimo calcolo); vista "Serie intera" anche in modalità per stagione | Mai calcoli pesanti nella richiesta HTTP | M4 |
+| 32 | Plugin Pages | La pagina registrata è `/RatingsRecs/Web/foryou.html`; quando Plugin Pages apre `#/userpluginsettings.html?pageUrl=…foryou…` lo script porta a `#/ratingsrecs` | Plugin Pages carica pagine HTML; la pagina "Per te" è disegnata dallo script | M4 |
+
+## Home, menu e righe (M4)
+- **File Transformation raggruppa le trasformazioni per testo del pattern** e cerca prima la chiave esatta (`WebFileTransformationService.RunTransformation`):
+  HSS e Plugin Pages usano `index.html`, quindi il nostro pattern deve essere **esattamente `index.html`** (con `index\.html$` la nostra
+  trasformazione non veniva più eseguita quando quei plugin erano installati). Lo stato mostra anche `lastInjectedUtc`.
+- **Home Screen Sections 3.0.4.0** (stessa API su 10.11.11 e 12.4): `PluginInterface.RegisterSection(JObject)`; la classe dei risultati è creata
+  con DI (`ActivatorUtilities`), metodo d'istanza con parametro `{ UserId, AdditionalData }` e ritorno `QueryResult<BaseItemDto>`.
+  Le sezioni compaiono in `GET /ModularHomeViews/Sections` e nelle impostazioni utente "Modular Home"; `GET /HomeScreen/Section/{id}` restituisce
+  i nostri risultati (verificato su entrambi i server). Per vederle in home servono: HSS **attivato dall'amministratore** (`Enabled` nella sua
+  configurazione, di default `false`), "Modular Home" attivato dall'utente e le nostre sezioni spuntate.
+- Sui server di prova la home modulare di HSS restava vuota/in caricamento anche con le sole sezioni predefinite (anche svuotando la cache del
+  browser): non è stato possibile vedere la resa grafica delle nostre sezioni dentro HSS → verifica manuale. Con HSS installato e utente con
+  "Modular Home" attivo, la home standard non compare più (è HSS a disegnarla).
+- Disattivare un plugin dalla dashboard lo può rimuovere (visto con File Transformation in M2); disinstallare HSS libera la home standard.
+- Home standard: `.homeSectionsContainer` con `.verticalSection.section0…` (10.11 e 12). Le righe dello script vanno in cima.
+- Menu laterale: Legacy `.mainDrawer a.navMenuOption[href="#/home"]` (icone `material-icons <nome>`); Modern `.MuiDrawer-root a[href="#/home"]`
+  (`a.MuiListItemButton-root` con `.MuiListItemIcon-root` e `.MuiListItemText-primary`): la voce "Per te" è una copia senza gestori React.
+- Pagina dettaglio: "Altri come questo" = `#similarCollapsible`; contenitore 10.11 `.detailPageContent`, 12 `.detailPageSecondaryContainer`.
+
 ## Stagioni (M3b)
 - `Season.SeriesId`, `Season.IndexNumber`, `Episode.SeasonId`, `PersonKind.GuestStar`, `BaseItem.PremiereDate`: uguali in 10.11.9 e 12.0.
 - `BasePlugin<T>.ConfigurationChanged` è una **proprietà** delegato (`EventHandler<BasePluginConfiguration>`), non un evento: `+=` funziona lo stesso;

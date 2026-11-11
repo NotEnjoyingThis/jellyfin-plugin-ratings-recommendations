@@ -39,3 +39,11 @@ The section of each version is used for the GitHub Release notes and the `change
   without per-episode credits fall back to the series. Series score = 0.6 × best season + 0.4 × mean (configurable),
   season-to-season explanations, "start from season N" for anthologies (tag "anthology"/"antologia").
 - Settings page: series mode options and the share of seasons without per-episode credits.
+- Home Screen Sections: "Recommended for you" and "Rate these" sections registered for users to add from Modular Home.
+- Home rows drawn by the web script when the home is not rendered by Home Screen Sections.
+- "For you" entry in the side menu (Legacy and Modern) and in Plugin Pages; clickable row titles.
+- "Similar, picked for you" row on movie and series pages (`GET /RatingsRecs/Similar/{itemId}`), from the cached profile.
+- Settings page: delivery options (home rows mode and size, similar row, menu entry).
+
+### Fixed
+- The web script was not injected when another plugin (Home Screen Sections, Plugin Pages) also transformed `index.html`.

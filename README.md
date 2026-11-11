@@ -57,6 +57,15 @@ Updates appear in the dashboard automatically.
 **Without File Transformation** the API, the recommendations and the Jellyfin 12 provider still work; the settings page
 shows how to add the script manually.
 
+## Home rows and the "For you" page
+
+- **With Home Screen Sections**: the administrator enables Home Screen Sections in its own settings; each user then opens
+  *Modular Home* (side menu), enables it and ticks **Recommended for you** and **Rate these**, choosing their position.
+- **Without Home Screen Sections** (or when it is not drawing the home): the plugin script adds both rows at the top of
+  the home by itself. "Rate these" disappears after 15 ratings (configurable).
+- The **For you** page (Movies / Series, with explanations) opens from the side menu, from the row titles, or from
+  Plugin Pages if installed. Movie and series pages get a **Similar, picked for you** row under "More like this".
+
 ## Configuration
 
 Dashboard → Plugins → Ratings & Recommendations. Groups: Ratings (names and values of the levels, Favourite behaviour,

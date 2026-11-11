@@ -90,6 +90,21 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>Gets or sets the weight of the average season in a series score.</summary>
     public double SeriesAverageSeasonWeight { get; set; } = 0.4;
 
+    /// <summary>Gets or sets how the home rows are shown: "Auto" (default), "HomeScreenSections", "Script" or "Off".</summary>
+    public string HomeRowsMode { get; set; } = "Auto";
+
+    /// <summary>Gets or sets the number of items in the home rows.</summary>
+    public int HomeRowSize { get; set; } = 20;
+
+    /// <summary>Gets or sets a value indicating whether the "Similar, picked for you" row is added to detail pages.</summary>
+    public bool ShowSimilarRow { get; set; } = true;
+
+    /// <summary>Gets or sets the number of items in the "Similar, picked for you" row.</summary>
+    public int SimilarRowSize { get; set; } = 12;
+
+    /// <summary>Gets or sets a value indicating whether to add the "For you" entry to the side menu.</summary>
+    public bool ShowMenuEntry { get; set; } = true;
+
     /// <summary>Gets or sets the genre weight α.</summary>
     public double WeightGenre { get; set; } = 1.0;
 

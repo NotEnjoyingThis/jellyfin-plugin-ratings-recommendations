@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using System.Text;
 using Jellyfin.Plugin.RatingsRecs.Configuration;
+using Jellyfin.Plugin.RatingsRecs.Home;
+using Jellyfin.Plugin.RatingsRecs.Hooks;
 using Jellyfin.Plugin.RatingsRecs.Web;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -18,15 +20,20 @@ namespace Jellyfin.Plugin.RatingsRecs.Api;
 [Route("RatingsRecs/Web")]
 public class WebController : ControllerBase
 {
+    private const string ForYouPage = "<div class=\"rr-pluginpages-foryou\"><a href=\"#/ratingsrecs\">For you / Per te</a></div>";
+
     private readonly IPluginConfigProvider _config;
+    private readonly HookStatusRegistry _hooks;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="WebController"/> class.
     /// </summary>
     /// <param name="config">The configuration.</param>
-    public WebController(IPluginConfigProvider config)
+    /// <param name="hooks">The hook registry.</param>
+    public WebController(IPluginConfigProvider config, HookStatusRegistry hooks)
     {
         _config = config;
+        _hooks = hooks;
     }
 
     /// <summary>
@@ -36,7 +43,12 @@ public class WebController : ControllerBase
     [HttpGet("ratings.js")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status304NotModified)]
-    public ActionResult GetScript() => Serve(WebAssets.BuildScript(_config.Current), "application/javascript; charset=utf-8");
+    public ActionResult GetScript()
+    {
+        var config = _config.Current;
+        var hssActive = _hooks.Get(HomeSectionsBridge.HomeScreenSectionsHook)?.State == HookState.Active;
+        return Serve(WebAssets.BuildScript(config, WebAssets.HomeRows(config.HomeRowsMode, hssActive)), "application/javascript; charset=utf-8");
+    }
 
     /// <summary>
     /// Gets the web client stylesheet.
@@ -46,6 +58,14 @@ public class WebController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status304NotModified)]
     public ActionResult GetStylesheet() => Serve(WebAssets.ReadText("ratings.css") ?? string.Empty, "text/css; charset=utf-8");
+
+    /// <summary>
+    /// Gets the page registered in Plugin Pages; the web script sends it on to the "For you" page (#/ratingsrecs).
+    /// </summary>
+    /// <returns>HTML.</returns>
+    [HttpGet("foryou.html")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public ActionResult GetForYouPage() => Serve(ForYouPage, "text/html; charset=utf-8");
 
     private ActionResult Serve(string content, string contentType)
     {

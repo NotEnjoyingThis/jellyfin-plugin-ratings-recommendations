@@ -160,6 +160,63 @@ public sealed class RecommendationPresenter
         };
     }
 
+    /// <summary>
+    /// Gets the items similar to an open item, ranked with the user's taste (from the cached profile).
+    /// </summary>
+    /// <param name="user">The user.</param>
+    /// <param name="itemId">The open item.</param>
+    /// <param name="limit">The number of items.</param>
+    /// <returns>The response, or <c>null</c> if the item does not exist or is not accessible.</returns>
+    public RecommendationsResponse? Similar(User user, Guid itemId, int limit)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+        var source = _library.GetItem(itemId);
+        if (source is null || !source.IsVisibleStandalone(user))
+        {
+            return null;
+        }
+
+        var cached = _service.Get(user.Id);
+        if (cached?.Context is null)
+        {
+            _scheduler.EnsureComputed(user.Id);
+            return new RecommendationsResponse { Status = "Computing" };
+        }
+
+        // Ratings given since the last computation count too: a negatively rated item never appears.
+        var negative = _store.GetAll(user.Id).Where(r => r.Value < 0).Select(r => r.ItemId).ToHashSet();
+        var take = Math.Clamp(limit, 1, MaxLimit);
+        var page = new List<(BaseItem Item, ExplanationDto Explanation)>();
+        foreach (var scored in global::RatingsRecs.Engine.SimilarRanker.Rank(cached.Context, itemId, take + negative.Count + 10))
+        {
+            if (page.Count >= take)
+            {
+                break;
+            }
+
+            if (negative.Contains(scored.ItemId))
+            {
+                continue;
+            }
+
+            var item = _library.GetItem(scored.ItemId);
+            if (item is not null && item.IsVisibleStandalone(user))
+            {
+                page.Add((item, ExplanationDto.From(item.Id, scored.Explanation)));
+            }
+        }
+
+        return new RecommendationsResponse
+        {
+            Items = ToDtos(user, page.Select(p => p.Item).ToList()),
+            Explanations = page.Select(p => p.Explanation).ToList(),
+            TotalRecordCount = page.Count,
+            ComputedUtc = cached.ComputedUtc,
+            IsColdStart = cached.IsColdStart,
+            ExplicitRatingCount = cached.ExplicitRatingCount,
+        };
+    }
+
     private BaseItem? Visible(User user, Guid id)
     {
         var item = _library.GetItem(id);

@@ -69,5 +69,5 @@ assets/                            logo.png (render-logo.ps1)
 - `manifest.json` is only modified by the release pipeline; jf12 entry always before jf10.11 for the same version.
 
 ## Milestones (docs/DESIGN.md §9)
-M0 skeleton ✅ → M1 store + API ✅ → M2 web thumbs ✅ → M3 engine ✅ → M3b seasons ✅ → M4 home rows → M5 JF12 provider → M6 polish/release.
+M0 skeleton ✅ → M1 store + API ✅ → M2 web thumbs ✅ → M3 engine ✅ → M3b seasons ✅ → M4 home rows ✅ → M5 JF12 provider → M6 polish/release.
 Stop after each milestone and wait for the user's go-ahead.

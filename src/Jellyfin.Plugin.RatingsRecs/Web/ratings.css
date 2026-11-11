@@ -348,3 +348,38 @@
 .rr-copy-wrap {
     flex-basis: 100%;
 }
+
+/* Horizontal rows: home ("Recommended for you", "Rate these") and detail page ("Similar, picked for you"). */
+
+.rr-row {
+    display: flex;
+    gap: 1em;
+    overflow-x: auto;
+    padding-bottom: 0.6em;
+    scroll-snap-type: x proximity;
+}
+
+.rr-row .rr-card {
+    flex: 0 0 9.5em;
+    scroll-snap-align: start;
+}
+
+.rr-row-section {
+    margin-bottom: 1.5em;
+}
+
+.rr-section-link {
+    display: inline-flex;
+    align-items: center;
+    color: inherit;
+    text-decoration: none;
+}
+
+.rr-section-link .chevron_right {
+    margin-left: 0.2em;
+}
+
+.rr-menu-foryou svg.rr-icon {
+    width: 1.5em;
+    height: 1.5em;
+}

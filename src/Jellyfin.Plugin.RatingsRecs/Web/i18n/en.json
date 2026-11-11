@@ -42,5 +42,6 @@
   "copySeasons.done": "Seasons updated: {0}",
   "similarSeason": "Season {0} is like season {1} of {2}, which you rated {3}",
   "sharedFeature": "same {0}: {1}",
-  "startFrom": "Start from season {0}"
+  "startFrom": "Start from season {0}",
+  "similar.title": "Similar, picked for you"
 }

@@ -53,7 +53,9 @@ public sealed class WebInjector : BackgroundService
         return JsonSerializer.Serialize(new
         {
             id = TransformationId,
-            fileNamePattern = "index\\.html$",
+            // Exactly "index.html": File Transformation groups transformations by pattern text and prefers the exact
+            // key, so other plugins' "index.html" pipeline would otherwise hide a differently written pattern.
+            fileNamePattern = "index.html",
             callbackAssembly = typeof(IndexTransformation).Assembly.FullName,
             callbackClass = typeof(IndexTransformation).FullName,
             callbackMethod = nameof(IndexTransformation.Transform),

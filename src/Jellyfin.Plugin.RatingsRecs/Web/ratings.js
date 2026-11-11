@@ -946,6 +946,235 @@
         return card;
     }
 
+    /* ---------- rows: home ("Recommended for you", "Rate these") and detail page ("Similar, picked for you") ---------- */
+
+    function rowSection(className, title, link, response, withExplanations) {
+        var section = el('div', 'verticalSection rr-row-section ' + className);
+        var header = el('div', 'sectionTitleContainer sectionTitleContainer-cards padded-left');
+        var heading = el('h2', 'sectionTitle sectionTitle-cards', title);
+        if (link) {
+            var a = el('a', 'rr-section-link');
+            a.href = link;
+            a.appendChild(heading);
+            a.appendChild(el('span', 'material-icons chevron_right'));
+            header.appendChild(a);
+        } else {
+            header.appendChild(heading);
+        }
+
+        section.appendChild(header);
+        var row = el('div', 'rr-row padded-left padded-right');
+        var serverId = apiClient().serverId ? apiClient().serverId() : '';
+        (response.Items || []).forEach(function (item, i) {
+            row.appendChild(itemCard(item, withExplanations ? (response.Explanations || [])[i] : null, serverId));
+        });
+        section.appendChild(row);
+        return section;
+    }
+
+    function isHomeRoute() {
+        var hash = location.hash || '';
+        return hash === '' || hash === '#/' || /^#\/home(\.html)?(\?(?!.*tab=[1-9]).*)?$/.test(hash);
+    }
+
+    function renderHomeRows(root) {
+        if (BOOT.homeRows === 'off' || !isHomeRoute() || !root || !root.querySelector) {
+            return;
+        }
+
+        var container = root.querySelector('.homeSectionsContainer');
+        if (!container) {
+            return;
+        }
+
+        // Home Screen Sections renders its own sections (data-page attribute): ours are among them if the user added them.
+        if (container.querySelector('.verticalSection[data-page]')) {
+            decorateHomeScreenSections(container);
+            return;
+        }
+
+        // Wait until jellyfin-web has drawn its standard home, then add ours on top (no Home Screen Sections home).
+        if (!container.querySelector('.section0') || state.homeLoading) {
+            return;
+        }
+
+        var existing = container.querySelector('.rr-home-rows');
+        if (existing && existing.getAttribute('data-rr-user') === state.userId && !state.homeStale) {
+            return;
+        }
+
+        state.homeStale = false;
+        state.homeLoading = true;
+        Promise.all([
+            request('GET', 'Recommendations?limit=' + (BOOT.homeRowSize || 20)),
+            request('GET', 'Onboarding?limit=' + (BOOT.homeRowSize || 20)).catch(function () { return { Hidden: true }; })
+        ]).then(function (results) {
+            state.homeLoading = false;
+            var block = el('div', 'rr-home-rows');
+            block.setAttribute('data-rr-user', state.userId);
+            if (results[0].Items && results[0].Items.length) {
+                block.appendChild(rowSection('rr-home-recommended', t('forYou.recommended'), '#/ratingsrecs', results[0], true));
+            }
+
+            if (!results[1].Hidden && results[1].Items && results[1].Items.length) {
+                block.appendChild(rowSection('rr-home-ratethese', t('rateThese'), '#/ratingsrecs', results[1], false));
+            }
+
+            var old = container.querySelector('.rr-home-rows');
+            if (old) {
+                old.parentNode.removeChild(old);
+            }
+
+            if (block.children.length) {
+                container.insertBefore(block, container.firstChild);
+            }
+        }, function (err) {
+            state.homeLoading = false;
+            log('could not load the home rows:', err && err.message);
+        });
+    }
+
+    function decorateHomeScreenSections(container) {
+        // Our registered titles (server language) are relabelled in the user's language, linked to the "For you"
+        // page, and the recommended cards get their explanation line.
+        var titles = container.querySelectorAll('.verticalSection[data-page] .sectionTitle');
+        for (var i = 0; i < titles.length; i++) {
+            var title = titles[i];
+            var text = (title.textContent || '').trim();
+            var kind = /^(Recommended for you|Consigliati per te)$/.test(text) ? 'recommended' : (/^(Rate these|Valuta questi)$/.test(text) ? 'ratethese' : null);
+            if (!kind || title.getAttribute('data-rr-done')) {
+                continue;
+            }
+
+            title.setAttribute('data-rr-done', '1');
+            title.textContent = kind === 'recommended' ? t('forYou.recommended') : t('rateThese');
+            var section = title.closest('.verticalSection');
+            section.classList.add(kind === 'recommended' ? 'rr-home-recommended' : 'rr-home-ratethese');
+            if (!title.closest('a')) {
+                var link = el('a', 'rr-section-link');
+                link.href = '#/ratingsrecs';
+                title.parentNode.insertBefore(link, title);
+                link.appendChild(title);
+            }
+
+            if (kind === 'recommended') {
+                addExplanationsToCards(section);
+            }
+        }
+    }
+
+    function addExplanationsToCards(section) {
+        request('GET', 'Recommendations?limit=' + (BOOT.homeRowSize || 20)).then(function (response) {
+            var byId = {};
+            (response.Items || []).forEach(function (item, i) { byId[normId(item.Id)] = (response.Explanations || [])[i]; });
+            var cards = section.querySelectorAll('.card[data-id]');
+            for (var i = 0; i < cards.length; i++) {
+                var why = explanationText(byId[normId(cards[i].getAttribute('data-id'))]);
+                var footer = cards[i].querySelector('.cardFooter') || cards[i].querySelector('.cardBox');
+                if (why && footer && !footer.querySelector('.rr-card-why')) {
+                    footer.appendChild(el('div', 'rr-card-why', why));
+                }
+            }
+        }, function () { /* explanations are optional */ });
+    }
+
+    function renderSimilarRow(root) {
+        if (!BOOT.similarRow || !isDetailRoute() || !root || !root.querySelector) {
+            return;
+        }
+
+        var itemId = idFromLocation();
+        if (!itemId || root.querySelector('.rr-similar-section[data-rr-item="' + itemId + '"]') || state.similarPending === itemId) {
+            return;
+        }
+
+        // 10.11: .detailPageContent; 12 (both layouts): .detailPageSecondaryContainer.
+        var content = root.querySelector('.detailPageContent, .detailPageSecondaryContainer, .detailPageWrapperContainer');
+        if (!content) {
+            return;
+        }
+
+        state.similarPending = itemId;
+        getItemType(itemId).then(function (type) {
+            if (type !== 'Movie' && type !== 'Series') {
+                return null;
+            }
+
+            return request('GET', 'Similar/' + itemId + '?limit=' + (BOOT.similarRowSize || 12));
+        }).then(function (response) {
+            state.similarPending = null;
+            var stale = root.querySelectorAll('.rr-similar-section');
+            for (var i = 0; i < stale.length; i++) {
+                stale[i].parentNode.removeChild(stale[i]);
+            }
+
+            if (!response || !response.Items || !response.Items.length || idFromLocation() !== itemId) {
+                return;
+            }
+
+            var section = rowSection('rr-similar-section', t('similar.title'), null, response, true);
+            section.setAttribute('data-rr-item', itemId);
+
+            // Right below jellyfin-web's own "More like this", or at the end of the details.
+            var native = root.querySelector('#similarCollapsible') || (root.querySelector('.similarContent') && root.querySelector('.similarContent').closest('.verticalSection'));
+            if (native && native.parentNode) {
+                native.parentNode.insertBefore(section, native.nextSibling);
+            } else {
+                content.appendChild(section);
+            }
+        }).catch(function (err) {
+            state.similarPending = null;
+            log('could not load similar items:', err && err.message);
+        });
+    }
+
+    /* ---------- side menu entry and Plugin Pages ---------- */
+
+    function addMenuEntry() {
+        if (BOOT.menuEntry === false) {
+            return;
+        }
+
+        // Legacy drawer.
+        var home = document.querySelector('.mainDrawer a.navMenuOption[href="#/home"]');
+        if (home && !home.parentNode.querySelector('.rr-menu-foryou')) {
+            var a = el('a', 'navMenuOption lnkMediaFolder emby-button rr-menu-foryou');
+            a.href = '#/ratingsrecs';
+            a.appendChild(el('span', 'material-icons navMenuOptionIcon thumb_up'));
+            a.appendChild(el('span', 'navMenuOptionText', t('forYou.title')));
+            home.parentNode.insertBefore(a, home.nextSibling);
+        }
+
+        // Modern drawer (React/MUI): a copy of the "Home" entry, plain link without React handlers.
+        var modernHome = document.querySelector('.MuiDrawer-root a[href="#/home"]');
+        if (modernHome && !modernHome.parentNode.querySelector('.rr-menu-foryou')) {
+            var clone = modernHome.cloneNode(true);
+            clone.classList.add('rr-menu-foryou');
+            clone.classList.remove('Mui-selected');
+            clone.removeAttribute('aria-current');
+            clone.setAttribute('href', '#/ratingsrecs');
+            var label = clone.querySelector('.MuiListItemText-primary') || clone.querySelector('.MuiTypography-root');
+            if (label) {
+                label.textContent = t('forYou.title');
+            }
+
+            var icon = clone.querySelector('.MuiListItemIcon-root');
+            if (icon) {
+                icon.innerHTML = svg(THUMB_UP, false);
+            }
+
+            modernHome.parentNode.insertBefore(clone, modernHome.nextSibling);
+        }
+    }
+
+    function handlePluginPagesRoute() {
+        // Plugin Pages opens #/userpluginsettings.html?pageUrl=/RatingsRecs/Web/foryou.html: show our page instead.
+        var hash = location.hash || '';
+        if (/^#\/userpluginsettings/i.test(hash) && /RatingsRecs(%2F|\/)Web(%2F|\/)foryou/i.test(hash)) {
+            location.replace('#/ratingsrecs');
+        }
+    }
+
     function renderSection(container, title, response, withExplanations) {
         var section = el('section', 'rr-section');
         if (title) {
@@ -1101,7 +1330,11 @@
 
             var adapter = currentAdapter();
             var root = activePage(adapter);
+            handlePluginPagesRoute();
+            addMenuEntry();
             renderForYou(root);
+            renderHomeRows(root);
+            renderSimilarRow(root);
             scanDetail(adapter, root);
             scanCards(adapter, root);
         } catch (err) {
@@ -1143,7 +1376,10 @@
         try {
             ensureStylesheet();
             new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
-            document.addEventListener('viewshow', schedule, true);
+            document.addEventListener('viewshow', function () {
+                state.homeStale = true;
+                schedule();
+            }, true);
             window.addEventListener('hashchange', schedule);
             window.addEventListener('popstate', schedule);
             schedule();

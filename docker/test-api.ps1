@@ -76,6 +76,11 @@ foreach ($name in $targets) {
     $admin = Login $srv $envValues['JF_ADMIN_USER'] $envValues['JF_ADMIN_PASSWORD']
     $family = Login $srv $envValues['JF_USER2_NAME'] $envValues['JF_USER2_PASSWORD']
 
+    # Start from the server default series mode for both test users (earlier manual tests may have changed it).
+    foreach ($session in @($admin, $family)) {
+        Invoke-Jf -Srv $srv -Method Put -Path '/RatingsRecs/Preferences' -Token $session.Token -Body @{ seriesMode = $null } | Out-Null
+    }
+
     $movie = Find-Item $srv $admin 'Movie' 'Neon Rain'
     $movie2 = Find-Item $srv $admin 'Movie' 'Paper Lanterns'
     $series = Find-Item $srv $admin 'Series' 'Harbour Precinct'
@@ -202,6 +207,18 @@ foreach ($name in $targets) {
     }
     $median = ($times | Sort-Object)[3]
     Check "recommendations answer from cache in < 200 ms (median $median ms)" ($median -lt 200)
+
+    # "Similar, picked for you" (design section 6.6, point 3).
+    $similar = Invoke-Jf -Srv $srv -Method Get -Path ('/RatingsRecs/Similar/' + $movie + '?limit=12') -Token $family.Token
+    $simIds = @($similar.Items | ForEach-Object { $_.Id })
+    Check 'Similar returns items with explanations, never the open item' ($simIds.Count -gt 0 -and -not ($simIds -contains $movie) -and @($similar.Explanations).Count -eq $simIds.Count) "items=$($simIds.Count)"
+    $victim = $simIds[0]
+    Invoke-Jf -Srv $srv -Method Put -Path ('/RatingsRecs/Ratings/' + $victim) -Token $family.Token -Body @{ value = -1 } | Out-Null
+    $similar = Invoke-Jf -Srv $srv -Method Get -Path ('/RatingsRecs/Similar/' + $movie + '?limit=12') -Token $family.Token
+    Check 'Similar never shows a negatively rated item' (-not (@($similar.Items | ForEach-Object { $_.Id }) -contains $victim))
+    Invoke-Jf -Srv $srv -Method Delete -Path ('/RatingsRecs/Ratings/' + $victim) -Token $family.Token | Out-Null
+    $status = Get-Status { Invoke-Jf -Srv $srv -Method Get -Path ('/RatingsRecs/Similar/' + [Guid]::NewGuid()) -Token $family.Token }
+    Check 'Similar on an unknown item -> 404' ($status -eq 404) "got $status"
 
     # Series rating modes and season ratings (design section 4.1).
     $seasons = Invoke-Jf -Srv $srv -Method Get -Path ('/Items?Recursive=true&IncludeItemTypes=Season&ParentId=' + $series + '&userId=' + $family.Id) -Token $family.Token

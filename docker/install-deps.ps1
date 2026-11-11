@@ -22,6 +22,9 @@ param(
 . "$PSScriptRoot\common.ps1"
 Set-StrictMode -Off
 
+# 'powershell -File' passes a comma-separated list as one string: split it.
+$Plugins = @($Plugins | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+
 $repoName = 'IAmParadox27 plugins'
 $repoUrl = 'https://www.iamparadox.dev/jellyfin/plugins/manifest.json'
 $guids = @{

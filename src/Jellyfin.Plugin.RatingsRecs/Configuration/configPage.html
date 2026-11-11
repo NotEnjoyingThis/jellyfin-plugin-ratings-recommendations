@@ -90,6 +90,42 @@
                     </div>
 
                     <div class="verticalSection">
+                        <h3 class="sectionTitle">Delivery / Consegna</h3>
+                        <div class="selectContainer">
+                            <label class="selectLabel" for="rrHomeRowsMode">Home rows / Righe in home</label>
+                            <select is="emby-select" id="rrHomeRowsMode" class="emby-select-withcolor emby-select">
+                                <option value="Auto">Auto (Home Screen Sections if available, otherwise the script) / Auto</option>
+                                <option value="HomeScreenSections">Home Screen Sections</option>
+                                <option value="Script">Script (top of the home) / Script (in cima alla home)</option>
+                                <option value="Off">Off / Disattivate</option>
+                            </select>
+                            <div class="fieldDescription">With Home Screen Sections each user adds "Recommended for you" and "Rate these" from Modular Home settings (Home Screen Sections must be enabled in its own settings). Restart Jellyfin after changing this option. / Con Home Screen Sections ogni utente aggiunge le sezioni dalle impostazioni di Modular Home (Home Screen Sections va attivato nelle sue impostazioni). Riavvia Jellyfin dopo aver cambiato questa opzione.</div>
+                        </div>
+                        <div style="display:flex;gap:1em;flex-wrap:wrap;">
+                            <div class="inputContainer" style="flex:1;min-width:12em;">
+                                <label class="inputLabel inputLabelUnfocused" for="rrHomeRowSize">Items per home row / Elementi per riga</label>
+                                <input id="rrHomeRowSize" type="number" step="1" min="1" max="100" is="emby-input" />
+                            </div>
+                            <div class="inputContainer" style="flex:1;min-width:12em;">
+                                <label class="inputLabel inputLabelUnfocused" for="rrSimilarRowSize">Items in "Similar, picked for you" / Elementi in "Simili, scelti per te"</label>
+                                <input id="rrSimilarRowSize" type="number" step="1" min="1" max="50" is="emby-input" />
+                            </div>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="rrShowSimilarRow" type="checkbox" is="emby-checkbox" />
+                                <span>"Similar, picked for you" row on detail pages / Riga "Simili, scelti per te" nella pagina dettaglio</span>
+                            </label>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="rrShowMenuEntry" type="checkbox" is="emby-checkbox" />
+                                <span>"For you" entry in the side menu / Voce "Per te" nel menu laterale</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="verticalSection">
                         <h3 class="sectionTitle">Engine / Motore</h3>
                         <div id="rrEngine" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(14em,1fr));gap:0 1em;"></div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
@@ -210,7 +246,9 @@
                 }
 
                 var hookNames = {
-                    WebInjection: 'Web client script / Script nel client web'
+                    WebInjection: 'Web client script / Script nel client web',
+                    HomeScreenSections: 'Home Screen Sections',
+                    PluginPages: 'Plugin Pages'
                 };
 
                 function renderStatus(status) {
@@ -266,6 +304,11 @@
                     q('#rrSeriesMode').value = config.SeriesRatingMode || 'Series';
                     q('#rrUsersCanChooseMode').checked = config.UsersCanChooseSeriesMode;
                     q('#rrBestSeasonWeight').value = config.SeriesBestSeasonWeight;
+                    q('#rrHomeRowsMode').value = config.HomeRowsMode || 'Auto';
+                    q('#rrHomeRowSize').value = config.HomeRowSize;
+                    q('#rrSimilarRowSize').value = config.SimilarRowSize;
+                    q('#rrShowSimilarRow').checked = config.ShowSimilarRow;
+                    q('#rrShowMenuEntry').checked = config.ShowMenuEntry;
                     q('#rrAverageSeasonWeight').value = config.SeriesAverageSeasonWeight;
                     q('#rrExcludeHatedCollections').checked = config.ExcludeHatedCollections;
                 }
@@ -320,6 +363,11 @@
                         config.SeriesRatingMode = q('#rrSeriesMode').value;
                         config.UsersCanChooseSeriesMode = q('#rrUsersCanChooseMode').checked;
                         config.SeriesBestSeasonWeight = readNumber('#rrBestSeasonWeight', config.SeriesBestSeasonWeight);
+                        config.HomeRowsMode = q('#rrHomeRowsMode').value;
+                        config.HomeRowSize = Math.max(1, Math.round(readNumber('#rrHomeRowSize', config.HomeRowSize)));
+                        config.SimilarRowSize = Math.max(1, Math.round(readNumber('#rrSimilarRowSize', config.SimilarRowSize)));
+                        config.ShowSimilarRow = q('#rrShowSimilarRow').checked;
+                        config.ShowMenuEntry = q('#rrShowMenuEntry').checked;
                         config.SeriesAverageSeasonWeight = readNumber('#rrAverageSeasonWeight', config.SeriesAverageSeasonWeight);
                         ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);

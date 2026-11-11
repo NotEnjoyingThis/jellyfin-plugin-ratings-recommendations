@@ -150,6 +150,7 @@ public sealed class RecommendationService : IDisposable
         var engine = Stopwatch.StartNew();
         var result = RecommendationEngine.Recommend(request);
         var onboarding = Onboarding.Select(request with { Ratings = signals.Where(s => s.IsExplicit).ToList() }, OnboardingSize);
+        var context = EngineContext.Create(request);
         engine.Stop();
         total.Stop();
 
@@ -163,6 +164,7 @@ public sealed class RecommendationService : IDisposable
             IsColdStart = result.IsColdStart,
             EngineDuration = engine.Elapsed,
             TotalDuration = total.Elapsed,
+            Context = context,
         };
 
         _logger.LogInformation(

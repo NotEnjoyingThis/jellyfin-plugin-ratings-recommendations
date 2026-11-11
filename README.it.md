@@ -58,6 +58,15 @@ Gli aggiornamenti compaiono da soli nel pannello di controllo.
 **Senza File Transformation** l'API, i consigli e il provider di Jellyfin 12 funzionano lo stesso; la pagina impostazioni
 spiega come aggiungere lo script a mano.
 
+## Righe in home e pagina "Per te"
+
+- **Con Home Screen Sections**: l'amministratore attiva Home Screen Sections nelle sue impostazioni; ogni utente apre
+  *Modular Home* (menu laterale), la attiva e spunta **Consigliati per te** e **Valuta questi**, scegliendo la posizione.
+- **Senza Home Screen Sections** (o se non sta disegnando la home): lo script del plugin aggiunge da solo le due righe
+  in cima alla home. "Valuta questi" sparisce dopo 15 voti (configurabile).
+- La pagina **Per te** (Film / Serie, con le spiegazioni) si apre dal menu laterale, dal titolo delle righe o da
+  Plugin Pages se installato. Le pagine di film e serie hanno la riga **Simili, scelti per te** sotto "Altri come questo".
+
 ## Configurazione
 
 Pannello di controllo → Plugin → Ratings & Recommendations. Gruppi: Voti (nomi e valori dei livelli, Preferiti,

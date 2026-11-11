@@ -60,6 +60,7 @@ public class StatusController : ControllerBase
             JellyfinLine = BuildInfo.JellyfinLine,
             Hooks = _hooks.GetAll(),
             SeasonCredits = _recommendations.CreditsReport,
+            LastInjectedUtc = Web.IndexTransformation.LastInjectedUtc,
         };
     }
 }

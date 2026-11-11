@@ -44,8 +44,9 @@ public static class WebAssets
     /// Builds <c>ratings.js</c>: bootstrap object + client script.
     /// </summary>
     /// <param name="config">The plugin configuration.</param>
+    /// <param name="homeRows">How the home rows are drawn: "hss" (Home Screen Sections), "script" or "off".</param>
     /// <returns>The script.</returns>
-    public static string BuildScript(PluginConfiguration config)
+    public static string BuildScript(PluginConfiguration config, string homeRows = "script")
     {
         ArgumentNullException.ThrowIfNull(config);
         var strings = new Dictionary<string, JsonElement>(StringComparer.Ordinal);
@@ -70,6 +71,11 @@ public static class WebAssets
                 ["3"] = NullIfEmpty(config.NameAmazing),
             },
             strings,
+            homeRows,
+            homeRowSize = Math.Max(1, config.HomeRowSize),
+            similarRow = config.ShowSimilarRow,
+            similarRowSize = Math.Max(1, config.SimilarRowSize),
+            menuEntry = config.ShowMenuEntry,
         };
 
         return "window.RatingsRecsBootstrap = " + JsonSerializer.Serialize(bootstrap) + ";\n" + (ReadText("ratings.js") ?? string.Empty);
@@ -85,6 +91,28 @@ public static class WebAssets
         ArgumentNullException.ThrowIfNull(content);
         var hash = SHA256.HashData(Encoding.UTF8.GetBytes(content));
         return "\"" + Convert.ToHexString(hash, 0, 12) + "\"";
+    }
+
+    /// <summary>
+    /// Resolves how the home rows are drawn from the setting and the Home Screen Sections hook.
+    /// </summary>
+    /// <param name="mode">The setting: Auto, HomeScreenSections, Script or Off.</param>
+    /// <param name="homeScreenSectionsActive">Whether the sections are registered in Home Screen Sections.</param>
+    /// <returns>"hss", "script" or "off".</returns>
+    public static string HomeRows(string? mode, bool homeScreenSectionsActive)
+    {
+        if (string.Equals(mode, "Off", StringComparison.OrdinalIgnoreCase))
+        {
+            return "off";
+        }
+
+        if (string.Equals(mode, "Script", StringComparison.OrdinalIgnoreCase))
+        {
+            return "script";
+        }
+
+        // Auto or HomeScreenSections: Home Screen Sections when it works, otherwise the script (degrade, never break).
+        return homeScreenSectionsActive ? "hss" : "script";
     }
 
     private static string? NullIfEmpty(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();

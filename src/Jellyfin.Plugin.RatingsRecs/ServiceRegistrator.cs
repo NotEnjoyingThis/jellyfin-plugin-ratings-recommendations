@@ -3,6 +3,7 @@ using System.IO;
 using Jellyfin.Plugin.RatingsRecs.Api;
 using Jellyfin.Plugin.RatingsRecs.Compat;
 using Jellyfin.Plugin.RatingsRecs.Configuration;
+using Jellyfin.Plugin.RatingsRecs.Home;
 using Jellyfin.Plugin.RatingsRecs.Hooks;
 using Jellyfin.Plugin.RatingsRecs.Ratings;
 using Jellyfin.Plugin.RatingsRecs.Recommendations;
@@ -56,5 +57,7 @@ public class ServiceRegistrator : IPluginServiceRegistrator
 
         serviceCollection.AddSingleton<HookStatusRegistry>();
         serviceCollection.AddHostedService<WebInjector>();
+        serviceCollection.AddHostedService<HomeSectionsBridge>();
+        serviceCollection.AddTransient<HomeSectionResults>();
     }
 }

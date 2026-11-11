@@ -220,7 +220,7 @@ public static class RecommendationEngine
     private static List<string> CollectionKeys(FeatureIndex index, Guid id)
         => index.Features(id).Where(f => f.Category == FeatureCategory.Collection).Select(f => f.Key).ToList();
 
-    private static HashSet<Feature> HatedFeatures(FeatureIndex index, IEnumerable<UserRating> ratings)
+    internal static HashSet<Feature> HatedFeatures(FeatureIndex index, IEnumerable<UserRating> ratings)
     {
         var features = new HashSet<Feature>();
         foreach (var rating in ratings.Where(r => r.IsHate))
@@ -237,13 +237,13 @@ public static class RecommendationEngine
         return features;
     }
 
-    private static double AverageQuality(IEnumerable<MediaItem> items)
+    internal static double AverageQuality(IEnumerable<MediaItem> items)
     {
         var ratings = items.Where(i => i.CommunityRating.HasValue).Select(i => Math.Clamp(i.CommunityRating!.Value / 10.0, 0, 1)).ToList();
         return ratings.Count == 0 ? 0.5 : ratings.Average();
     }
 
-    private static Explanation Explain(FeatureIndex index, TasteBreakdown breakdown, IReadOnlyList<UserRating> ratings, EngineSettings settings)
+    internal static Explanation Explain(FeatureIndex index, TasteBreakdown breakdown, IReadOnlyList<UserRating> ratings, EngineSettings settings)
     {
         var top = breakdown.Top(settings.ExplanationFeatures);
         if (top.Count == 0)

@@ -60,6 +60,29 @@ public class RecommendationsController : ControllerBase
     }
 
     /// <summary>
+    /// Gets the items similar to an open item, ranked with the user's taste ("Similar, picked for you").
+    /// Items rated negatively never appear.
+    /// </summary>
+    /// <param name="itemId">The open item.</param>
+    /// <param name="limit">Number of items (default 12).</param>
+    /// <param name="userId">Optional target user (administrators only).</param>
+    /// <returns>The items.</returns>
+    [HttpGet("Similar/{itemId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<RecommendationsResponse>> GetSimilar([FromRoute] Guid itemId, [FromQuery] int limit = 12, [FromQuery] Guid? userId = null)
+    {
+        var (user, error) = await _resolver.ResolveAsync(this, userId).ConfigureAwait(false);
+        if (user is null)
+        {
+            return error!;
+        }
+
+        var response = _presenter.Similar(user, itemId, limit);
+        return response is null ? Problem(statusCode: StatusCodes.Status404NotFound, detail: "Item not found.") : response;
+    }
+
+    /// <summary>
     /// Gets the "Rate these" items (cold start); <c>Hidden</c> is true once the user has enough ratings.
     /// </summary>
     /// <param name="limit">Number of items (default 20).</param>

@@ -28,4 +28,8 @@ public sealed record PluginStatusDto
     /// <summary>Gets the share of seasons without per-episode credits (null until the first full computation).</summary>
     [JsonPropertyName("seasonCredits")]
     public Jellyfin.Plugin.RatingsRecs.Recommendations.SeasonCreditsReport? SeasonCredits { get; init; }
+
+    /// <summary>Gets the last time the web script was injected into index.html (null if never since start).</summary>
+    [JsonPropertyName("lastInjectedUtc")]
+    public System.DateTime? LastInjectedUtc { get; init; }
 }

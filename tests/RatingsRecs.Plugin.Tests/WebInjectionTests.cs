@@ -49,7 +49,8 @@ public class WebInjectionTests
         var root = doc.RootElement;
 
         Assert.Equal(WebInjector.TransformationId, root.GetProperty("id").GetGuid());
-        Assert.Matches(root.GetProperty("fileNamePattern").GetString()!, "index.html");
+        // Same pipeline key as Home Screen Sections and Plugin Pages (File Transformation prefers exact keys).
+        Assert.Equal("index.html", root.GetProperty("fileNamePattern").GetString());
         Assert.Equal(typeof(IndexTransformation).Assembly.FullName, root.GetProperty("callbackAssembly").GetString());
         Assert.Equal(typeof(IndexTransformation).FullName, root.GetProperty("callbackClass").GetString());
         Assert.Equal("Transform", root.GetProperty("callbackMethod").GetString());

@@ -15,6 +15,11 @@ public static class IndexTransformation
     public const string Marker = "RatingsRecs/Web/ratings.js";
 
     /// <summary>
+    /// Gets the last time the script was injected into a served index.html (diagnostics for the settings page).
+    /// </summary>
+    public static DateTime? LastInjectedUtc { get; private set; }
+
+    /// <summary>
     /// Transforms <c>index.html</c>. Signature required by File Transformation: static, one parameter
     /// with a <c>contents</c> property, returns the new content.
     /// </summary>
@@ -30,7 +35,13 @@ public static class IndexTransformation
                 return contents;
             }
 
-            return Inject(contents, typeof(IndexTransformation).Assembly.GetName().Version?.ToString() ?? "0");
+            var result = Inject(contents, typeof(IndexTransformation).Assembly.GetName().Version?.ToString() ?? "0");
+            if (!ReferenceEquals(result, contents))
+            {
+                LastInjectedUtc = DateTime.UtcNow;
+            }
+
+            return result;
         }
         catch (Exception ex) when (ex is not OutOfMemoryException)
         {

@@ -32,4 +32,7 @@ public sealed record UserRecommendations
 
     /// <summary>Gets the total compute time (library read + engine).</summary>
     public TimeSpan TotalDuration { get; init; }
+
+    /// <summary>Gets the profile and index kept for "similar" rankings (no library read at request time).</summary>
+    public EngineContext? Context { get; init; }
 }
