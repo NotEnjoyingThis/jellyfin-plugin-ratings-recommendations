@@ -48,7 +48,7 @@
   "homeRows.HomeScreenSections": "Home Screen Sections",
   "homeRows.Script": "Script (top of the home)",
   "homeRows.Off": "Off",
-  "homeRows.hint": "With Home Screen Sections each user adds \"Recommended for you\" and \"Rate these\" from the Modular Home settings (Home Screen Sections must be enabled in its own settings). Restart Jellyfin after changing this option.",
+  "homeRows.hint": "With Home Screen Sections each user adds \"Recommended for you\" and \"Watched, to rate\" from the Modular Home settings (Home Screen Sections must be enabled in its own settings). Restart Jellyfin after changing this option.",
   "homeRowSize": "Items per home row",
   "similarRowSize": "Items in \"Similar, picked for you\"",
   "showSimilarRow": "\"Similar, picked for you\" row on detail pages",

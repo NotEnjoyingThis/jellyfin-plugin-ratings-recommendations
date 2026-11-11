@@ -117,8 +117,9 @@ public sealed class RecommendationPresenter
     /// </summary>
     /// <param name="user">The user.</param>
     /// <param name="limit">The number of items.</param>
+    /// <param name="type">"Movie", "Series" (series and seasons) or <c>null</c> for everything.</param>
     /// <returns>The response.</returns>
-    public RecommendationsResponse RateThese(User user, int limit)
+    public RecommendationsResponse RateThese(User user, int limit, string? type = null)
     {
         ArgumentNullException.ThrowIfNull(user);
         var ratings = _store.GetAll(user.Id);
@@ -130,6 +131,9 @@ public sealed class RecommendationPresenter
             return new RecommendationsResponse { Status = "Computing", ExplicitRatingCount = explicitCount };
         }
 
+        // The series mode may have changed since the computation (it is recomputed 30 s later): never offer a
+        // series or a season the current mode cannot rate.
+        var mode = SeriesModes.Effective(_config.Current, _store.GetPreferences(user.Id));
         var rated = ratings.Select(r => r.ItemId).ToHashSet();
         var remaining = cached.RateThese.Where(id => !rated.Contains(id)).ToList();
         var items = new List<BaseItem>();
@@ -141,10 +145,17 @@ public sealed class RecommendationPresenter
             }
 
             var item = _library.GetItem(id);
-            if (item is not null && item.IsVisibleStandalone(user))
+            var isTv = item is MediaBrowser.Controller.Entities.TV.Series or MediaBrowser.Controller.Entities.TV.Season;
+            if (item is null || !item.IsVisibleStandalone(user)
+                || (item is MediaBrowser.Controller.Entities.TV.Series && !SeriesModes.SeriesRateable(mode))
+                || (item is MediaBrowser.Controller.Entities.TV.Season && !SeriesModes.SeasonsRateable(mode))
+                || (string.Equals(type, "Movie", StringComparison.OrdinalIgnoreCase) && isTv)
+                || (string.Equals(type, "Series", StringComparison.OrdinalIgnoreCase) && !isTv))
             {
-                items.Add(item);
+                continue;
             }
+
+            items.Add(item);
         }
 
         return new RecommendationsResponse

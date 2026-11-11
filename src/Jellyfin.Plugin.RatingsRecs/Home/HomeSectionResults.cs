@@ -49,7 +49,7 @@ public class HomeSectionResults
     }
 
     /// <summary>
-    /// "Rate these": empty once the user has enough ratings (the section then disappears).
+    /// "Watched, to rate": watched but not rated yet (empty when there is nothing to rate).
     /// </summary>
     /// <param name="payload">The section payload.</param>
     /// <returns>The items.</returns>

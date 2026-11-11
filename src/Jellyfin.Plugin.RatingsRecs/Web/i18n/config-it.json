@@ -48,7 +48,7 @@
   "homeRows.HomeScreenSections": "Home Screen Sections",
   "homeRows.Script": "Script (in cima alla home)",
   "homeRows.Off": "Disattivate",
-  "homeRows.hint": "Con Home Screen Sections ogni utente aggiunge \"Consigliati per te\" e \"Valuta questi\" dalle impostazioni di Modular Home (Home Screen Sections va attivato nelle sue impostazioni). Riavvia Jellyfin dopo aver cambiato questa opzione.",
+  "homeRows.hint": "Con Home Screen Sections ogni utente aggiunge \"Consigliati per te\" e \"Già visti, da valutare\" dalle impostazioni di Modular Home (Home Screen Sections va attivato nelle sue impostazioni). Riavvia Jellyfin dopo aver cambiato questa opzione.",
   "homeRowSize": "Elementi per riga in home",
   "similarRowSize": "Elementi in \"Simili, scelti per te\"",
   "showSimilarRow": "Riga \"Simili, scelti per te\" nella pagina dettaglio",

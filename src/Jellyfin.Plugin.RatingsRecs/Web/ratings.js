@@ -1071,8 +1071,13 @@
         }
 
         link.appendChild(poster);
-        link.appendChild(el('div', 'rr-card-title', item.Name));
-        if (item.ProductionYear) {
+
+        // A season alone ("Season 1") says nothing: show the series name, with the season underneath.
+        var isSeason = item.Type === 'Season' && item.SeriesName;
+        link.appendChild(el('div', 'rr-card-title', isSeason ? item.SeriesName : item.Name));
+        if (isSeason) {
+            link.appendChild(el('div', 'rr-card-meta', item.Name + (item.ProductionYear ? ' · ' + item.ProductionYear : '')));
+        } else if (item.ProductionYear) {
             link.appendChild(el('div', 'rr-card-meta', String(item.ProductionYear)));
         }
 
@@ -1188,7 +1193,7 @@
         for (var i = 0; i < titles.length; i++) {
             var title = titles[i];
             var text = (title.textContent || '').trim();
-            var kind = /^(Recommended for you|Consigliati per te)$/.test(text) ? 'recommended' : (/^(Rate these|Valuta questi)$/.test(text) ? 'ratethese' : null);
+            var kind = /^(Recommended for you|Consigliati per te)$/.test(text) ? 'recommended' : (/^(Watched, to rate|Già visti, da valutare|Rate these|Valuta questi)$/.test(text) ? 'ratethese' : null);
             if (!kind || title.getAttribute('data-rr-done')) {
                 continue;
             }
@@ -1521,7 +1526,7 @@
 
         Promise.all([
             request('GET', 'Recommendations?limit=100&type=' + type),
-            request('GET', 'RateThese?limit=40').catch(function () { return { Items: [] }; })
+            request('GET', 'RateThese?limit=40&type=' + type).catch(function () { return { Items: [] }; })
         ]).then(function (results) {
             if (host.getAttribute('data-rr-foryou') !== key) {
                 return;

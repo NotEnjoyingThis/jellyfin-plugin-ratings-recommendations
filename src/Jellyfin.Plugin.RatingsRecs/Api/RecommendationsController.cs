@@ -86,18 +86,25 @@ public class RecommendationsController : ControllerBase
     /// Gets the "Rate these" items: watched but not rated yet, most recently watched first; empty when there is nothing to rate.
     /// </summary>
     /// <param name="limit">Number of items (default 20).</param>
+    /// <param name="type">Optional: "Movie", or "Series" (series and seasons).</param>
     /// <param name="userId">Optional target user (administrators only).</param>
     /// <returns>The items.</returns>
     [HttpGet("RateThese")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<RecommendationsResponse>> GetRateThese([FromQuery] int limit = 20, [FromQuery] Guid? userId = null)
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<RecommendationsResponse>> GetRateThese([FromQuery] int limit = 20, [FromQuery] string? type = null, [FromQuery] Guid? userId = null)
     {
+        if (type is not null && !string.Equals(type, "Movie", StringComparison.OrdinalIgnoreCase) && !string.Equals(type, "Series", StringComparison.OrdinalIgnoreCase))
+        {
+            return Problem(statusCode: StatusCodes.Status400BadRequest, detail: "type must be Movie or Series.");
+        }
+
         var (user, error) = await _resolver.ResolveAsync(this, userId).ConfigureAwait(false);
         if (user is null)
         {
             return error!;
         }
 
-        return _presenter.RateThese(user, limit);
+        return _presenter.RateThese(user, limit, type);
     }
 }

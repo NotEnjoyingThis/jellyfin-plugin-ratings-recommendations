@@ -48,12 +48,19 @@ public sealed class LibrarySnapshotBuilder
         var collections = CollectionsByItem(user);
 
         var playedMovies = _library.GetItems(user, [BaseItemKind.Movie], isPlayed: true);
-        var playedSeries = _library.GetItems(user, [BaseItemKind.Series], isPlayed: true).Select(s => s.Id).ToHashSet();
-        var playedEpisodes = _library.GetItems(user, [BaseItemKind.Episode], isPlayed: true).OfType<Episode>().ToList();
-        var allEpisodes = _library.GetItems(user, [BaseItemKind.Episode]).OfType<Episode>().ToList();
+
+        // Series and seasons are "watched" when all their (real, not missing) episodes are: computed here because the
+        // IsPlayed query filter ignores folders on Jellyfin 10.11 (see docs/NOTES.md).
+        var playedEpisodes = _library.GetItems(user, [BaseItemKind.Episode], isPlayed: true).OfType<Episode>().Where(e => !e.IsVirtualItem).ToList();
+        var allEpisodes = _library.GetItems(user, [BaseItemKind.Episode]).OfType<Episode>().Where(e => !e.IsVirtualItem).ToList();
         var episodesPerSeries = allEpisodes
             .GroupBy(e => e.SeriesId)
             .ToDictionary(g => g.Key, g => g.Count());
+        var playedSeries = playedEpisodes
+            .GroupBy(e => e.SeriesId)
+            .Where(g => g.Count() >= episodesPerSeries.GetValueOrDefault(g.Key))
+            .Select(g => g.Key)
+            .ToHashSet();
         var startedSeries = playedEpisodes.Select(e => e.SeriesId).ToHashSet();
 
         var facts = new List<PlaybackFact>();
@@ -154,7 +161,10 @@ public sealed class LibrarySnapshotBuilder
         var people = _library.GetPeople(allEpisodes);
         var episodesBySeason = allEpisodes.GroupBy(e => e.SeasonId).ToDictionary(g => g.Key, g => g.ToList());
         var playedBySeason = playedEpisodes.GroupBy(e => e.SeasonId).ToDictionary(g => g.Key, g => g.ToList());
-        var playedSeasons = _library.GetItems(user, [BaseItemKind.Season], isPlayed: true).Select(s => s.Id).ToHashSet();
+        var playedSeasons = playedBySeason
+            .Where(p => p.Value.Count >= (episodesBySeason.GetValueOrDefault(p.Key)?.Count ?? int.MaxValue))
+            .Select(p => p.Key)
+            .ToHashSet();
 
         foreach (var season in _library.GetItems(user, [BaseItemKind.Season]).OfType<Season>())
         {

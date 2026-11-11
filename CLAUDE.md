@@ -77,8 +77,9 @@ scripts/                           release.mjs (+ tests: node --test scripts/)
 - M6: 10.11 override (`Override/`, registered only in the 10.11 build), `Compatibility` hook, settings page texts in
   `Web/i18n/config-<lang>.json`, release tooling in `scripts/release.mjs` + `.github/workflows/release.yml`.
 - Before 1.0 (NOTES deviations 43–45): ratings are given **only on the item page**; cards show a read-only badge on rated
-  items (nothing otherwise); "Rate these" = watched but not rated (`RateTheseList`, `GET /RatingsRecs/RateThese`);
-  monochrome outline icons.
+  items (nothing otherwise); "Già visti, da valutare" / "Watched, to rate" = watched but not rated (`RateTheseList`,
+  `GET /RatingsRecs/RateThese?type=`); monochrome outline icons. Never use the `IsPlayed` query filter for series or
+  seasons (ignored on 10.11): compute "fully watched" from the episodes.
 - M5 design: per-library switch in the plugin settings (`SimilarProviderLibraryIds`); `SimilarProviderSync` puts our provider
   first in `TypeOptions.SimilarItemProviderOrder` of the selected libraries via `CollectionFolder.UpdateLibraryOptions` and never
   creates missing `TypeOptions`. Limits (small libraries, `/Movies/Recommendations`) in NOTES deviations 34–37.

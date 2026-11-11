@@ -20,8 +20,8 @@ First release. Requires Jellyfin 10.11.9+ or 12.0+.
 - Ratings mirrored onto Jellyfin's `Rating`/`Likes` and Favourites; a heart set in other apps counts as +3.
 - Local, content-based recommendations from what you liked and disliked (genres, directors, actors, writers, tags,
   studios, decades, collections), with explanations and diversity.
-- "Rate these": what you watched but have not rated yet (also before installing the plugin), most recent first.
-- "For you" page, "Recommended for you" and "Rate these" home rows (Home Screen Sections or the plugin script) and a
+- "Watched, to rate": what you watched but have not rated yet (also before installing the plugin), most recent first.
+- "For you" page, "Recommended for you" and "Watched, to rate" home rows (Home Screen Sections or the plugin script) and a
   "Similar, picked for you" row on detail pages.
 - TV series rating modes: whole series, per season or both, with per-season features from the episodes' credits.
 - Jellyfin 12: native "More like this" provider ranked with each user's taste (also in TV and mobile apps), per library.

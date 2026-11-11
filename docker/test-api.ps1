@@ -227,6 +227,87 @@ foreach ($name in $targets) {
         Invoke-Jf -Srv $srv -Method Delete -Path ('/RatingsRecs/Ratings/' + $id) -Token $family.Token | Out-Null
         if (-not $before[$id]) { Invoke-Jf -Srv $srv -Method Delete -Path ('/UserPlayedItems/' + $id + '?userId=' + $family.Id) -Token $family.Token | Out-Null }
     }
+
+    # "Watched, to rate" with the series rating modes, un-watching, permissions, implicit ratings, Home Screen Sections.
+    $rateIdsOf = { @((Invoke-Jf -Srv $srv -Method Get -Path '/RatingsRecs/RateThese?limit=200' -Token $family.Token).Items | ForEach-Object { $_.Id }) }
+    $waitFor = {
+        param([scriptblock]$condition)
+        for ($attempt = 0; $attempt -lt 45; $attempt++) {
+            if (& $condition) { return $true }
+            Start-Sleep -Seconds 2
+        }
+        return $false
+    }
+    $seasonsOf = @(Invoke-Jf -Srv $srv -Method Get -Path ('/Items?Recursive=true&IncludeItemTypes=Season&ParentId=' + $series + '&userId=' + $family.Id) -Token $family.Token | ForEach-Object { $_.Items } | Sort-Object IndexNumber)
+    $firstSeason = $seasonsOf[0].Id
+    $seasonEpisodes = @(Invoke-Jf -Srv $srv -Method Get -Path ('/Shows/' + $series + '/Episodes?seasonId=' + $firstSeason + '&userId=' + $family.Id) -Token $family.Token | ForEach-Object { $_.Items } | Sort-Object IndexNumber)
+    $episodeWasPlayed = @{}
+    foreach ($e in $seasonEpisodes) { $episodeWasPlayed[$e.Id] = [bool]$e.UserData.Played }
+    foreach ($id in @($series, $firstSeason)) { Invoke-Jf -Srv $srv -Method Delete -Path ('/RatingsRecs/Ratings/' + $id) -Token $family.Token | Out-Null }
+    foreach ($e in $seasonEpisodes) { Invoke-Jf -Srv $srv -Method Delete -Path ('/UserPlayedItems/' + $e.Id + '?userId=' + $family.Id) -Token $family.Token | Out-Null }
+    Invoke-Jf -Srv $srv -Method Put -Path '/RatingsRecs/Preferences' -Token $family.Token -Body @{ seriesMode = $null } | Out-Null
+
+    Invoke-Jf -Srv $srv -Method Post -Path ('/UserPlayedItems/' + $seasonEpisodes[0].Id + '?userId=' + $family.Id + '&datePlayed=2026-02-01T20:00:00Z') -Token $family.Token | Out-Null
+    $ok = & $waitFor { (& $rateIdsOf) -contains $series }
+    $ids = & $rateIdsOf
+    Check 'whole series: a series with one episode watched is offered, not its season' ($ok -and -not ($ids -contains $firstSeason))
+
+    foreach ($e in $seasonEpisodes) { Invoke-Jf -Srv $srv -Method Post -Path ('/UserPlayedItems/' + $e.Id + '?userId=' + $family.Id + '&datePlayed=2026-02-02T20:00:00Z') -Token $family.Token | Out-Null }
+    Invoke-Jf -Srv $srv -Method Put -Path '/RatingsRecs/Preferences' -Token $family.Token -Body @{ seriesMode = 'Season' } | Out-Null
+    Check 'per season: the series disappears at once after the mode change' (-not ((& $rateIdsOf) -contains $series))
+    $ok = & $waitFor { (& $rateIdsOf) -contains $firstSeason }
+    Check 'per season: a fully watched season is offered (after the recomputation)' $ok
+    $partial = @($seasonsOf | Select-Object -Skip 1 | ForEach-Object { $_.Id })
+    Check 'per season: a season not watched is not offered' (@((& $rateIdsOf) | Where-Object { $partial -contains $_ }).Count -eq 0)
+
+    Invoke-Jf -Srv $srv -Method Put -Path '/RatingsRecs/Preferences' -Token $family.Token -Body @{ seriesMode = 'Both' } | Out-Null
+    $ok = & $waitFor { $now = & $rateIdsOf; ($now -contains $series) -and ($now -contains $firstSeason) }
+    Check 'both: the series and the watched season are offered' $ok
+
+    Invoke-Jf -Srv $srv -Method Put -Path ('/RatingsRecs/Ratings/' + $firstSeason) -Token $family.Token -Body @{ value = 3 } | Out-Null
+    $now = & $rateIdsOf
+    Check 'both: rating the season removes only the season' (($now -contains $series) -and -not ($now -contains $firstSeason))
+    Invoke-Jf -Srv $srv -Method Delete -Path ('/RatingsRecs/Ratings/' + $firstSeason) -Token $family.Token | Out-Null
+
+    foreach ($e in $seasonEpisodes) { Invoke-Jf -Srv $srv -Method Delete -Path ('/UserPlayedItems/' + $e.Id + '?userId=' + $family.Id) -Token $family.Token | Out-Null }
+    $ok = & $waitFor { $now = & $rateIdsOf; -not ($now -contains $series) -and -not ($now -contains $firstSeason) }
+    Check 'marking as not watched removes the series and the season (after the recomputation)' $ok
+    Invoke-Jf -Srv $srv -Method Put -Path '/RatingsRecs/Preferences' -Token $family.Token -Body @{ seriesMode = $null } | Out-Null
+    foreach ($e in $seasonEpisodes) {
+        if ($episodeWasPlayed[$e.Id]) { Invoke-Jf -Srv $srv -Method Post -Path ('/UserPlayedItems/' + $e.Id + '?userId=' + $family.Id) -Token $family.Token | Out-Null }
+    }
+
+    $movieOnly = @((Invoke-Jf -Srv $srv -Method Get -Path '/RatingsRecs/RateThese?limit=200&type=Movie' -Token $family.Token).Items | Where-Object { $_.Type -ne 'Movie' })
+    $tvOnly = @((Invoke-Jf -Srv $srv -Method Get -Path '/RatingsRecs/RateThese?limit=200&type=Series' -Token $family.Token).Items | Where-Object { $_.Type -notin @('Series', 'Season') })
+    Check '"watched, to rate" type=Movie / type=Series filter the kinds' (($movieOnly.Count -eq 0) -and ($tvOnly.Count -eq 0))
+    $status = Get-Status { Invoke-Jf -Srv $srv -Method Get -Path '/RatingsRecs/RateThese?type=Episode' -Token $family.Token }
+    Check '"watched, to rate" with an invalid type -> 400' ($status -eq 400) "got $status"
+    $status = Get-Status { Invoke-Jf -Srv $srv -Method Get -Path ('/RatingsRecs/RateThese?userId=' + $admin.Id) -Token $family.Token }
+    Check 'non-admin cannot read "watched, to rate" of another user (403)' ($status -eq 403) "got $status"
+    $status = Get-Status { Invoke-Jf -Srv $srv -Method Get -Path ('/RatingsRecs/RateThese?userId=' + $family.Id) -Token $admin.Token }
+    Check 'admin can read "watched, to rate" of another user' ($status -eq 200) "got $status"
+    $status = Get-Status { Invoke-Jf -Srv $srv -Method Get -Path '/RatingsRecs/RateThese' }
+    Check '"watched, to rate" needs authentication (401)' ($status -eq 401) "got $status"
+
+    $hearted = Find-Item $srv $family 'Movie' 'Under the Ice'
+    $heartedWasPlayed = (Get-Native $srv $family $hearted).Played
+    Invoke-Jf -Srv $srv -Method Delete -Path ('/RatingsRecs/Ratings/' + $hearted) -Token $family.Token | Out-Null
+    Invoke-Jf -Srv $srv -Method Post -Path ('/UserPlayedItems/' + $hearted + '?userId=' + $family.Id + '&datePlayed=2026-02-03T20:00:00Z') -Token $family.Token | Out-Null
+    $ok = & $waitFor { (& $rateIdsOf) -contains $hearted }
+    Invoke-Jf -Srv $srv -Method Post -Path ('/UserFavoriteItems/' + $hearted + '?userId=' + $family.Id) -Token $family.Token | Out-Null
+    $implicitRating = Invoke-Jf -Srv $srv -Method Get -Path ('/RatingsRecs/Ratings/' + $hearted) -Token $family.Token
+    Check 'a heart from another app (implicit +3) removes the item from "watched, to rate"' ($ok -and $implicitRating.source -eq 'implicit' -and -not ((& $rateIdsOf) -contains $hearted)) "listed=$ok source=$($implicitRating.source)"
+    Invoke-Jf -Srv $srv -Method Delete -Path ('/UserFavoriteItems/' + $hearted + '?userId=' + $family.Id) -Token $family.Token | Out-Null
+    Invoke-Jf -Srv $srv -Method Delete -Path ('/RatingsRecs/Ratings/' + $hearted) -Token $family.Token | Out-Null
+    if (-not $heartedWasPlayed) { Invoke-Jf -Srv $srv -Method Delete -Path ('/UserPlayedItems/' + $hearted + '?userId=' + $family.Id) -Token $family.Token | Out-Null }
+
+    $hssHook = @((Invoke-Jf -Srv $srv -Method Get -Path '/RatingsRecs/Status' -Token $admin.Token).hooks | ForEach-Object { $_ } | Where-Object { $_.name -eq 'HomeScreenSections' })[0]
+    if ($hssHook -and $hssHook.state -eq 'Active') {
+        $hssIds = @((Invoke-Jf -Srv $srv -Method Get -Path ('/HomeScreen/Section/RatingsRecsRateThese?UserId=' + $family.Id) -Token $family.Token).Items | ForEach-Object { $_.Id })
+        $apiIds = @(& $rateIdsOf | Select-Object -First $hssIds.Count)
+        Check 'Home Screen Sections section = the same "watched, to rate" items' (($hssIds -join ',') -eq ($apiIds -join ',')) "hss=$($hssIds.Count) api=$($apiIds.Count)"
+    }
+
     $times = @()
     for ($i = 0; $i -lt 7; $i++) {
         $sw = [Diagnostics.Stopwatch]::StartNew()

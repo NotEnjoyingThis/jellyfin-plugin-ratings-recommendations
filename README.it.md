@@ -20,7 +20,7 @@ Tutto viene calcolato sul tuo server.
 - Voti rispecchiati sui campi nativi di Jellyfin `Likes`, `Rating` e Preferiti: non si perdono disinstallando il plugin.
 - Consigli personali basati sui contenuti (generi, registi, attori, sceneggiatori, tag, studi, decenni, saghe),
   con spiegazioni come "Perché hai amato *X*".
-- Righe in home "Consigliati per te" e "Valuta questi" (con Home Screen Sections, oppure aggiunte dallo script del plugin),
+- Righe in home "Consigliati per te" e "Già visti, da valutare" (con Home Screen Sections, oppure aggiunte dallo script del plugin),
   una pagina "Per te" e una riga "Simili, scelti per te" nella pagina dettaglio.
 - Jellyfin 12: provider nativo dei "Simili", così i consigli arrivano anche alle app TV e mobile.
 - Jellyfin 10.11: sostituzione opzionale dei suggerimenti di Jellyfin (spenta di default).
@@ -75,7 +75,7 @@ utenti), poi:
 2. **Ogni utente** (serve se *Enabled by Default* è spento, o per scegliere le sezioni): apri **Modular Home**:
    - **layout Legacy** (Jellyfin 10.11, oppure 12 con Impostazioni → Schermo → Layout "Desktop (legacy)"): menu laterale;
    - **layout Modern** (predefinito in Jellyfin 12): menu dell'avatar in alto a destra (sul telefono: menu laterale ☰).
-3. Spunta **Enable "Modular Home"**, poi sotto **Enabled Sections** spunta **Consigliati per te** e **Valuta questi**
+3. Spunta **Enable "Modular Home"**, poi sotto **Enabled Sections** spunta **Consigliati per te** e **Già visti, da valutare**
    (e le altre sezioni che vuoi) → **Save** → torna alla home.
 
 ### Senza Home Screen Sections
@@ -83,7 +83,7 @@ utenti), poi:
 Lo script del plugin aggiunge da solo le due righe in cima alla home (anche quando Home Screen Sections è installato ma
 non attivato).
 
-**"Valuta questi"** elenca ciò che hai visto ma non hai ancora votato, anche quello visto prima di installare il plugin
+**"Già visti, da valutare"** elenca ciò che hai visto ma non hai ancora votato, anche quello visto prima di installare il plugin
 (lo stato "visto" di Jellyfin): film visti, serie con almeno un episodio visto (modalità "Serie intera") e stagioni con
 tutti gli episodi visti (modalità "Per stagione"; con "Entrambe" serie e stagioni). Prima i visti più di recente. Apri
 il media e votalo dalla sua pagina: uscirà dalla riga al prossimo caricamento. Se non c'è nulla da votare, la riga

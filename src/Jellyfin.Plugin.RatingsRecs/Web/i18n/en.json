@@ -17,7 +17,7 @@
   "forYou.computing": "Your recommendations are being prepared: this takes a few seconds the first time.",
   "forYou.empty": "Nothing to recommend yet: rate a few movies and series you have watched.",
   "forYou.coldStart": "You have rated {0} titles: after 5 ratings the recommendations become personal.",
-  "rateThese": "Rate these",
+  "rateThese": "Watched, to rate",
   "tab.movies": "Movies",
   "tab.series": "Series",
   "becauseLoved": "Because you loved {0}",

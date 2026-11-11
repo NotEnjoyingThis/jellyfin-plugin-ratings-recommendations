@@ -100,10 +100,10 @@ public sealed class HomeSectionsBridge : BackgroundService
             if (!hssDone)
             {
                 var result = PluginInterop.InvokeWithJson("Jellyfin.Plugin.HomeScreenSections", "Jellyfin.Plugin.HomeScreenSections.PluginInterface", "RegisterSection", SectionPayload(RecommendedSectionId, italian ? "Consigliati per te" : "Recommended for you", nameof(HomeSectionResults.GetRecommended)))
-                    ?? PluginInterop.InvokeWithJson("Jellyfin.Plugin.HomeScreenSections", "Jellyfin.Plugin.HomeScreenSections.PluginInterface", "RegisterSection", SectionPayload(RateTheseSectionId, italian ? "Valuta questi" : "Rate these", nameof(HomeSectionResults.GetRateThese)));
+                    ?? PluginInterop.InvokeWithJson("Jellyfin.Plugin.HomeScreenSections", "Jellyfin.Plugin.HomeScreenSections.PluginInterface", "RegisterSection", SectionPayload(RateTheseSectionId, italian ? "Già visti, da valutare" : "Watched, to rate", nameof(HomeSectionResults.GetRateThese)));
                 if (result is null)
                 {
-                    _status.Set(HomeScreenSectionsHook, HookState.Active, "Sections registered: users add \"Recommended for you\" and \"Rate these\" from the Home Screen Sections settings.");
+                    _status.Set(HomeScreenSectionsHook, HookState.Active, "Sections registered: users add \"Recommended for you\" and \"Watched, to rate\" from the Home Screen Sections settings.");
                     hssDone = true;
                 }
                 else if (last)

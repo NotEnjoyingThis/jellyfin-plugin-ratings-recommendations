@@ -19,7 +19,7 @@ and get recommendations built from what you liked *and* what you disliked. Every
 - Ratings mirrored onto Jellyfin's own `Likes`, `Rating` and Favourite fields, so they survive an uninstall.
 - Personal, content-based recommendations (genres, directors, actors, writers, tags, studios, decades, collections),
   with explanations such as "Because you loved *X*".
-- "Recommended for you" and "Rate these" home rows (via Home Screen Sections, or added by the plugin script),
+- "Recommended for you" and "Watched, to rate" home rows (via Home Screen Sections, or added by the plugin script),
   a "For you" page, and a "Similar, picked for you" row on detail pages.
 - Jellyfin 12: native similar-items provider, so recommendations also reach TV and mobile apps.
 - Jellyfin 10.11: optional override of Jellyfin's suggestions (off by default).
@@ -73,7 +73,7 @@ Install **Home Screen Sections** and **Plugin Pages** (Plugin Pages adds the *Mo
 2. **Each user** (needed when *Enabled by Default* is off, or to choose sections): open **Modular Home**:
    - **Legacy layout** (Jellyfin 10.11, or 12 with Settings → Display → Layout "Desktop (legacy)"): side menu;
    - **Modern layout** (Jellyfin 12 default): the avatar menu at the top right (on a phone: side menu ☰).
-3. Tick **Enable "Modular Home"**, then under **Enabled Sections** tick **Recommended for you** and **Rate these**
+3. Tick **Enable "Modular Home"**, then under **Enabled Sections** tick **Recommended for you** and **Watched, to rate**
    (and the other sections you want) → **Save** → go back to the home.
 
 ### Without Home Screen Sections
@@ -81,7 +81,7 @@ Install **Home Screen Sections** and **Plugin Pages** (Plugin Pages adds the *Mo
 The plugin script adds both rows at the top of the home by itself (also when Home Screen Sections is installed but not
 enabled).
 
-**"Rate these"** lists what you have watched but not rated yet — including what you watched before installing the
+**"Watched, to rate"** lists what you have watched but not rated yet — including what you watched before installing the
 plugin (Jellyfin's own "played" state): movies you finished, series with at least one episode watched ("Whole series"
 mode) and seasons with every episode watched ("Per season" mode; "Both" shows series and seasons). Most recently
 watched first. Open an item and rate it from its page: it leaves the row at the next load. When there is nothing to
