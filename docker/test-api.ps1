@@ -262,6 +262,41 @@ foreach ($name in $targets) {
         Invoke-Jf -Srv $srv -Method Post -Path $pluginPath -Token $admin.Token -Body $config | Out-Null
     }
 
+    # Jellyfin 10.11 optional override of /Items/Suggestions and /Movies/Recommendations (design M6).
+    if ($name -eq '10.11') {
+        $pluginPath = '/Plugins/4d56ae7e38cb431cbff8e135c2087aa5/Configuration'
+        $config = Invoke-Jf -Srv $srv -Method Get -Path $pluginPath -Token $admin.Token
+        $savedOverride = [bool]$config.OverrideSuggestions
+        $hookOf = { @((Invoke-Jf -Srv $srv -Method Get -Path '/RatingsRecs/Status' -Token $admin.Token).hooks | ForEach-Object { $_ } | Where-Object { $_.name -eq 'SuggestionsOverride' })[0] }
+        $suggestPath = '/Items/Suggestions?type=Movie&limit=5&userId=' + $family.Id
+
+        $config.OverrideSuggestions = $false
+        Invoke-Jf -Srv $srv -Method Post -Path $pluginPath -Token $admin.Token -Body $config | Out-Null
+        Check 'override off by default/after save: hook Disabled' ((& $hookOf).state -eq 'Disabled')
+
+        $wasPlayed = (Get-Native $srv $family $movie).Played
+        Invoke-Jf -Srv $srv -Method Post -Path ('/UserPlayedItems/' + $movie + '?userId=' + $family.Id) -Token $family.Token | Out-Null
+        $hatedRec = Find-Item $srv $family 'Movie' 'Orbit of Glass'
+        Invoke-Jf -Srv $srv -Method Put -Path ('/RatingsRecs/Ratings/' + $hatedRec) -Token $family.Token -Body @{ value = -3 } | Out-Null
+
+        $config.OverrideSuggestions = $true
+        Invoke-Jf -Srv $srv -Method Post -Path $pluginPath -Token $admin.Token -Body $config | Out-Null
+        Check 'override on: hook Active' ((& $hookOf).state -eq 'Active') "$((& $hookOf).state) $((& $hookOf).message)"
+        $ours = @((Invoke-Jf -Srv $srv -Method Get -Path '/RatingsRecs/Recommendations?type=Movie&limit=5' -Token $family.Token).Items | ForEach-Object { $_.Id })
+        $suggested = @((Invoke-Jf -Srv $srv -Method Get -Path $suggestPath -Token $family.Token).Items | ForEach-Object { $_.Id })
+        Check 'override on: /Items/Suggestions = the recommendations' ($suggested.Count -gt 0 -and ($suggested -join ',') -eq ($ours -join ','))
+        $episodes = @((Invoke-Jf -Srv $srv -Method Get -Path ('/Items/Suggestions?type=Episode&limit=3&userId=' + $family.Id) -Token $family.Token).Items | Where-Object { $_.Type -ne 'Episode' })
+        Check 'override on: suggestions for other types are left alone' ($episodes.Count -eq 0)
+        $categories = @(Invoke-Jf -Srv $srv -Method Get -Path ('/Movies/Recommendations?categoryLimit=5&itemLimit=12&userId=' + $family.Id) -Token $family.Token | ForEach-Object { $_ })
+        $inCategories = @($categories | ForEach-Object { $_.Items } | ForEach-Object { $_.Id })
+        Check 'override on: /Movies/Recommendations has no item rated -3' ($categories.Count -gt 0 -and -not ($inCategories -contains $hatedRec)) "categories=$($categories.Count)"
+
+        $config.OverrideSuggestions = $savedOverride
+        Invoke-Jf -Srv $srv -Method Post -Path $pluginPath -Token $admin.Token -Body $config | Out-Null
+        Invoke-Jf -Srv $srv -Method Delete -Path ('/RatingsRecs/Ratings/' + $hatedRec) -Token $family.Token | Out-Null
+        if (-not $wasPlayed) { Invoke-Jf -Srv $srv -Method Delete -Path ('/UserPlayedItems/' + $movie + '?userId=' + $family.Id) -Token $family.Token | Out-Null }
+    }
+
     # Series rating modes and season ratings (design section 4.1).
     $seasons = Invoke-Jf -Srv $srv -Method Get -Path ('/Items?Recursive=true&IncludeItemTypes=Season&ParentId=' + $series + '&userId=' + $family.Id) -Token $family.Token
     $season1 = @($seasons.Items | Sort-Object IndexNumber)[0].Id

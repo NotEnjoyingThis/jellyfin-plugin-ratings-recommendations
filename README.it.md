@@ -24,6 +24,7 @@ Tutto viene calcolato sul tuo server.
 - Righe in home "Consigliati per te" e "Valuta questi" (con Home Screen Sections, oppure aggiunte dallo script del plugin),
   una pagina "Per te" e una riga "Simili, scelti per te" nella pagina dettaglio.
 - Jellyfin 12: provider nativo dei "Simili", così i consigli arrivano anche alle app TV e mobile.
+- Jellyfin 10.11: sostituzione opzionale dei suggerimenti di Jellyfin (spenta di default).
 - Voti per stagione delle serie TV, in opzione.
 - Importazione dei Preferiti come +3; esportazione e importazione dei voti in CSV.
 
@@ -112,6 +113,19 @@ Limiti:
 - I consigli film di Jellyfin ("Perché hai guardato…") usano solo il provider di Jellyfin e non cambiano.
 - Jellyfin 10.11 non ha questo provider: la riga "Simili, scelti per te" del plugin funziona su entrambe le versioni.
 
+## Jellyfin 10.11: suggerimenti (opzionale)
+
+Jellyfin 10.11 non ha il provider dei simili, quindi le app TV e mobile mostrano i suggerimenti di Jellyfin. Come
+opzione **facoltativa e spenta di default** (Consegna → "Jellyfin 10.11: suggerimenti") il plugin può cambiare due
+elenchi di Jellyfin per tutti i client:
+
+- `/Items/Suggestions` per film e serie → sostituito con i consigli dell'utente;
+- `/Movies/Recommendations` ("Perché hai guardato…") → ogni elenco riordinato col gusto dell'utente, senza i titoli
+  votati negativamente.
+
+Funziona modificando le risposte di Jellyfin, quindi dipende da dettagli interni: se qualcosa va storto si spegne da
+solo, scrive l'errore nel log e lo mostra nella pagina impostazioni. Su Jellyfin 12 usa invece il provider nativo qui sopra.
+
 ## Configurazione
 
 Pannello di controllo → Plugin → Ratings & Recommendations. Gruppi: Voti (nomi e valori dei livelli, Preferiti,
@@ -169,6 +183,12 @@ Soluzione, con Jellyfin avviato del tutto:
   fetch([...document.scripts].find(s => /main\.jellyfin\.bundle/.test(s.src)).src, { cache: 'reload' }).then(() => location.reload())
   ```
 Evita di aprire il client web nei primi secondi dopo il riavvio di Jellyfin.
+
+**Dopo un aggiornamento la pagina impostazioni sembra vecchia o mostra chiavi non tradotte.** Il browser ha tenuto la
+pagina precedente: ricarica il pannello di controllo con Ctrl+F5.
+
+**La pagina impostazioni dice "This is the build for Jellyfin 10.11 but the server runs 12".** È stato installato a
+mano lo zip per l'altra versione di Jellyfin: rimuovi il plugin e installalo dal catalogo, che sceglie la build giusta.
 
 **Gli altri utenti vedono i miei voti?** No. Ogni utente ha voti e consigli separati; solo gli amministratori possono
 esportare i voti degli altri.

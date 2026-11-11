@@ -12,17 +12,15 @@
                 <p id="rrVersion" class="fieldDescription"></p>
 
                 <div class="verticalSection">
-                    <h3 class="sectionTitle">Dependencies / Dipendenze</h3>
+                    <h3 class="sectionTitle" data-rr-i18n="section.dependencies"></h3>
                     <ul id="rrDependencies"></ul>
                     <ul id="rrHooks"></ul>
                     <div id="rrManualInjection" class="fieldDescription" hidden style="border:1px solid currentColor;border-radius:4px;padding:.8em 1em;">
-                        <p><strong>Thumbs in the web client need File Transformation / I pollici nel client web richiedono File Transformation.</strong></p>
-                        <p>Add the repository <code>https://www.iamparadox.dev/jellyfin/plugins/manifest.json</code> (Dashboard → Plugins → Repositories), install File Transformation from the catalog and restart Jellyfin.
-                            See <a href="https://github.com/IAmParadox27/jellyfin-plugin-file-transformation" target="_blank" rel="noopener">its README</a>.</p>
-                        <p>Aggiungi il repository qui sopra (Pannello di controllo → Plugin → Repository), installa File Transformation dal catalogo e riavvia Jellyfin.</p>
-                        <p>Alternative / In alternativa: paste this tag in Dashboard → General → Custom HTML (branding) or in JavaScript Injector / incolla questo tag nel codice HTML personalizzato o in JavaScript Injector:</p>
+                        <p><strong data-rr-i18n="manual.title"></strong></p>
+                        <p data-rr-i18n-html="manual.install"></p>
+                        <p data-rr-i18n="manual.alternative"></p>
                         <pre style="white-space:pre-wrap;">&lt;script defer src="/RatingsRecs/Web/ratings.js"&gt;&lt;/script&gt;</pre>
-                        <p>If Jellyfin runs under a base URL, prefix it (e.g. <code>/jellyfin/RatingsRecs/Web/ratings.js</code>). After any change reload the web page with Ctrl+F5 / dopo ogni modifica ricarica la pagina con Ctrl+F5.</p>
+                        <p data-rr-i18n-html="manual.baseUrl"></p>
                     </div>
                 </div>
 
@@ -30,138 +28,148 @@
                     <div class="checkboxContainer checkboxContainer-withDescription">
                         <label class="emby-checkbox-label">
                             <input id="rrEnabled" type="checkbox" is="emby-checkbox" />
-                            <span>Enabled / Attivo</span>
+                            <span data-rr-i18n="enabled"></span>
                         </label>
                     </div>
 
                     <div class="verticalSection">
-                        <h3 class="sectionTitle">Ratings / Voti</h3>
+                        <h3 class="sectionTitle" data-rr-i18n="section.ratings"></h3>
                         <div id="rrLevels"></div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input id="rrAmazingSetsFavorite" type="checkbox" is="emby-checkbox" />
-                                <span>"Amazing" adds to Favourites / "Fantastico" aggiunge ai Preferiti</span>
+                                <span data-rr-i18n="amazingSetsFavorite"></span>
                             </label>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input id="rrFavoriteFromOtherClients" type="checkbox" is="emby-checkbox" />
-                                <span>Heart from other clients (TV apps) counts as a rating / Il cuore dagli altri client vale come voto</span>
+                                <span data-rr-i18n="favoriteFromOtherClients"></span>
                             </label>
                         </div>
                         <div class="selectContainer">
-                            <label class="selectLabel" for="rrSeriesMode">TV series rating mode / Modalità di voto delle serie</label>
+                            <label class="selectLabel" for="rrSeriesMode" data-rr-i18n="seriesMode"></label>
                             <select is="emby-select" id="rrSeriesMode" class="emby-select-withcolor emby-select">
-                                <option value="Series">Whole series / Serie intera (default)</option>
-                                <option value="Season">Per season / Per stagione</option>
-                                <option value="Both">Both / Entrambe</option>
+                                <option value="Series" data-rr-i18n="seriesMode.Series"></option>
+                                <option value="Season" data-rr-i18n="seriesMode.Season"></option>
+                                <option value="Both" data-rr-i18n="seriesMode.Both"></option>
                             </select>
-                            <div class="fieldDescription">Ratings are never deleted when the mode changes / I voti non si cancellano cambiando modalità.</div>
+                            <div class="fieldDescription" data-rr-i18n="seriesMode.hint"></div>
                         </div>
                         <div id="rrCreditsWarning" class="fieldDescription" hidden style="border-left:3px solid currentColor;padding-left:.8em;"></div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input id="rrUsersCanChooseMode" type="checkbox" is="emby-checkbox" />
-                                <span>Users can choose their own mode ("For you" page) / Gli utenti possono scegliere la propria modalità (pagina "Per te")</span>
+                                <span data-rr-i18n="usersCanChooseMode"></span>
                             </label>
                         </div>
                         <div style="display:flex;gap:1em;flex-wrap:wrap;">
                             <div class="inputContainer" style="flex:1;min-width:12em;">
-                                <label class="inputLabel inputLabelUnfocused" for="rrBestSeasonWeight">Series score: best season weight / Peso della stagione migliore</label>
+                                <label class="inputLabel inputLabelUnfocused" for="rrBestSeasonWeight" data-rr-i18n="bestSeasonWeight"></label>
                                 <input id="rrBestSeasonWeight" type="number" step="0.05" min="0" is="emby-input" />
                             </div>
                             <div class="inputContainer" style="flex:1;min-width:12em;">
-                                <label class="inputLabel inputLabelUnfocused" for="rrAverageSeasonWeight">Series score: average season weight / Peso della media delle stagioni</label>
+                                <label class="inputLabel inputLabelUnfocused" for="rrAverageSeasonWeight" data-rr-i18n="averageSeasonWeight"></label>
                                 <input id="rrAverageSeasonWeight" type="number" step="0.05" min="0" is="emby-input" />
                             </div>
                         </div>
                         <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="rrImplicitFavorite">Implicit value: Favourite from other clients / Valore implicito: Preferito da altri client</label>
+                            <label class="inputLabel inputLabelUnfocused" for="rrImplicitFavorite" data-rr-i18n="implicitFavorite"></label>
                             <input id="rrImplicitFavorite" type="number" step="0.1" is="emby-input" />
                         </div>
                         <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="rrImplicitWatched">Implicit value: watched without rating / Valore implicito: visto senza voto</label>
+                            <label class="inputLabel inputLabelUnfocused" for="rrImplicitWatched" data-rr-i18n="implicitWatched"></label>
                             <input id="rrImplicitWatched" type="number" step="0.1" is="emby-input" />
                         </div>
                         <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="rrImplicitAbandoned">Implicit value: abandoned / Valore implicito: abbandonato</label>
+                            <label class="inputLabel inputLabelUnfocused" for="rrImplicitAbandoned" data-rr-i18n="implicitAbandoned"></label>
                             <input id="rrImplicitAbandoned" type="number" step="0.1" is="emby-input" />
                         </div>
                     </div>
 
                     <div class="verticalSection">
-                        <h3 class="sectionTitle">Delivery / Consegna</h3>
+                        <h3 class="sectionTitle" data-rr-i18n="section.delivery"></h3>
                         <div class="selectContainer">
-                            <label class="selectLabel" for="rrHomeRowsMode">Home rows / Righe in home</label>
+                            <label class="selectLabel" for="rrHomeRowsMode" data-rr-i18n="homeRows"></label>
                             <select is="emby-select" id="rrHomeRowsMode" class="emby-select-withcolor emby-select">
-                                <option value="Auto">Auto (Home Screen Sections if available, otherwise the script) / Auto</option>
-                                <option value="HomeScreenSections">Home Screen Sections</option>
-                                <option value="Script">Script (top of the home) / Script (in cima alla home)</option>
-                                <option value="Off">Off / Disattivate</option>
+                                <option value="Auto" data-rr-i18n="homeRows.Auto"></option>
+                                <option value="HomeScreenSections" data-rr-i18n="homeRows.HomeScreenSections"></option>
+                                <option value="Script" data-rr-i18n="homeRows.Script"></option>
+                                <option value="Off" data-rr-i18n="homeRows.Off"></option>
                             </select>
-                            <div class="fieldDescription">With Home Screen Sections each user adds "Recommended for you" and "Rate these" from Modular Home settings (Home Screen Sections must be enabled in its own settings). Restart Jellyfin after changing this option. / Con Home Screen Sections ogni utente aggiunge le sezioni dalle impostazioni di Modular Home (Home Screen Sections va attivato nelle sue impostazioni). Riavvia Jellyfin dopo aver cambiato questa opzione.</div>
+                            <div class="fieldDescription" data-rr-i18n="homeRows.hint"></div>
                         </div>
                         <div style="display:flex;gap:1em;flex-wrap:wrap;">
                             <div class="inputContainer" style="flex:1;min-width:12em;">
-                                <label class="inputLabel inputLabelUnfocused" for="rrHomeRowSize">Items per home row / Elementi per riga</label>
+                                <label class="inputLabel inputLabelUnfocused" for="rrHomeRowSize" data-rr-i18n="homeRowSize"></label>
                                 <input id="rrHomeRowSize" type="number" step="1" min="1" max="100" is="emby-input" />
                             </div>
                             <div class="inputContainer" style="flex:1;min-width:12em;">
-                                <label class="inputLabel inputLabelUnfocused" for="rrSimilarRowSize">Items in "Similar, picked for you" / Elementi in "Simili, scelti per te"</label>
+                                <label class="inputLabel inputLabelUnfocused" for="rrSimilarRowSize" data-rr-i18n="similarRowSize"></label>
                                 <input id="rrSimilarRowSize" type="number" step="1" min="1" max="50" is="emby-input" />
                             </div>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input id="rrShowSimilarRow" type="checkbox" is="emby-checkbox" />
-                                <span>"Similar, picked for you" row on detail pages / Riga "Simili, scelti per te" nella pagina dettaglio</span>
+                                <span data-rr-i18n="showSimilarRow"></span>
                             </label>
                         </div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input id="rrShowMenuEntry" type="checkbox" is="emby-checkbox" />
-                                <span>"For you" entry in the side menu / Voce "Per te" nel menu laterale</span>
+                                <span data-rr-i18n="showMenuEntry"></span>
                             </label>
                         </div>
                         <div id="rrSimilarProviderBlock" hidden>
-                            <h4>Jellyfin 12: native "More like this" / "Simili" nativi di Jellyfin 12</h4>
-                            <div class="fieldDescription">Libraries where the native "More like this" lists (web, TV and mobile apps) are ranked with each user's taste. On save the plugin puts its provider first in the similar-item provider order of the selected libraries and removes it from the others (Dashboard &gt; Libraries). Deselect all and save before uninstalling the plugin. / Librerie in cui gli elenchi "Simili" nativi (web, app TV e mobile) sono ordinati col gusto di ogni utente. Al salvataggio il plugin mette il suo provider per primo nell'ordine dei provider dei simili delle librerie scelte e lo toglie dalle altre (Pannello di controllo &gt; Librerie). Prima di disinstallare il plugin togli tutte le spunte e salva.</div>
+                            <h4 data-rr-i18n="provider.title"></h4>
+                            <div class="fieldDescription" data-rr-i18n="provider.hint"></div>
                             <div id="rrSimilarLibraries"></div>
+                        </div>
+                        <div id="rrOverrideBlock" hidden>
+                            <h4 data-rr-i18n="override.title"></h4>
+                            <div class="checkboxContainer checkboxContainer-withDescription">
+                                <label class="emby-checkbox-label">
+                                    <input id="rrOverrideSuggestions" type="checkbox" is="emby-checkbox" />
+                                    <span data-rr-i18n="override.label"></span>
+                                </label>
+                                <div class="fieldDescription checkboxFieldDescription" data-rr-i18n="override.hint"></div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="verticalSection">
-                        <h3 class="sectionTitle">Engine / Motore</h3>
+                        <h3 class="sectionTitle" data-rr-i18n="section.engine"></h3>
                         <div id="rrEngine" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(14em,1fr));gap:0 1em;"></div>
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
                                 <input id="rrExcludeHatedCollections" type="checkbox" is="emby-checkbox" />
-                                <span>Exclude other chapters of a saga rated -3 / Escludi gli altri capitoli di una saga votata -3</span>
+                                <span data-rr-i18n="excludeHatedCollections"></span>
                             </label>
                         </div>
-                        <div class="fieldDescription">Changes apply at the next computation (Recompute now, or within 6 hours) / Le modifiche valgono dal prossimo calcolo (Ricalcola ora, o entro 6 ore).</div>
+                        <div class="fieldDescription" data-rr-i18n="engine.hint"></div>
                     </div>
 
                     <div>
                         <button is="emby-button" type="submit" class="raised button-submit block emby-button">
-                            <span>Save</span>
+                            <span data-rr-i18n="save"></span>
                         </button>
                     </div>
                 </form>
 
                 <div class="verticalSection">
-                    <h3 class="sectionTitle">Tools / Strumenti</h3>
+                    <h3 class="sectionTitle" data-rr-i18n="section.tools"></h3>
                     <div class="selectContainer">
-                        <label class="selectLabel" for="rrToolUser">User / Utente</label>
+                        <label class="selectLabel" for="rrToolUser" data-rr-i18n="tools.user"></label>
                         <select is="emby-select" id="rrToolUser" class="emby-select-withcolor emby-select"></select>
                     </div>
                     <div style="display:flex;flex-wrap:wrap;gap:.5em;">
-                        <button is="emby-button" type="button" id="rrImportFavorites" class="raised emby-button"><span>Import Favourites as +3 / Importa Preferiti come +3</span></button>
-                        <button is="emby-button" type="button" id="rrExportCsv" class="raised emby-button"><span>Export CSV / Esporta CSV</span></button>
-                        <button is="emby-button" type="button" id="rrImportCsvButton" class="raised emby-button"><span>Import CSV / Importa CSV</span></button>
+                        <button is="emby-button" type="button" id="rrImportFavorites" class="raised emby-button"><span data-rr-i18n="tools.importFavorites"></span></button>
+                        <button is="emby-button" type="button" id="rrExportCsv" class="raised emby-button"><span data-rr-i18n="tools.exportCsv"></span></button>
+                        <button is="emby-button" type="button" id="rrImportCsvButton" class="raised emby-button"><span data-rr-i18n="tools.importCsv"></span></button>
                         <input type="file" id="rrImportCsvFile" accept=".csv,text/csv" style="display:none" />
-                        <button is="emby-button" type="button" id="rrRecompute" class="raised emby-button"><span>Recompute now / Ricalcola ora</span></button>
-                        <button is="emby-button" type="button" id="rrPreview" class="raised emby-button"><span>Preview recommendations / Anteprima consigli</span></button>
+                        <button is="emby-button" type="button" id="rrRecompute" class="raised emby-button"><span data-rr-i18n="tools.recompute"></span></button>
+                        <button is="emby-button" type="button" id="rrPreview" class="raised emby-button"><span data-rr-i18n="tools.preview"></span></button>
                     </div>
                     <pre id="rrToolResult" class="fieldDescription" style="white-space:pre-wrap;"></pre>
                 </div>
@@ -175,37 +183,60 @@
                     { id: 'b8298e01-2697-407a-b44d-aa8dc795e850', name: 'Home Screen Sections', required: false },
                     { id: '5b6550fa-a014-4f4c-8a2c-59a43680ac6d', name: 'Plugin Pages', required: false }
                 ];
-                var levels = [
-                    { key: 'Hate', label: 'Hate it / Detesto (-3)' },
-                    { key: 'Watchable', label: 'Watchable / Guardabile (-1)' },
-                    { key: 'Good', label: 'Good / Bello (+1)' },
-                    { key: 'Amazing', label: 'Amazing / Fantastico (+3)' }
-                ];
+                var levels = ['Hate', 'Watchable', 'Good', 'Amazing'];
                 var engineFields = [
-                    { key: 'WeightGenre', label: 'α Genres / Generi' },
-                    { key: 'WeightDirector', label: 'α Directors / Registi' },
-                    { key: 'WeightActor', label: 'α Actors / Attori' },
-                    { key: 'WeightWriter', label: 'α Writers / Sceneggiatori' },
-                    { key: 'WeightTag', label: 'α Tags' },
-                    { key: 'WeightStudio', label: 'α Studios / Studi' },
-                    { key: 'WeightDecade', label: 'α Decade / Decennio' },
-                    { key: 'WeightCollection', label: 'α Collections / Saghe' },
-                    { key: 'SmoothingK', label: 'k (smoothing / smorzamento)' },
-                    { key: 'HalfLifeDays', label: 'Half-life days / Emivita giorni (0 = off)' },
-                    { key: 'TasteWeight', label: 'Taste / Gusto' },
-                    { key: 'QualityWeight', label: 'Quality / Qualità' },
-                    { key: 'ExplorationWeight', label: 'Exploration / Esplorazione' },
-                    { key: 'DiversityLambda', label: 'Diversity λ / λ diversità' },
-                    { key: 'ProximityPenalty', label: 'Proximity penalty / Penalità di vicinanza' },
-                    { key: 'ColdStartThreshold', label: 'Cold start below N ratings / Partenza a freddo sotto N voti', integer: true },
-                    { key: 'OnboardingHideAfter', label: '"Rate these" hidden after N ratings / "Valuta questi" nascosto dopo N voti', integer: true }
+                    { key: 'WeightGenre' }, { key: 'WeightDirector' }, { key: 'WeightActor' }, { key: 'WeightWriter' },
+                    { key: 'WeightTag' }, { key: 'WeightStudio' }, { key: 'WeightDecade' }, { key: 'WeightCollection' },
+                    { key: 'SmoothingK' }, { key: 'HalfLifeDays' }, { key: 'TasteWeight' }, { key: 'QualityWeight' },
+                    { key: 'ExplorationWeight' }, { key: 'DiversityLambda' }, { key: 'ProximityPenalty' },
+                    { key: 'ColdStartThreshold', integer: true }, { key: 'OnboardingHideAfter', integer: true }
                 ];
+                var similarLibraryTypes = ['movies', 'tvshows', 'mixed'];
                 var page = document.querySelector('#RatingsRecsConfigPage');
+                var strings = { en: {}, current: {} };
 
                 function q(sel) { return page.querySelector(sel); }
 
                 function normalize(id) {
                     return (id || '').replace(/-/g, '').toLowerCase();
+                }
+
+                // Same rule as the web script: the web client's language, then the browser's; English for missing texts.
+                function language() {
+                    var raw = document.documentElement.getAttribute('lang') || navigator.language || 'en';
+                    return raw.toLowerCase().slice(0, 2) || 'en';
+                }
+
+                function t(key) {
+                    var text = strings.current[key] || strings.en[key] || key;
+                    var args = Array.prototype.slice.call(arguments, 1);
+                    return text.replace(/\{(\d)\}/g, function (match, index) {
+                        var value = args[Number(index)];
+                        return value === undefined || value === null ? '' : String(value);
+                    });
+                }
+
+                function loadStrings() {
+                    function get(lang) {
+                        return fetch(ApiClient.getUrl('RatingsRecs/Web/i18n/config.' + lang + '.json'))
+                            .then(function (r) { return r.ok ? r.json() : {}; })
+                            .catch(function () { return {}; });
+                    }
+                    var lang = language();
+                    return Promise.all([get('en'), lang === 'en' ? Promise.resolve(null) : get(lang)]).then(function (results) {
+                        strings.en = results[0];
+                        strings.current = results[1] || results[0];
+                    });
+                }
+
+                function translatePage() {
+                    Array.prototype.forEach.call(page.querySelectorAll('[data-rr-i18n]'), function (el) {
+                        el.textContent = t(el.getAttribute('data-rr-i18n'));
+                    });
+                    // Static markup from the plugin's own translation files (links and code samples).
+                    Array.prototype.forEach.call(page.querySelectorAll('[data-rr-i18n-html]'), function (el) {
+                        el.innerHTML = t(el.getAttribute('data-rr-i18n-html'));
+                    });
                 }
 
                 function authHeaders(extra) {
@@ -218,46 +249,58 @@
                     q('#rrToolResult').textContent = text;
                 }
 
+                function showError(status) {
+                    showResult(t('result.error', status));
+                }
+
+                function field(container, id, labelText, type, step, attrs) {
+                    var wrapper = document.createElement('div');
+                    wrapper.className = 'inputContainer';
+                    var label = document.createElement('label');
+                    label.className = 'inputLabel inputLabelUnfocused';
+                    label.setAttribute('for', id);
+                    label.textContent = labelText;
+                    var input = document.createElement('input');
+                    input.id = id;
+                    input.type = type;
+                    input.setAttribute('is', 'emby-input');
+                    if (step) { input.step = step; }
+                    Object.keys(attrs || {}).forEach(function (k) { input.setAttribute(k, attrs[k]); });
+                    wrapper.appendChild(label);
+                    wrapper.appendChild(input);
+                    container.appendChild(wrapper);
+                    return wrapper;
+                }
+
                 function renderLevels() {
-                    var html = '';
-                    levels.forEach(function (l) {
-                        html += '<div style="display:flex;gap:1em;flex-wrap:wrap;">'
-                            + '<div class="inputContainer" style="flex:2;min-width:12em;"><label class="inputLabel inputLabelUnfocused" for="rrName' + l.key + '">' + l.label + ' - name / nome</label>'
-                            + '<input id="rrName' + l.key + '" type="text" is="emby-input" placeholder="(default)" /></div>'
-                            + '<div class="inputContainer" style="flex:1;min-width:8em;"><label class="inputLabel inputLabelUnfocused" for="rrValue' + l.key + '">value / valore</label>'
-                            + '<input id="rrValue' + l.key + '" type="number" step="0.1" is="emby-input" /></div>'
-                            + '</div>';
+                    var container = q('#rrLevels');
+                    container.innerHTML = '';
+                    levels.forEach(function (key) {
+                        var row = document.createElement('div');
+                        row.style.cssText = 'display:flex;gap:1em;flex-wrap:wrap;';
+                        field(row, 'rrName' + key, t('level.name', t('level.' + key)), 'text', null, { placeholder: t('level.default') }).style.cssText = 'flex:2;min-width:12em;';
+                        field(row, 'rrValue' + key, t('level.value'), 'number', '0.1').style.cssText = 'flex:1;min-width:8em;';
+                        container.appendChild(row);
                     });
-                    q('#rrLevels').innerHTML = html;
-                    var engineHtml = '';
+                    var engine = q('#rrEngine');
+                    engine.innerHTML = '';
                     engineFields.forEach(function (f) {
-                        engineHtml += '<div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="rrCfg' + f.key + '">' + f.label + '</label>'
-                            + '<input id="rrCfg' + f.key + '" type="number" step="' + (f.integer ? '1' : '0.05') + '" min="0" is="emby-input" /></div>';
+                        field(engine, 'rrCfg' + f.key, t('engine.' + f.key), 'number', f.integer ? '1' : '0.05', { min: '0' });
                     });
-                    q('#rrEngine').innerHTML = engineHtml;
                 }
 
                 function renderPlugins(plugins) {
                     var self = plugins.filter(function (p) { return normalize(p.Id) === normalize(pluginId); })[0];
-                    q('#rrVersion').textContent = self ? ('Version ' + self.Version + ' - ' + self.Status) : '';
+                    q('#rrVersion').textContent = self ? t('version', self.Version, self.Status) : '';
                     var list = q('#rrDependencies');
                     list.innerHTML = '';
                     dependencies.forEach(function (dep) {
                         var found = plugins.filter(function (p) { return normalize(p.Id) === normalize(dep.id); })[0];
                         var li = document.createElement('li');
-                        li.textContent = dep.name + ': ' + (found ? (found.Version + ' (' + found.Status + ')') : (dep.required ? 'NOT INSTALLED / NON INSTALLATO' : 'not installed / non installato'));
+                        li.textContent = dep.name + ': ' + (found ? (found.Version + ' (' + found.Status + ')') : t(dep.required ? 'dep.notInstalledRequired' : 'dep.notInstalled'));
                         list.appendChild(li);
                     });
                 }
-
-                var hookNames = {
-                    WebInjection: 'Web client script / Script nel client web',
-                    HomeScreenSections: 'Home Screen Sections',
-                    PluginPages: 'Plugin Pages',
-                    SimilarProvider: 'Jellyfin 12 "More like this" provider / Provider "Simili" di Jellyfin 12'
-                };
-
-                var similarLibraryTypes = ['movies', 'tvshows', 'mixed'];
 
                 function renderSimilarLibraries(folders, selectedIds) {
                     var container = q('#rrSimilarLibraries');
@@ -291,7 +334,8 @@
                     var webActive = false;
                     (status.hooks || []).forEach(function (hook) {
                         var li = document.createElement('li');
-                        li.textContent = (hookNames[hook.name] || hook.name) + ': ' + hook.state + (hook.message ? ' - ' + hook.message : '');
+                        var name = strings.en['hook.' + hook.name] ? t('hook.' + hook.name) : hook.name;
+                        li.textContent = name + ': ' + t('state.' + hook.state) + (hook.message ? ' - ' + hook.message : '');
                         list.appendChild(li);
                         if (hook.name === 'WebInjection' && hook.state === 'Active') { webActive = true; }
                     });
@@ -300,15 +344,13 @@
                     var warning = q('#rrCreditsWarning');
                     if (credits && credits.seasons > 0) {
                         warning.hidden = false;
-                        warning.textContent = credits.percentWithoutCredits + '% of the seasons (' + credits.withoutCredits + '/' + credits.seasons
-                            + ') have no per-episode credits: with poor metadata the per-season mode works almost like "whole series". Refresh the TV metadata from TMDb or TVDb first. / '
-                            + 'Il ' + credits.percentWithoutCredits + '% delle stagioni (' + credits.withoutCredits + '/' + credits.seasons
-                            + ') non ha crediti per episodio: con metadati scarsi la modalità per stagione si comporta quasi come "Serie intera". Aggiorna prima i metadati da TMDb o TVDb.';
+                        warning.textContent = t('creditsWarning', credits.percentWithoutCredits, credits.withoutCredits, credits.seasons);
                     }
                     if (status.version) {
-                        q('#rrVersion').textContent += ' - build Jellyfin ' + status.jellyfinLine + ' (targetAbi ' + status.targetAbi + ')';
+                        q('#rrVersion').textContent += t('build', status.jellyfinLine, status.targetAbi);
                     }
                     q('#rrSimilarProviderBlock').hidden = status.jellyfinLine !== '12';
+                    q('#rrOverrideBlock').hidden = status.jellyfinLine !== '10.11';
                 }
 
                 function renderUsers(users) {
@@ -326,9 +368,9 @@
 
                 function loadConfig(config) {
                     q('#rrEnabled').checked = config.Enabled;
-                    levels.forEach(function (l) {
-                        q('#rrName' + l.key).value = config['Name' + l.key] || '';
-                        q('#rrValue' + l.key).value = config['Value' + l.key];
+                    levels.forEach(function (key) {
+                        q('#rrName' + key).value = config['Name' + key] || '';
+                        q('#rrValue' + key).value = config['Value' + key];
                     });
                     q('#rrAmazingSetsFavorite').checked = config.AmazingSetsFavorite;
                     q('#rrFavoriteFromOtherClients').checked = config.FavoriteFromOtherClientsCounts;
@@ -344,6 +386,7 @@
                     q('#rrSimilarRowSize').value = config.SimilarRowSize;
                     q('#rrShowSimilarRow').checked = config.ShowSimilarRow;
                     q('#rrShowMenuEntry').checked = config.ShowMenuEntry;
+                    q('#rrOverrideSuggestions').checked = config.OverrideSuggestions;
                     q('#rrAverageSeasonWeight').value = config.SeriesAverageSeasonWeight;
                     q('#rrExcludeHatedCollections').checked = config.ExcludeHatedCollections;
                 }
@@ -358,15 +401,18 @@
                 }
 
                 page.addEventListener('pageshow', function () {
-                    renderLevels();
                     Dashboard.showLoadingMsg();
-                    Promise.all([
-                        ApiClient.getPluginConfiguration(pluginId),
-                        ApiClient.getJSON(ApiClient.getUrl('Plugins')),
-                        ApiClient.getJSON(ApiClient.getUrl('Users')),
-                        ApiClient.getJSON(ApiClient.getUrl('RatingsRecs/Status')).catch(function () { return { hooks: [] }; }),
-                        ApiClient.getJSON(ApiClient.getUrl('Library/VirtualFolders')).catch(function () { return []; })
-                    ]).then(function (results) {
+                    loadStrings().then(function () {
+                        translatePage();
+                        renderLevels();
+                        return Promise.all([
+                            ApiClient.getPluginConfiguration(pluginId),
+                            ApiClient.getJSON(ApiClient.getUrl('Plugins')),
+                            ApiClient.getJSON(ApiClient.getUrl('Users')),
+                            ApiClient.getJSON(ApiClient.getUrl('RatingsRecs/Status')).catch(function () { return { hooks: [] }; }),
+                            ApiClient.getJSON(ApiClient.getUrl('Library/VirtualFolders')).catch(function () { return []; })
+                        ]);
+                    }).then(function (results) {
                         loadConfig(results[0]);
                         renderPlugins(results[1]);
                         renderUsers(results[2]);
@@ -383,9 +429,9 @@
                     Dashboard.showLoadingMsg();
                     ApiClient.getPluginConfiguration(pluginId).then(function (config) {
                         config.Enabled = q('#rrEnabled').checked;
-                        levels.forEach(function (l) {
-                            config['Name' + l.key] = q('#rrName' + l.key).value.trim();
-                            config['Value' + l.key] = readNumber('#rrValue' + l.key, config['Value' + l.key]);
+                        levels.forEach(function (key) {
+                            config['Name' + key] = q('#rrName' + key).value.trim();
+                            config['Value' + key] = readNumber('#rrValue' + key, config['Value' + key]);
                         });
                         config.AmazingSetsFavorite = q('#rrAmazingSetsFavorite').checked;
                         config.FavoriteFromOtherClientsCounts = q('#rrFavoriteFromOtherClients').checked;
@@ -409,9 +455,13 @@
                             config.SimilarProviderLibraryIds = Array.prototype.filter.call(page.querySelectorAll('.rrSimilarLibrary'), function (c) { return c.checked; })
                                 .map(function (c) { return c.getAttribute('data-id'); });
                         }
+                        if (!q('#rrOverrideBlock').hidden) {
+                            config.OverrideSuggestions = q('#rrOverrideSuggestions').checked;
+                        }
                         config.SeriesAverageSeasonWeight = readNumber('#rrAverageSeasonWeight', config.SeriesAverageSeasonWeight);
                         ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);
+                            return ApiClient.getJSON(ApiClient.getUrl('RatingsRecs/Status')).then(renderStatus);
                         });
                     });
                     return false;
@@ -420,8 +470,7 @@
                 q('#rrImportFavorites').addEventListener('click', function () {
                     fetch(toolUrl('ImportFavorites'), { method: 'POST', headers: authHeaders() })
                         .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
-                        .then(function (res) { showResult('Imported / Importati: ' + res.imported + ' - already rated / già votati: ' + res.alreadyRated); },
-                              function (status) { showResult('Error / Errore ' + status); });
+                        .then(function (res) { showResult(t('result.imported', res.imported, res.alreadyRated)); }, showError);
                 });
 
                 q('#rrExportCsv').addEventListener('click', function () {
@@ -434,8 +483,8 @@
                             document.body.appendChild(a);
                             a.click();
                             setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
-                            showResult('Exported / Esportato');
-                        }, function (status) { showResult('Error / Errore ' + status); });
+                            showResult(t('result.exported'));
+                        }, showError);
                 });
 
                 q('#rrRecompute').addEventListener('click', function () {
@@ -444,24 +493,24 @@
                         if (!task) { return Promise.reject('task not found'); }
                         return fetch(ApiClient.getUrl('ScheduledTasks/Running/' + task.Id), { method: 'POST', headers: authHeaders() });
                     }).then(function () {
-                        showResult('Recomputation started (Dashboard → Scheduled tasks) / Ricalcolo avviato (Pannello di controllo → Operazioni pianificate)');
-                    }, function (err) { showResult('Error / Errore ' + err); });
+                        showResult(t('result.recomputeStarted'));
+                    }, showError);
                 });
 
                 q('#rrPreview').addEventListener('click', function () {
                     fetch(toolUrl('Recommendations') + '&limit=20', { headers: authHeaders() })
                         .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
                         .then(function (res) {
-                            if (res.Status === 'Computing') { showResult('Still computing, try again in a few seconds / Calcolo in corso, riprova tra qualche secondo'); return; }
-                            var lines = ['Computed / Calcolati: ' + res.ComputedUtc + ' - ratings / voti: ' + res.ExplicitRatingCount + (res.IsColdStart ? ' (cold start)' : '')];
+                            if (res.Status === 'Computing') { showResult(t('result.computing')); return; }
+                            var lines = [t('result.computed', res.ComputedUtc, res.ExplicitRatingCount) + (res.IsColdStart ? t('result.coldStart') : '')];
                             res.Items.forEach(function (item, i) {
                                 var e = res.Explanations[i] || {};
                                 var why = (e.Features || []).map(function (f) { return f.Category + ': ' + f.Value; });
-                                if (e.BecauseOf) { why.unshift('because / perché ' + e.BecauseOf.Name); }
+                                if (e.BecauseOf) { why.unshift(t('result.because', e.BecauseOf.Name)); }
                                 lines.push((i + 1) + '. ' + item.Name + ' (' + item.Type + (item.ProductionYear ? ', ' + item.ProductionYear : '') + ') - ' + why.join('; '));
                             });
                             showResult(lines.join('\n'));
-                        }, function (status) { showResult('Error / Errore ' + status); });
+                        }, showError);
                 });
 
                 q('#rrImportCsvButton').addEventListener('click', function () {
@@ -475,11 +524,11 @@
                         return fetch(toolUrl('Import'), { method: 'POST', headers: authHeaders({ 'Content-Type': 'text/csv' }), body: text });
                     }).then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
                       .then(function (res) {
-                          var lines = ['Added / Aggiunti: ' + res.added, 'Updated / Aggiornati: ' + res.updated, 'Skipped / Ignorati: ' + res.skipped, 'Not found / Non trovati: ' + res.unmatched];
+                          var lines = [t('result.added', res.added), t('result.updated', res.updated), t('result.skipped', res.skipped), t('result.unmatched', res.unmatched)];
                           if (res.unmatchedNames.length) { lines.push('  ' + res.unmatchedNames.join(', ')); }
-                          res.errors.forEach(function (err) { lines.push('Line / Riga ' + err.line + ': ' + err.message); });
+                          res.errors.forEach(function (err) { lines.push(t('result.line', err.line, err.message)); });
                           showResult(lines.join('\n'));
-                      }, function (status) { showResult('Error / Errore ' + status); });
+                      }, showError);
                     e.target.value = '';
                 });
             })();

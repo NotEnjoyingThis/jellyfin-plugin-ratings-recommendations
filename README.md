@@ -23,6 +23,7 @@ and get recommendations built from what you liked *and* what you disliked. Every
 - "Recommended for you" and "Rate these" home rows (via Home Screen Sections, or added by the plugin script),
   a "For you" page, and a "Similar, picked for you" row on detail pages.
 - Jellyfin 12: native similar-items provider, so recommendations also reach TV and mobile apps.
+- Jellyfin 10.11: optional override of Jellyfin's suggestions (off by default).
 - Optional per-season ratings for TV series.
 - Imports existing Favourites as +3; CSV export/import of ratings.
 
@@ -109,6 +110,19 @@ Limits:
 - Jellyfin's movie recommendations ("Because you watched…") use only Jellyfin's own provider and are not changed.
 - Jellyfin 10.11 has no such provider: the plugin's own "Similar, picked for you" row works on both versions.
 
+## Jellyfin 10.11: suggestions (optional)
+
+Jellyfin 10.11 has no similar-items provider, so the TV and mobile apps keep Jellyfin's own suggestions. As an
+**optional, off-by-default** setting (Delivery → "Jellyfin 10.11: suggestions") the plugin can change two of Jellyfin's
+lists for every client:
+
+- `/Items/Suggestions` for movies and series → replaced with the user's recommendations;
+- `/Movies/Recommendations` ("Because you watched…") → each list reordered with the user's taste, without the titles
+  rated negatively.
+
+It works by changing Jellyfin's responses, so it depends on Jellyfin internals: if anything goes wrong it switches
+itself off, logs the error and shows it on the settings page. On Jellyfin 12 use the native provider above instead.
+
 ## Configuration
 
 Dashboard → Plugins → Ratings & Recommendations. Groups: Ratings (names and values of the levels, Favourite behaviour,
@@ -164,6 +178,12 @@ Fix, once Jellyfin has fully started:
   fetch([...document.scripts].find(s => /main\.jellyfin\.bundle/.test(s.src)).src, { cache: 'reload' }).then(() => location.reload())
   ```
 Avoid opening the web client in the first seconds after restarting Jellyfin.
+
+**After an update the settings page looks old or shows untranslated keys.** The browser kept the previous page:
+reload the dashboard with Ctrl+F5.
+
+**The settings page says "This is the build for Jellyfin 10.11 but the server runs 12".** A zip for the other Jellyfin
+version was installed by hand: remove the plugin and install it from the catalog, which picks the right build.
 
 **Can other users see my ratings?** No. Every user has separate ratings and recommendations; only administrators can
 export other users' ratings.

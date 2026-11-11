@@ -1,0 +1,82 @@
+name: Release
+
+# Releasing = add a "## [X.Y.Z] - date" section to CHANGELOG.md on main, then push the tag vX.Y.Z (design section 10.4).
+# This workflow builds both zips, publishes the GitHub Release and adds the new versions to manifest.json on main.
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            9.0.x
+            10.0.x
+
+      - name: Check the tag
+        run: |
+          git fetch origin main
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo "The tag must point to a commit on main"; exit 1; }
+          node scripts/release.mjs notes "${GITHUB_REF_NAME#v}" > release-notes.md
+          COMMIT_TIME="$(git log -1 --format=%ct "$GITHUB_SHA")"
+          {
+            echo "PLUGIN_VERSION=${GITHUB_REF_NAME#v}.0"
+            echo "SOURCE_DATE_EPOCH=$COMMIT_TIME"
+            echo "RELEASE_TIMESTAMP=$(date -u -d "@$COMMIT_TIME" +%Y-%m-%dT%H:%M:%SZ)"
+          } >> "$GITHUB_ENV"
+
+      - name: Test
+        run: |
+          node --test scripts/
+          dotnet test Jellyfin.Plugin.RatingsRecommendations.sln -c Release
+
+      - name: Package (both zips, reproducible)
+        run: bash ./build.sh --version "$PLUGIN_VERSION"
+
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            artifacts/*.zip artifacts/*.sha256 \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file release-notes.md \
+            --verify-tag
+
+      - name: Add the versions to manifest.json on main
+        run: |
+          git checkout -B main origin/main
+          node scripts/release.mjs manifest --tag "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --timestamp "$RELEASE_TIMESTAMP"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          git commit -m "chore: add $GITHUB_REF_NAME to manifest.json"
+          git push origin main
+
+      - name: Verify the published zips against the manifest
+        run: |
+          for attempt in 1 2 3 4 5; do
+            node scripts/release.mjs verify --tag "$GITHUB_REF_NAME" && exit 0
+            sleep 15
+          done
+          exit 1

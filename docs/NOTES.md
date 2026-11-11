@@ -49,6 +49,11 @@ Ogni scelta che cambia o precisa `docs/DESIGN.md`. Da tenere aggiornata.
 | 34 | Provider "attivabile per libreria" (`LibraryOptions.SimilarItemProviders`) | **Interruttore nel plugin** (scelto dall'utente): elenco delle librerie film/serie/miste nella pagina impostazioni (`SimilarProviderLibraryIds`, vuoto di default). Al salvataggio e all'avvio il plugin mette "Ratings & Recommendations" **per primo** in `TypeOptions.SimilarItemProviderOrder` (tipi `Movie`/`Series`) delle librerie scelte e lo **toglie** dalle altre, con `CollectionFolder.GetLibraryOptions()/UpdateLibraryOptions()` (API del server); nelle librerie non scelte il provider non restituisce nulla. Non tocca `SimilarItemProviders`. Se una libreria non ha `TypeOptions` per il tipo non le crea (un blocco vuoto disattiverebbe i downloader di metadati) e lo segnala nello stato | In Jellyfin 12.4 i provider locali sono sempre attivi e conta solo l'ordine; il primo che riempie il limite ferma gli altri | M5 |
 | 35 | "Non mostra media votati -3" | Vale quando la libreria ha abbastanza titoli. Se ne ha meno di quelli richiesti, Jellyfin completa la lista col proprio provider (che non conosce i voti, e mescolerebbe i suoi risultati ai nostri per punteggio): per evitarlo il nostro provider restituisce tutti i titoli dello stesso tipo — prima i simili ordinati col gusto, poi gli altri per gusto, e **in fondo** quelli votati negativamente (prima -1, poi -3). Proposto all'utente, nessuna obiezione | Limite del `SimilarItemsManager` di 12.4 | M5 |
 | 36 | Provider "riordina 'Simili' e 'Perché hai guardato…'" | Solo **"Simili"** (`/Items/{id}/Similar`, anche nelle app). `/Movies/Recommendations` ("Perché hai guardato…", "Con il regista…") usa solo il **primo** `IBatchLocalSimilarItemsProvider` registrato (quello di Jellyfin) e ignora l'ordine delle librerie: verificato sul server 12.4 (stesso ordine standard col nostro provider attivo) | Limite di Jellyfin 12.4; nessun aggancio supportato | M5 |
+| 38 | Override 10.11 "per sostituirne il contenuto" | `/Items/Suggestions`: sostituito con i consigli **solo** se la richiesta chiede film e/o serie (altri tipi, es. episodi, invariati); DTO costruiti con le opzioni del plugin (campi forse diversi da quelli chiesti dal client). `/Movies/Recommendations`: le categorie di Jellyfin restano ("Perché hai guardato X"), ogni elenco viene **riordinato** col gusto e perde i titoli votati negativamente (`TasteOrder`); categorie rimaste vuote tolte. Solo risposte 200 già prodotte da Jellyfin, solo con hook Active; in errore si spegne fino al riavvio | Sostituire le categorie con i consigli renderebbe falsi i titoli "Perché hai guardato X" | M6 |
+| 39 | "Traduzioni IT/EN" | Pagina impostazioni con chiavi `data-rr-i18n` e file `Web/i18n/config-<lingua>.json` (trattino, non punto: `config.it.json` diventerebbe un assembly satellite), servito da `GET /RatingsRecs/Web/i18n/config.{lingua}.json` (anonimo, nessun dato utente; 404 per lingue senza file). I **messaggi** di stato degli agganci restano in inglese (sono gli stessi del log); nomi degli agganci e stati sono tradotti | Separati da `en.json`/`it.json` per non appesantire `ratings.js`, caricato da ogni utente | M6 |
+| 40 | "Controlli di compatibilità all'avvio" | Oltre ai controlli dei singoli agganci: hook `Compatibility` che confronta la linea della build (10.11 / 12) con la versione del server (10.11.9+ / 12+) e segnala lo zip sbagliato | Jellyfin carica un plugin su qualunque server con versione ≥ `targetAbi`: la build 10.11 si caricherebbe anche su 12 | M6 |
+| 41 | `release.yml` (10.4) | Aiuti in `scripts/release.mjs` (Node, nessuna dipendenza; test con `node --test scripts/` anche in CI). In più: il tag deve puntare a un commit di `main`, i test girano prima del rilascio, la sezione del CHANGELOG è obbligatoria. Formato del manifest verificato sui modelli di Jellyfin 12.0.0 (`PackageInfo`, `VersionInfo`: stessi nomi JSON) | Sul PC di sviluppo non ci sono Python né PowerShell 7; Node c'è (ed è sui runner di GitHub) | M6 |
+| 42 | `CHANGELOG.md` | La sezione `Unreleased` è stata riscritta come note di rilascio per gli utenti (prima era la cronologia dello sviluppo) | Diventa il testo della Release e del campo `changelog` del manifest | M6 |
 | 37 | "Simili" nativi | Stesso tipo del media aperto (film → film, serie → serie, come il provider di Jellyfin); la riga "Simili, scelti per te" dello script resta mista. Nessuna cache lato Jellyfin (`CacheDuration = null`): tutto dalla cache dei consigli | Coerenza con i "Simili" standard | M5 |
 
 ## Provider "Simili" di Jellyfin 12 (M5)
@@ -72,9 +77,31 @@ Ogni scelta che cambia o precisa `docs/DESIGN.md`. Da tenere aggiornata.
   limite 12 i titoli negativi in fondo (libreria di 12 film); spento di nuovo → ordine standard. Pagina dettaglio "Altri come questo"
   con l'ordine nostro in Modern e Legacy. Controlli ripetuti in `docker/test-api.ps1` (solo 12).
 
+## Rifinitura (M6)
+- **Override 10.11**: azioni verificate nei metadati di `Jellyfin.Api.dll` 10.11.11: `SuggestionsController.GetSuggestions` /
+  `GetSuggestionsLegacy(userId, mediaType, type, startIndex, limit, enableTotalRecordCount)` e
+  `MoviesController.GetMovieRecommendations(userId, parentId, fields, categoryLimit, itemLimit)`. Il filtro è un `IAsyncResultFilter`
+  globale registrato con `services.Configure<MvcOptions>(o => o.Filters.AddService<...>())` nel `IPluginServiceRegistrator`:
+  funziona (verificato sul server 10.11.11). All'avvio e a ogni salvataggio `SuggestionsOverrideStatus` cerca le due azioni in
+  `IActionDescriptorCollectionProvider`. Verifica: con l'opzione accesa `/Items/Suggestions?type=Movie` = `/RatingsRecs/Recommendations`,
+  le richieste di episodi restano di Jellyfin, la categoria "Neon Rain" di `/Movies/Recommendations` perde i titoli votati -3.
+  Controlli ripetuti in `docker/test-api.ps1` (solo 10.11).
+- **Risorse incorporate**: un nome come `config.it.json` viene letto da MSBuild come risorsa della cultura `it` e finisce in un assembly
+  satellite (`bin/.../it/*.resources.dll`): per questo i file sono `config-it.json`. `build.ps1`/`build.sh` falliscono se nello zip
+  finirebbe un'altra DLL.
+- **Pagina impostazioni in cache**: `/web/configurationpage` viene servita senza `Cache-Control`; dopo un aggiornamento il browser può
+  mostrare la pagina vecchia finché non si ricarica con Ctrl+F5 (FAQ nei README).
+- **Avvisi di Home Screen Sections nel log** ("No translation found for key 'RatingsRecsRecommended' in language 'it'"): HSS cerca
+  una traduzione propria dell'id della sezione e poi usa il testo che registriamo; innocui (lo script rietichetta comunque i titoli).
+- **Pipeline di rilascio**: provata a secco con gli zip reali (`node scripts/release.mjs manifest` su una copia del repository: due voci,
+  prima jf12, MD5 uguali ai file `.md5`, seconda esecuzione sulla stessa versione rifiutata). Il workflow vero (Release su GitHub, commit
+  del manifest, verifica degli MD5 scaricati) si prova solo creando il tag.
+
 ## Stato attuale (11/11/2026)
 
-Milestone completate e committate: M0, M1, M2, M3, M3b, M4 (`2cd8810`), M5. Prossima: M6 (rifinitura e release).
+Milestone completate e committate: M0, M1, M2, M3, M3b, M4 (`2cd8810`), M5 (`a01ddd0`), M6 (rifinitura). Resta la **release v1.0.0**
+(tag e push decisi dall'utente) con il controllo di accettazione di M6: installazione dal catalogo su server puliti 10.11 e 12, e una
+seconda release di prova (v1.0.1) che compare come aggiornamento.
 
 Esito delle prove manuali dell'utente su M4:
 - **10.11 (Legacy)**: righe in home, "Per te" nel menu laterale, "Simili, scelti per te": tutto funziona.

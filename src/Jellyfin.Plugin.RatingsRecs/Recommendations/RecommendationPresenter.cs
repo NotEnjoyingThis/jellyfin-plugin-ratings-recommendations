@@ -264,6 +264,26 @@ public sealed class RecommendationPresenter
         return items;
     }
 
+    /// <summary>
+    /// Reorders a list chosen by Jellyfin with the user's taste and drops negatively rated items (cached context only).
+    /// </summary>
+    /// <param name="user">The user.</param>
+    /// <param name="itemIds">The items, in Jellyfin's order.</param>
+    /// <returns>The new order, or <c>null</c> while the recommendations are being computed.</returns>
+    public IReadOnlyList<Guid>? ReorderByTaste(User user, IReadOnlyList<Guid> itemIds)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+        var cached = _service.Get(user.Id);
+        if (cached?.Context is null)
+        {
+            _scheduler.EnsureComputed(user.Id);
+            return null;
+        }
+
+        var liveNegatives = _store.GetAll(user.Id).Where(r => r.Value < 0).ToDictionary(r => r.ItemId, r => (double)r.Value);
+        return global::RatingsRecs.Engine.TasteOrder.Order(cached.Context, itemIds, liveNegatives);
+    }
+
     private BaseItem? Visible(User user, Guid id)
     {
         var item = _library.GetItem(id);

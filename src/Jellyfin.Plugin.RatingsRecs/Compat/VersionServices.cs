@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Jellyfin.Plugin.RatingsRecs.Compat;
@@ -17,7 +18,10 @@ internal static class VersionServices
 #if JF12
         services.AddHostedService<Similar.SimilarProviderSync>();
 #else
-        _ = services;
+        // Optional override of /Items/Suggestions and /Movies/Recommendations (off by default).
+        services.AddSingleton<Override.SuggestionsOverrideFilter>();
+        services.AddHostedService<Override.SuggestionsOverrideStatus>();
+        services.Configure<MvcOptions>(options => options.Filters.AddService<Override.SuggestionsOverrideFilter>());
 #endif
     }
 }

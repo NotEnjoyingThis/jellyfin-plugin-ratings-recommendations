@@ -106,6 +106,12 @@ public class PluginConfiguration : BasePluginConfiguration
     public bool ShowMenuEntry { get; set; } = true;
 
     /// <summary>
+    /// Gets or sets a value indicating whether Jellyfin 10.11's <c>/Items/Suggestions</c> and <c>/Movies/Recommendations</c>
+    /// responses are replaced with the user's recommendations (off by default: it depends on Jellyfin internals).
+    /// </summary>
+    public bool OverrideSuggestions { get; set; }
+
+    /// <summary>
     /// Gets or sets the libraries (ids, "N" format) where the Jellyfin 12 "similar items" provider is active.
     /// On save the plugin puts its provider first in their provider order and removes it from the others.
     /// Empty by default: the plugin changes no library setting until an administrator selects libraries.

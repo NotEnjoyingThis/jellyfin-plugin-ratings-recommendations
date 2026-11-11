@@ -67,6 +67,21 @@ public class WebController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     public ActionResult GetForYouPage() => Serve(ForYouPage, "text/html; charset=utf-8");
 
+    /// <summary>
+    /// Gets the texts of the settings page in one language.
+    /// </summary>
+    /// <param name="language">"en" or "it".</param>
+    /// <returns>JSON, or 404 for another language.</returns>
+    [HttpGet("i18n/config.{language}.json")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status304NotModified)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public ActionResult GetSettingsTexts([FromRoute] string language)
+    {
+        var json = WebAssets.Languages.Contains(language, StringComparer.Ordinal) ? WebAssets.ReadText("i18n.config-" + language + ".json") : null;
+        return json is null ? NotFound() : Serve(json, "application/json; charset=utf-8");
+    }
+
     private ActionResult Serve(string content, string contentType)
     {
         var etag = WebAssets.ETag(content);

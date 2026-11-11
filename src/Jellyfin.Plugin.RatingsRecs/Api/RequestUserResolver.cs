@@ -58,4 +58,24 @@ public sealed class RequestUserResolver
             ? (null, controller.Problem(statusCode: StatusCodes.Status404NotFound, detail: "User not found."))
             : (target, null);
     }
+
+    /// <summary>
+    /// Resolves the target user of a request handled by Jellyfin itself (same rules, no error results).
+    /// </summary>
+    /// <param name="context">The HTTP context.</param>
+    /// <param name="requestedUserId">The optional <c>userId</c> parameter.</param>
+    /// <returns>The user, or <c>null</c> if it cannot be determined or the caller may not act on it.</returns>
+    public async Task<User?> ResolveAsync(HttpContext context, Guid? requestedUserId)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        var auth = await _authContext.GetAuthorizationInfo(context).ConfigureAwait(false);
+        var caller = auth.User;
+        if (requestedUserId is null || requestedUserId == Guid.Empty || (caller is not null && requestedUserId == caller.Id))
+        {
+            return caller;
+        }
+
+        var isAdmin = auth.IsApiKey || (caller is not null && _users.IsAdministrator(caller));
+        return isAdmin ? _users.GetUser(requestedUserId.Value) : null;
+    }
 }

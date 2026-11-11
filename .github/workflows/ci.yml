@@ -25,6 +25,9 @@ jobs:
       - name: Check web client script syntax
         run: node --check src/Jellyfin.Plugin.RatingsRecs/Web/ratings.js
 
+      - name: Test the release scripts
+        run: node --test scripts/
+
       - name: Check formatting
         run: dotnet format Jellyfin.Plugin.RatingsRecommendations.sln --verify-no-changes --no-restore
 

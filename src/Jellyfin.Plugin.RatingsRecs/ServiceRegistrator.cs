@@ -56,6 +56,7 @@ public class ServiceRegistrator : IPluginServiceRegistrator
         serviceCollection.AddSingleton<RecommendationPresenter>();
 
         serviceCollection.AddSingleton<HookStatusRegistry>();
+        serviceCollection.AddHostedService<CompatibilityCheck>();
         serviceCollection.AddHostedService<WebInjector>();
         serviceCollection.AddHostedService<HomeSectionsBridge>();
         serviceCollection.AddTransient<HomeSectionResults>();

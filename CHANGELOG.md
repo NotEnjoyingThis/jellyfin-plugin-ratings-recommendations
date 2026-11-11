@@ -8,50 +8,20 @@ The section of each version is used for the GitHub Release notes and the `change
 
 ## [Unreleased]
 
-### Added
-- Project skeleton: engine and plugin projects, dual build for Jellyfin 10.11.9+ (net9.0) and 12.0+ (net10.0).
-- Settings page with plugin version and dependency status (File Transformation, Home Screen Sections, Plugin Pages).
-- Packaging scripts producing one zip per Jellyfin line with MD5 and SHA-256.
-- Docker test servers (10.11.11 and 12.4) with a fictional sample library.
-- Rating store: one JSON file per user with schema version, atomic writes and per-user locking; kept across plugin updates.
-- Ratings API: `GET/PUT/DELETE /RatingsRecs/Ratings/{itemId}`, bulk `GET /RatingsRecs/Ratings?itemIds=`,
-  `GET /RatingsRecs/Export`, `POST /RatingsRecs/Import` (CSV), `POST /RatingsRecs/ImportFavorites`.
-- Ratings mirrored onto Jellyfin's `Rating`/`Likes` and Favourites as in the design table.
-- A Favourite set by a client without thumbs counts as an implicit +3 (explicit ratings always win).
-- Settings page: rating names/values, Favourite options, implicit signal weights; tools to import Favourites and export/import CSV.
-- Web client: the Favourite heart is replaced (hidden, not removed) by a 4-level thumbs selector on movie and series
-  detail pages and on card overlays, in the Legacy and Modern layouts; keyboard and screen-reader friendly,
-  optimistic saving with rollback and an error message; theme colours; Italian and English texts.
-- Script injection through File Transformation (registered by reflection); without it the hook switches itself off
-  and the settings page shows how to add the script manually.
-- `GET /RatingsRecs/Status` (administrators) with the state of the integration hooks.
-- Recommendation engine (content-based): taste profile with IDF, smoothing and time decay; taste + quality + daily
-  exploration score; exclusions, proximity penalty, MMR diversity, saga cap, explanations, cold start and "Rate these".
-- Background computation with in-memory cache: scheduled task every 6 hours, recomputation 30 s after a rating change
-  and after library scans; `GET /RatingsRecs/Recommendations` and `GET /RatingsRecs/Onboarding` answer from the cache.
-- Implicit signals: watched without rating (+0.5), abandoned (-0.5).
-- "For you" page (`#/ratingsrecs`) with Movies/Series tabs, explanations and thumbs on every card.
-- Settings page: engine coefficients, "Recompute now", recommendations preview for a user.
-- TV series rating modes: Whole series (default), Per season, Both; server default plus optional per-user choice on the
-  "For you" page; ratings are never deleted when the mode changes.
-- Per-season ratings: thumbs on season pages and on season cards; "copy the series rating to the unrated seasons".
-- Season features aggregated from episodes (directors, writers, top 5 guest stars, decade, average rating); seasons
-  without per-episode credits fall back to the series. Series score = 0.6 × best season + 0.4 × mean (configurable),
-  season-to-season explanations, "start from season N" for anthologies (tag "anthology"/"antologia").
-- Settings page: series mode options and the share of seasons without per-episode credits.
-- Home Screen Sections: "Recommended for you" and "Rate these" sections registered for users to add from Modular Home.
-- Home rows drawn by the web script when the home is not rendered by Home Screen Sections.
-- "For you" entry in the side menu (Legacy and Modern) and in Plugin Pages; clickable row titles.
-- "Similar, picked for you" row on movie and series pages (`GET /RatingsRecs/Similar/{itemId}`), from the cached profile.
-- Settings page: delivery options (home rows mode and size, similar row, menu entry).
-- Jellyfin 12: native "More like this" provider for movies and series, ranked with each user's taste (also in TV and
-  mobile apps), enabled per library from the settings page; the plugin puts it first in the libraries' provider order.
+First release. Requires Jellyfin 10.11.9+ or 12.0+.
 
-### Fixed
-- The web script was not injected when another plugin (Home Screen Sections, Plugin Pages) also transformed `index.html`.
-- "For you" was unreachable in the Jellyfin 12 Modern layout on wide windows: it now has a top-bar button and an
-  avatar-menu entry; the Plugin Pages entry is shown in the user's language and is not duplicated in the side menu.
-- The "Recommended for you" and "Rate these" row titles now open the matching section of the "For you" page
-  (`#/ratingsrecs?section=recommended|rate`) instead of its top.
-- The Legacy header showed "Page not found" on the "For you" page.
-- README: how to fix "Page not found" for Plugin Pages entries (stale cached web client after a Jellyfin start).
+### Added
+- 4-level rating (Hate it -3, Watchable -1, Good +1, Amazing +3) instead of the Favourite heart in the web client,
+  on detail pages and cards, in the Legacy and Modern layouts (needs File Transformation).
+- Ratings mirrored onto Jellyfin's `Rating`/`Likes` and Favourites; a heart set in other apps counts as +3.
+- Local, content-based recommendations from what you liked and disliked (genres, directors, actors, writers, tags,
+  studios, decades, collections), with explanations, diversity and a cold start with "Rate these".
+- "For you" page, "Recommended for you" and "Rate these" home rows (Home Screen Sections or the plugin script) and a
+  "Similar, picked for you" row on detail pages.
+- TV series rating modes: whole series, per season or both, with per-season features from the episodes' credits.
+- Jellyfin 12: native "More like this" provider ranked with each user's taste (also in TV and mobile apps), per library.
+- Jellyfin 10.11: optional override of Jellyfin's suggestions (off by default).
+- Settings page in English and Italian: rating names and values, engine weights, delivery options, status of every
+  integration, startup compatibility check; tools to import Favourites, export/import ratings as CSV, recompute and
+  preview recommendations.
+- REST API under `/RatingsRecs` (ratings, recommendations, onboarding, similar items, preferences, CSV).

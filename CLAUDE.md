@@ -55,7 +55,8 @@ tests/RatingsRecs.Engine.Tests/    xUnit, engine
 tests/RatingsRecs.Plugin.Tests/    xUnit, integration (store, API)
 docker/                            compose files + scripts for the test servers
 assets/                            logo.png (render-logo.ps1)
-.github/                           ci.yml (release.yml in M6), issue/PR templates
+.github/                           ci.yml, release.yml (tag vX.Y.Z), issue/PR templates
+scripts/                           release.mjs (+ tests: node --test scripts/)
 ```
 
 ## Conventions
@@ -70,7 +71,10 @@ assets/                            logo.png (render-logo.ps1)
 - `manifest.json` is only modified by the release pipeline; jf12 entry always before jf10.11 for the same version.
 
 ## Current status
-- Last milestone committed: M5 (Jellyfin 12 "similar items" provider). See docs/NOTES.md → "Stato attuale". Next: M6.
+- Last milestone committed: M6 (polish). Only the v1.0.0 release is left: the user tags and pushes (see CONTRIBUTING →
+  Releases); then the M6 acceptance test (install from the catalog on clean 10.11 and 12, v1.0.1 shows as an update).
+- M6: 10.11 override (`Override/`, registered only in the 10.11 build), `Compatibility` hook, settings page texts in
+  `Web/i18n/config-<lang>.json`, release tooling in `scripts/release.mjs` + `.github/workflows/release.yml`.
 - M5 design: per-library switch in the plugin settings (`SimilarProviderLibraryIds`); `SimilarProviderSync` puts our provider
   first in `TypeOptions.SimilarItemProviderOrder` of the selected libraries via `CollectionFolder.UpdateLibraryOptions` and never
   creates missing `TypeOptions`. Limits (small libraries, `/Movies/Recommendations`) in NOTES deviations 34–37.
@@ -78,5 +82,5 @@ assets/                            logo.png (render-logo.ps1)
   `desktop-legacy` = Legacy) plus 10.11.
 
 ## Milestones (docs/DESIGN.md §9)
-M0 skeleton ✅ → M1 store + API ✅ → M2 web thumbs ✅ → M3 engine ✅ → M3b seasons ✅ → M4 home rows ✅ → M5 JF12 provider ✅ → M6 polish/release.
+M0 skeleton ✅ → M1 store + API ✅ → M2 web thumbs ✅ → M3 engine ✅ → M3b seasons ✅ → M4 home rows ✅ → M5 JF12 provider ✅ → M6 polish ✅ (release v1.0.0: user's tag).
 Stop after each milestone and wait for the user's go-ahead.
