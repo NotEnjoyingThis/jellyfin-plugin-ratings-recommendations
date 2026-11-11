@@ -71,9 +71,9 @@ scripts/                           release.mjs (+ tests: node --test scripts/rel
 - `manifest.json` is only modified by the release pipeline; jf12 entry always before jf10.11 for the same version.
 
 ## Current status
-- Last milestone committed: M6 (polish). Release v1.0.0 prepared (CHANGELOG section, READMEs): the user pushes `main` and
-  the tag `v1.0.0` (see CONTRIBUTING → Releases); then the M6 acceptance test (install from the catalog on clean 10.11
-  and 12, v1.0.1 shows as an update).
+- **v1.0.0 released** (2026-11-11): GitHub Release + `manifest.json` updated by the workflow. Left from the M6 acceptance
+  test: install from the catalog on clean 10.11 and 12 servers, and a v1.0.1 test release showing as an update.
+  New releases: CONTRIBUTING → Releases (CHANGELOG section, push `main`, tag). Push and tag only when the user asks.
 - M6: 10.11 override (`Override/`, registered only in the 10.11 build), `Compatibility` hook, settings page texts in
   `Web/i18n/config-<lang>.json`, release tooling in `scripts/release.mjs` + `.github/workflows/release.yml`.
 - Before 1.0 (NOTES deviations 43–45): ratings are given **only on the item page**; cards show a read-only badge on rated

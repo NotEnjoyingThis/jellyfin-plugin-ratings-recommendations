@@ -136,10 +136,14 @@ Ogni scelta che cambia o precisa `docs/DESIGN.md`. Da tenere aggiornata.
 
 ## Stato attuale (11/11/2026)
 
-Milestone completate e committate: M0, M1, M2, M3, M3b, M4 (`2cd8810`), M5 (`a01ddd0`), M6 (`7855508`). Rilascio v1.0.0 **preparato**
-(sezione `[1.0.0] - 2026-11-11` nel CHANGELOG, nota "in sviluppo" tolta dai README); restano push di `main` e tag `v1.0.0`
-(decisi dall'utente) con il controllo di accettazione di M6: installazione dal catalogo su server puliti 10.11 e 12, e una
-seconda release di prova (v1.0.1) che compare come aggiornamento.
+Milestone completate: M0–M6. **v1.0.0 pubblicata l'11/11/2026** su richiesta dell'utente: push di `main`, tag `v1.0.0`,
+Release https://github.com/NotEnjoyingThis/jellyfin-plugin-ratings-recommendations/releases/tag/v1.0.0 (2 zip + `.sha256`),
+`manifest.json` aggiornato dal bot (`78fde82`, prima jf12). Prima CI fallita: `node --test scripts/` con una cartella non funziona
+con Node 24 su Linux (su Windows con Node 26 sì) → ora `node --test scripts/release.test.mjs`. Verifiche dopo il rilascio: manifest
+pubblico uguale a quello del repository, MD5 degli zip scaricati uguali al manifest, logo raggiungibile; aggiunto il repository al
+catalogo dei server di prova: 10.11 vede solo la build 10.11, 12 vede entrambe con la jf12 prima.
+Restano dal controllo di accettazione di M6: installazione dal catalogo su server **puliti** 10.11 e 12, e una seconda release di
+prova (v1.0.1) che compare come aggiornamento.
 
 Esito delle prove manuali dell'utente su M4:
 - **10.11 (Legacy)**: righe in home, "Per te" nel menu laterale, "Simili, scelti per te": tutto funziona.
