@@ -105,6 +105,15 @@ public class PluginConfiguration : BasePluginConfiguration
     /// <summary>Gets or sets a value indicating whether to add the "For you" entry to the side menu.</summary>
     public bool ShowMenuEntry { get; set; } = true;
 
+    /// <summary>
+    /// Gets or sets the libraries (ids, "N" format) where the Jellyfin 12 "similar items" provider is active.
+    /// On save the plugin puts its provider first in their provider order and removes it from the others.
+    /// Empty by default: the plugin changes no library setting until an administrator selects libraries.
+    /// </summary>
+#pragma warning disable CA1819 // XML-serialized configuration: arrays are the format Jellyfin uses for plugin settings.
+    public string[] SimilarProviderLibraryIds { get; set; } = [];
+#pragma warning restore CA1819
+
     /// <summary>Gets or sets the genre weight α.</summary>
     public double WeightGenre { get; set; } = 1.0;
 

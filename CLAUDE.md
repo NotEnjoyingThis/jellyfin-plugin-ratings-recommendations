@@ -22,7 +22,7 @@ at every milestone). API findings (10.11 vs 12 signatures, selectors) also go in
 | jf12 | net10.0 | 12.0.0 | 12.0.0.0 | `JF12` |
 
 - Package versions, targetAbi and symbols live in `Directory.Build.targets`; plugin version in `build.yaml` (4 numbers, same for both builds).
-- `#if JF12` only inside `Compat/` (BuildInfo, `ILibraryGateway`, `IUserDataGateway`) and JF12-only files (SimilarItemsProvider). Nowhere else.
+- `#if JF12` only inside `Compat/` (BuildInfo, `ILibraryGateway`, `IUserDataGateway`, `VersionServices`) and JF12-only files (`Similar/RatingsSimilarItemsProvider.cs`, `Similar/SimilarProviderSync.cs`). Nowhere else.
 - `src/RatingsRecs.Engine` has NO Jellyfin dependency; the plugin compiles its sources in (single DLL in the zip). A test enforces this.
 
 ## Commands
@@ -70,12 +70,13 @@ assets/                            logo.png (render-logo.ps1)
 - `manifest.json` is only modified by the release pipeline; jf12 entry always before jf10.11 for the same version.
 
 ## Current status
-- Last milestone committed: M4 (`2cd8810`). See docs/NOTES.md → "Stato attuale" for the user's manual test results.
-- M4 manual-test issues fixed: "For you" in the Modern top bar and avatar menu; "Modular Home" is in the avatar menu in
-  Modern (needs Plugin Pages) and HSS "Enabled by Default" is off after install — steps in the READMEs. Next: M5.
+- Last milestone committed: M5 (Jellyfin 12 "similar items" provider). See docs/NOTES.md → "Stato attuale". Next: M6.
+- M5 design: per-library switch in the plugin settings (`SimilarProviderLibraryIds`); `SimilarProviderSync` puts our provider
+  first in `TypeOptions.SimilarItemProviderOrder` of the selected libraries via `CollectionFolder.UpdateLibraryOptions` and never
+  creates missing `TypeOptions`. Limits (small libraries, `/Movies/Recommendations`) in NOTES deviations 34–37.
 - Web client checks must always cover **Legacy and Modern** layouts on 12 (Settings → Display → layout: `auto` = Modern,
   `desktop-legacy` = Legacy) plus 10.11.
 
 ## Milestones (docs/DESIGN.md §9)
-M0 skeleton ✅ → M1 store + API ✅ → M2 web thumbs ✅ → M3 engine ✅ → M3b seasons ✅ → M4 home rows ✅ → M5 JF12 provider → M6 polish/release.
+M0 skeleton ✅ → M1 store + API ✅ → M2 web thumbs ✅ → M3 engine ✅ → M3b seasons ✅ → M4 home rows ✅ → M5 JF12 provider ✅ → M6 polish/release.
 Stop after each milestone and wait for the user's go-ahead.

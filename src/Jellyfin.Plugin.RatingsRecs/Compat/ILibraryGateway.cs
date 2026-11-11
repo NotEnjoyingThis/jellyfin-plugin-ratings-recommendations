@@ -35,4 +35,11 @@ public interface ILibraryGateway
     /// <param name="items">The items.</param>
     /// <returns>People by item id.</returns>
     IReadOnlyDictionary<Guid, IReadOnlyList<PersonInfo>> GetPeople(IReadOnlyList<BaseItem> items);
+
+    /// <summary>
+    /// Gets the libraries (collection folders) an item belongs to.
+    /// </summary>
+    /// <param name="item">The item.</param>
+    /// <returns>The library ids.</returns>
+    IReadOnlyList<Guid> GetLibraryIds(BaseItem item);
 }

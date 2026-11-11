@@ -92,6 +92,23 @@ enabled). "Rate these" disappears after 15 ratings (configurable).
 The row titles open it too, scrolled to the matching section (`#/ratingsrecs?section=recommended` or
 `?section=rate`). Movie and series pages get a **Similar, picked for you** row under "More like this".
 
+## Jellyfin 12: native "More like this"
+
+On Jellyfin 12 the plugin can rank the native "More like this" lists of movies and series with each user's taste. These
+lists are also shown by the TV and mobile apps.
+
+1. Dashboard → Plugins → Ratings & Recommendations → **Delivery** → tick the libraries (movies, shows or mixed) → Save.
+2. The plugin puts its provider first in the "similar items" provider order of those libraries (Dashboard → Libraries →
+   library → similar item providers) and removes it from the others. The settings page shows where it is active.
+3. To turn it off, untick the library and save: Jellyfin's own lists come back. **Untick everything and save before
+   uninstalling the plugin.**
+
+Limits:
+- Items rated negatively are not shown. In a library with fewer titles than the list asks for, they come last instead of
+  being left out, because Jellyfin would add them back in arbitrary positions.
+- Jellyfin's movie recommendations ("Because you watched…") use only Jellyfin's own provider and are not changed.
+- Jellyfin 10.11 has no such provider: the plugin's own "Similar, picked for you" row works on both versions.
+
 ## Configuration
 
 Dashboard → Plugins → Ratings & Recommendations. Groups: Ratings (names and values of the levels, Favourite behaviour,

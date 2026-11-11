@@ -13,7 +13,7 @@ Ogni scelta che cambia o precisa `docs/DESIGN.md`. Da tenere aggiornata.
 | 3 | Test su 12.0–12.2 | Server di prova su **12.4** (ultima stabile al 10/11/2026); `JF12_TAG` permette 12.0/12.2 | 12.3 e 12.4 sono uscite dopo la stesura del design | M0 |
 | 4 | Motore in progetto separato + "nello zip solo la DLL del plugin" | Progetto `RatingsRecs.Engine` separato (usato dai test); il plugin compila gli stessi sorgenti al suo interno | Unico modo per avere entrambe le cose senza strumenti di merge | M0 |
 | 5 | Stessa versione per le due build | Confermato; nel manifest la voce `jf12` va **sempre prima** di `jf10.11` | Il server installa qualunque versione con `targetAbi ≤` versione server; a parità di versione vince la prima in elenco (ordinamento stabile). Da verificare in M6 con installazione dal catalogo | M0 / M6 |
-| 6 | `LibraryOptions.SimilarItemProviders` | In 12.4 l'elenco è `TypeOptions.SimilarItemProviders` / `SimilarItemProviderOrder` (`string[]`, per tipo di media); i provider **locali sono sempre attivi** | Verificato nel codice `v12.4` (`MediaBrowser.Model/Configuration/TypeOptions.cs`, `SimilarItemsManager.cs`). "Attivabile per libreria" andrà fatto con un elenco librerie nelle impostazioni del plugin: da confermare prima di M5 | M5 |
+| 6 | `LibraryOptions.SimilarItemProviders` | In 12.4 l'elenco è `TypeOptions.SimilarItemProviders` / `SimilarItemProviderOrder` (`string[]`, per tipo di media); i provider **locali sono sempre attivi** | Verificato nel codice `v12.4` (`MediaBrowser.Model/Configuration/TypeOptions.cs`, `SimilarItemsManager.cs`). "Attivabile per libreria": vedi 34 (scelta dell'utente) | M5 |
 | 7 | Righe Home Screen Sections con 20 card | HSS **ignora `limit`** (forza 1 nel registro, la quantità la decide il risultato), mostra le sezioni esterne **solo in landscape** e richiede che l'utente attivi "Modular Home" | Verificato nel codice HSS 2.5.11 e 3.0.4 (`PluginDefinedSection`). Da confermare in M4 | M4 |
 | 8 | Script per Docker in `.ps1`/`.sh` | Script dei server di prova solo in PowerShell (5.1 e 7, anche `pwsh` su Linux/macOS); `build.sh` resta per CI/release | Evita di duplicare la libreria di esempio in bash senza `jq` | M0 |
 | 9 | Voti in `<cartella dati del plugin>/ratings/<userId>.json` | Percorso `<PluginConfigurationsPath>/Jellyfin.Plugin.RatingsRecs/ratings/<userId>.json` (es. `/config/plugins/configurations/…`) | `BasePlugin.DataFolderPath` è la cartella **versionata** del plugin (`plugins/RatingsRecs_1.0.0.0`), sostituita a ogni aggiornamento: i voti andrebbero persi. `configurations/` sopravvive ad aggiornamenti e disinstallazione | M1 |
@@ -46,9 +46,35 @@ Ogni scelta che cambia o precisa `docs/DESIGN.md`. Da tenere aggiornata.
 | 32 | Plugin Pages | La pagina registrata è `/RatingsRecs/Web/foryou.html`; quando Plugin Pages apre `#/userpluginsettings.html?pageUrl=…foryou…` lo script porta a `#/ratingsrecs` | Plugin Pages carica pagine HTML; la pagina "Per te" è disegnata dallo script | M4 |
 | 33 | Voce "Per te" "nel menu laterale" | Oltre al menu laterale (Legacy e Modern stretto): pulsante nella barra in alto del Modern largo (prima delle librerie) e voce nel menu dell'avatar (se c'è Plugin Pages la sua voce viene rietichettata nella lingua dell'utente, altrimenti lo script ne aggiunge una dopo "Impostazioni"); nel menu laterale la copia di Plugin Pages è nascosta. Tutte rispettano l'opzione "voce di menu" | Il Modern largo di Jellyfin 12 non ha menu laterale | M4 (fix) |
 
+| 34 | Provider "attivabile per libreria" (`LibraryOptions.SimilarItemProviders`) | **Interruttore nel plugin** (scelto dall'utente): elenco delle librerie film/serie/miste nella pagina impostazioni (`SimilarProviderLibraryIds`, vuoto di default). Al salvataggio e all'avvio il plugin mette "Ratings & Recommendations" **per primo** in `TypeOptions.SimilarItemProviderOrder` (tipi `Movie`/`Series`) delle librerie scelte e lo **toglie** dalle altre, con `CollectionFolder.GetLibraryOptions()/UpdateLibraryOptions()` (API del server); nelle librerie non scelte il provider non restituisce nulla. Non tocca `SimilarItemProviders`. Se una libreria non ha `TypeOptions` per il tipo non le crea (un blocco vuoto disattiverebbe i downloader di metadati) e lo segnala nello stato | In Jellyfin 12.4 i provider locali sono sempre attivi e conta solo l'ordine; il primo che riempie il limite ferma gli altri | M5 |
+| 35 | "Non mostra media votati -3" | Vale quando la libreria ha abbastanza titoli. Se ne ha meno di quelli richiesti, Jellyfin completa la lista col proprio provider (che non conosce i voti, e mescolerebbe i suoi risultati ai nostri per punteggio): per evitarlo il nostro provider restituisce tutti i titoli dello stesso tipo — prima i simili ordinati col gusto, poi gli altri per gusto, e **in fondo** quelli votati negativamente (prima -1, poi -3). Proposto all'utente, nessuna obiezione | Limite del `SimilarItemsManager` di 12.4 | M5 |
+| 36 | Provider "riordina 'Simili' e 'Perché hai guardato…'" | Solo **"Simili"** (`/Items/{id}/Similar`, anche nelle app). `/Movies/Recommendations` ("Perché hai guardato…", "Con il regista…") usa solo il **primo** `IBatchLocalSimilarItemsProvider` registrato (quello di Jellyfin) e ignora l'ordine delle librerie: verificato sul server 12.4 (stesso ordine standard col nostro provider attivo) | Limite di Jellyfin 12.4; nessun aggancio supportato | M5 |
+| 37 | "Simili" nativi | Stesso tipo del media aperto (film → film, serie → serie, come il provider di Jellyfin); la riga "Simili, scelti per te" dello script resta mista. Nessuna cache lato Jellyfin (`CacheDuration = null`): tutto dalla cache dei consigli | Coerenza con i "Simili" standard | M5 |
+
+## Provider "Simili" di Jellyfin 12 (M5)
+- `SimilarItemsManager` (12.4, `Emby.Server.Implementations/Library/SimilarItems/`): i provider **locali** (`ILocalSimilarItemsProvider`)
+  sono sempre usati, filtrati solo da `Supports(item.GetType())`; i remoti solo se elencati in `TypeOptions.SimilarItemProviders`.
+  Ordine: `SimilarItemProviderOrder` (se vuoto `SimilarItemProviders`), chiave = `Name` del provider (senza distinzione di maiuscole);
+  i nomi assenti vanno in fondo (ordine di registrazione). Esecuzione **in sequenza**, ognuno con `Limit = richiesto - già trovati`;
+  si ferma appena raggiunge il limite (`limit ?? 50`). Duplicati tolti per id e `PresentationUniqueKey`. Punteggio per i locali
+  `1 - posizione*0,02` + bonus per l'ordine, poi ordinamento decrescente e filtro di accesso. Eccezione di un provider → avviso nel
+  log e si passa al successivo. `CacheDuration` usata solo per i remoti.
+- Provider di Jellyfin: tutti con nome **"Local Genre/Tag"**; quello dei film pesa generi, tag, studi, registi, attori; serie/musica in
+  ordine casuale. Nella pagina della libreria (`GET /Libraries/AvailableOptions`) il nostro compare accanto agli altri
+  (`MetadataPluginType.LocalSimilarityProvider`, attivo di default); togliere la spunta a un provider locale non ha effetto.
+- Il nostro provider viene trovato da Jellyfin con la scansione degli export (`GetExports<ISimilarItemsProvider>()`): classe pubblica
+  con costruttore DI, nessuna registrazione nostra. All'avvio `SimilarProviderSync` controlla
+  `ISimilarItemsManager.GetSimilarItemsProviders<Movie>()`; se manca, stato `Failed` e nessuna modifica alle librerie.
+- `/Movies/Recommendations` usa `GetBatchSimilarItemsAsync` del primo `IBatchLocalSimilarItemsProvider` (il provider film di Jellyfin)
+  senza try/catch e senza ordine delle librerie (deviazione 36).
+- Verifica sul server 12.4 (`rrfamily`, "Neon Rain", voto -3 a "Orbit of Glass"): spento → 6 titoli per genere/tag con "Orbit of Glass"
+  primo; acceso → ordine del gusto (come la riga "Simili, scelti per te" filtrata ai film), con limite 5 nessun titolo negativo, con
+  limite 12 i titoli negativi in fondo (libreria di 12 film); spento di nuovo → ordine standard. Pagina dettaglio "Altri come questo"
+  con l'ordine nostro in Modern e Legacy. Controlli ripetuti in `docker/test-api.ps1` (solo 12).
+
 ## Stato attuale (11/11/2026)
 
-Milestone completate e committate: M0, M1, M2, M3, M3b, M4 (`2cd8810`). Prossima: M5 (provider nativo di Jellyfin 12), poi M6.
+Milestone completate e committate: M0, M1, M2, M3, M3b, M4 (`2cd8810`), M5. Prossima: M6 (rifinitura e release).
 
 Esito delle prove manuali dell'utente su M4:
 - **10.11 (Legacy)**: righe in home, "Per te" nel menu laterale, "Simili, scelti per te": tutto funziona.

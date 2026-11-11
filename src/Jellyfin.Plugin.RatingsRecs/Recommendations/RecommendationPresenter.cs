@@ -217,6 +217,53 @@ public sealed class RecommendationPresenter
         };
     }
 
+    /// <summary>
+    /// Items for the Jellyfin 12 "similar items" provider: similar items ranked with the user's taste, filled up to the
+    /// limit with the other items of the same kind and, only if still short, the negatively rated ones (last).
+    /// Served from the cached context (never computes).
+    /// </summary>
+    /// <param name="user">The user.</param>
+    /// <param name="source">The open item.</param>
+    /// <param name="limit">How many items Jellyfin asked for.</param>
+    /// <param name="excludeIds">Ids Jellyfin asked to leave out.</param>
+    /// <returns>The items, or <c>null</c> while the recommendations are being computed.</returns>
+    public IReadOnlyList<BaseItem>? ProviderItems(User user, BaseItem source, int limit, IReadOnlyCollection<Guid>? excludeIds)
+    {
+        ArgumentNullException.ThrowIfNull(user);
+        ArgumentNullException.ThrowIfNull(source);
+        var cached = _service.Get(user.Id);
+        if (cached?.Context is null)
+        {
+            _scheduler.EnsureComputed(user.Id);
+            return null;
+        }
+
+        var exclude = excludeIds is null ? [] : excludeIds.ToHashSet();
+        var liveNegatives = _store.GetAll(user.Id).Where(r => r.Value < 0).ToDictionary(r => r.ItemId, r => (double)r.Value);
+        var take = Math.Clamp(limit, 1, MaxLimit);
+        var items = new List<BaseItem>();
+        foreach (var id in global::RatingsRecs.Engine.SimilarRanker.OrderForProvider(cached.Context, source.Id, liveNegatives))
+        {
+            if (items.Count >= take)
+            {
+                break;
+            }
+
+            if (exclude.Contains(id))
+            {
+                continue;
+            }
+
+            var item = _library.GetItem(id);
+            if (item is not null && item.IsVisibleStandalone(user))
+            {
+                items.Add(item);
+            }
+        }
+
+        return items;
+    }
+
     private BaseItem? Visible(User user, Guid id)
     {
         var item = _library.GetItem(id);

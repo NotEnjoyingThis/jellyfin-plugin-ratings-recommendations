@@ -220,6 +220,48 @@ foreach ($name in $targets) {
     $status = Get-Status { Invoke-Jf -Srv $srv -Method Get -Path ('/RatingsRecs/Similar/' + [Guid]::NewGuid()) -Token $family.Token }
     Check 'Similar on an unknown item -> 404' ($status -eq 404) "got $status"
 
+    # Jellyfin 12 native "similar items" provider, per library (design M5).
+    if ($name -eq '12') {
+        $pluginPath = '/Plugins/4d56ae7e38cb431cbff8e135c2087aa5/Configuration'
+        $config = Invoke-Jf -Srv $srv -Method Get -Path $pluginPath -Token $admin.Token
+        $savedIds = @($config.SimilarProviderLibraryIds)
+        # PowerShell 5.1 passes a JSON array down the pipeline as one object: unroll it first.
+        $folders = @(Invoke-Jf -Srv $srv -Method Get -Path '/Library/VirtualFolders' -Token $admin.Token | ForEach-Object { $_ })
+        $moviesLibrary = @($folders | Where-Object { $_.CollectionType -eq 'movies' })[0]
+        $nativePath = '/Items/' + $movie + '/Similar?limit=5&userId=' + $family.Id
+
+        $config.SimilarProviderLibraryIds = @()
+        Invoke-Jf -Srv $srv -Method Post -Path $pluginPath -Token $admin.Token -Body $config | Out-Null
+        $standard = @((Invoke-Jf -Srv $srv -Method Get -Path $nativePath -Token $family.Token).Items | ForEach-Object { $_.Id })
+        $hated = $standard[0]
+        Invoke-Jf -Srv $srv -Method Put -Path ('/RatingsRecs/Ratings/' + $hated) -Token $family.Token -Body @{ value = -3 } | Out-Null
+
+        $config.SimilarProviderLibraryIds = @($moviesLibrary.ItemId)
+        Invoke-Jf -Srv $srv -Method Post -Path $pluginPath -Token $admin.Token -Body $config | Out-Null
+        $folder = @(Invoke-Jf -Srv $srv -Method Get -Path '/Library/VirtualFolders' -Token $admin.Token | ForEach-Object { $_ } | Where-Object { $_.ItemId -eq $moviesLibrary.ItemId })[0]
+        $order = @(@($folder.LibraryOptions.TypeOptions | Where-Object { $_.Type -eq 'Movie' })[0].SimilarItemProviderOrder)
+        Check 'provider on: placed first in the library order' ($order.Count -gt 0 -and $order[0] -eq 'Ratings & Recommendations') "order: $($order -join '|')"
+        $providerHook = @((Invoke-Jf -Srv $srv -Method Get -Path '/RatingsRecs/Status' -Token $admin.Token).hooks | Where-Object { $_.name -eq 'SimilarProvider' })[0]
+        Check 'provider hook is Active' ($providerHook.state -eq 'Active') "$($providerHook.state) $($providerHook.message)"
+        $ranked = @((Invoke-Jf -Srv $srv -Method Get -Path $nativePath -Token $family.Token).Items)
+        Check 'provider on: native Similar has no item rated -3' ($ranked.Count -eq 5 -and -not (@($ranked | ForEach-Object { $_.Id }) -contains $hated)) "items=$($ranked.Count)"
+        Check 'provider on: native Similar keeps the item type' (@($ranked | Where-Object { $_.Type -ne 'Movie' }).Count -eq 0)
+        $all = @((Invoke-Jf -Srv $srv -Method Get -Path ('/Items/' + $movie + '/Similar?limit=50&userId=' + $family.Id) -Token $family.Token).Items | ForEach-Object { $_.Id })
+        Check 'provider on, small library: negatively rated items only at the end' ($all.Count -gt 0 -and $all[$all.Count - 1] -eq $hated) "last=$($all[$all.Count - 1])"
+
+        $config.SimilarProviderLibraryIds = @()
+        Invoke-Jf -Srv $srv -Method Post -Path $pluginPath -Token $admin.Token -Body $config | Out-Null
+        $folder = @(Invoke-Jf -Srv $srv -Method Get -Path '/Library/VirtualFolders' -Token $admin.Token | ForEach-Object { $_ } | Where-Object { $_.ItemId -eq $moviesLibrary.ItemId })[0]
+        $order = @(@($folder.LibraryOptions.TypeOptions | Where-Object { $_.Type -eq 'Movie' })[0].SimilarItemProviderOrder)
+        Check 'provider off: removed from the library order' (-not ($order -contains 'Ratings & Recommendations')) "order: $($order -join '|')"
+        $back = @((Invoke-Jf -Srv $srv -Method Get -Path $nativePath -Token $family.Token).Items | ForEach-Object { $_.Id })
+        Check 'provider off: native Similar is the standard one again' (($back -join ',') -eq ($standard -join ','))
+
+        Invoke-Jf -Srv $srv -Method Delete -Path ('/RatingsRecs/Ratings/' + $hated) -Token $family.Token | Out-Null
+        $config.SimilarProviderLibraryIds = $savedIds
+        Invoke-Jf -Srv $srv -Method Post -Path $pluginPath -Token $admin.Token -Body $config | Out-Null
+    }
+
     # Series rating modes and season ratings (design section 4.1).
     $seasons = Invoke-Jf -Srv $srv -Method Get -Path ('/Items?Recursive=true&IncludeItemTypes=Season&ParentId=' + $series + '&userId=' + $family.Id) -Token $family.Token
     $season1 = @($seasons.Items | Sort-Object IndexNumber)[0].Id

@@ -68,4 +68,11 @@ public sealed class JellyfinLibraryGateway : ILibraryGateway
 #endif
         return result;
     }
+
+    /// <inheritdoc />
+    public IReadOnlyList<Guid> GetLibraryIds(BaseItem item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        return _libraryManager.GetCollectionFolders(item).Select(folder => folder.Id).ToList();
+    }
 }

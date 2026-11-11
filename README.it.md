@@ -95,6 +95,23 @@ Ci si arriva anche dal titolo delle righe, che porta alla sezione corrispondente
 oppure `?section=rate`). Le pagine di film e serie hanno la riga **Simili, scelti per te** sotto
 "Altri come questo".
 
+## Jellyfin 12: "Simili" nativi
+
+Su Jellyfin 12 il plugin può ordinare col gusto di ogni utente gli elenchi "Altri come questo" nativi di film e serie,
+che compaiono anche nelle app TV e mobile.
+
+1. Pannello di controllo → Plugin → Ratings & Recommendations → **Consegna** → spunta le librerie (film, serie o miste) → Salva.
+2. Il plugin mette il suo provider per primo nell'ordine dei provider dei simili di quelle librerie (Pannello di
+   controllo → Librerie → libreria → provider dei simili) e lo toglie dalle altre. La pagina impostazioni mostra dove è attivo.
+3. Per spegnerlo togli la spunta e salva: tornano gli elenchi di Jellyfin. **Prima di disinstallare il plugin togli tutte
+   le spunte e salva.**
+
+Limiti:
+- I titoli votati negativamente non compaiono. In una libreria con meno titoli di quanti l'elenco ne chiede finiscono
+  in fondo invece di sparire, perché Jellyfin li aggiungerebbe di nuovo in posizioni qualsiasi.
+- I consigli film di Jellyfin ("Perché hai guardato…") usano solo il provider di Jellyfin e non cambiano.
+- Jellyfin 10.11 non ha questo provider: la riga "Simili, scelti per te" del plugin funziona su entrambe le versioni.
+
 ## Configurazione
 
 Pannello di controllo → Plugin → Ratings & Recommendations. Gruppi: Voti (nomi e valori dei livelli, Preferiti,

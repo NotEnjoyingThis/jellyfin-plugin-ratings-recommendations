@@ -44,6 +44,8 @@ The section of each version is used for the GitHub Release notes and the `change
 - "For you" entry in the side menu (Legacy and Modern) and in Plugin Pages; clickable row titles.
 - "Similar, picked for you" row on movie and series pages (`GET /RatingsRecs/Similar/{itemId}`), from the cached profile.
 - Settings page: delivery options (home rows mode and size, similar row, menu entry).
+- Jellyfin 12: native "More like this" provider for movies and series, ranked with each user's taste (also in TV and
+  mobile apps), enabled per library from the settings page; the plugin puts it first in the libraries' provider order.
 
 ### Fixed
 - The web script was not injected when another plugin (Home Screen Sections, Plugin Pages) also transformed `index.html`.

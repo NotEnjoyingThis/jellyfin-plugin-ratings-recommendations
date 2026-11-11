@@ -59,5 +59,7 @@ public class ServiceRegistrator : IPluginServiceRegistrator
         serviceCollection.AddHostedService<WebInjector>();
         serviceCollection.AddHostedService<HomeSectionsBridge>();
         serviceCollection.AddTransient<HomeSectionResults>();
+
+        VersionServices.Register(serviceCollection);
     }
 }

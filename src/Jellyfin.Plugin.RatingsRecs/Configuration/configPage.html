@@ -123,6 +123,11 @@
                                 <span>"For you" entry in the side menu / Voce "Per te" nel menu laterale</span>
                             </label>
                         </div>
+                        <div id="rrSimilarProviderBlock" hidden>
+                            <h4>Jellyfin 12: native "More like this" / "Simili" nativi di Jellyfin 12</h4>
+                            <div class="fieldDescription">Libraries where the native "More like this" lists (web, TV and mobile apps) are ranked with each user's taste. On save the plugin puts its provider first in the similar-item provider order of the selected libraries and removes it from the others (Dashboard &gt; Libraries). Deselect all and save before uninstalling the plugin. / Librerie in cui gli elenchi "Simili" nativi (web, app TV e mobile) sono ordinati col gusto di ogni utente. Al salvataggio il plugin mette il suo provider per primo nell'ordine dei provider dei simili delle librerie scelte e lo toglie dalle altre (Pannello di controllo &gt; Librerie). Prima di disinstallare il plugin togli tutte le spunte e salva.</div>
+                            <div id="rrSimilarLibraries"></div>
+                        </div>
                     </div>
 
                     <div class="verticalSection">
@@ -248,8 +253,37 @@
                 var hookNames = {
                     WebInjection: 'Web client script / Script nel client web',
                     HomeScreenSections: 'Home Screen Sections',
-                    PluginPages: 'Plugin Pages'
+                    PluginPages: 'Plugin Pages',
+                    SimilarProvider: 'Jellyfin 12 "More like this" provider / Provider "Simili" di Jellyfin 12'
                 };
+
+                var similarLibraryTypes = ['movies', 'tvshows', 'mixed'];
+
+                function renderSimilarLibraries(folders, selectedIds) {
+                    var container = q('#rrSimilarLibraries');
+                    container.innerHTML = '';
+                    var selected = (selectedIds || []).map(normalize);
+                    folders.filter(function (f) {
+                        return !f.CollectionType || similarLibraryTypes.indexOf(f.CollectionType) !== -1;
+                    }).forEach(function (f) {
+                        var wrapper = document.createElement('div');
+                        wrapper.className = 'checkboxContainer';
+                        var label = document.createElement('label');
+                        label.className = 'emby-checkbox-label';
+                        var input = document.createElement('input');
+                        input.type = 'checkbox';
+                        input.setAttribute('is', 'emby-checkbox');
+                        input.className = 'rrSimilarLibrary';
+                        input.setAttribute('data-id', normalize(f.ItemId));
+                        input.checked = selected.indexOf(normalize(f.ItemId)) !== -1;
+                        var span = document.createElement('span');
+                        span.textContent = f.Name;
+                        label.appendChild(input);
+                        label.appendChild(span);
+                        wrapper.appendChild(label);
+                        container.appendChild(wrapper);
+                    });
+                }
 
                 function renderStatus(status) {
                     var list = q('#rrHooks');
@@ -274,6 +308,7 @@
                     if (status.version) {
                         q('#rrVersion').textContent += ' - build Jellyfin ' + status.jellyfinLine + ' (targetAbi ' + status.targetAbi + ')';
                     }
+                    q('#rrSimilarProviderBlock').hidden = status.jellyfinLine !== '12';
                 }
 
                 function renderUsers(users) {
@@ -329,12 +364,14 @@
                         ApiClient.getPluginConfiguration(pluginId),
                         ApiClient.getJSON(ApiClient.getUrl('Plugins')),
                         ApiClient.getJSON(ApiClient.getUrl('Users')),
-                        ApiClient.getJSON(ApiClient.getUrl('RatingsRecs/Status')).catch(function () { return { hooks: [] }; })
+                        ApiClient.getJSON(ApiClient.getUrl('RatingsRecs/Status')).catch(function () { return { hooks: [] }; }),
+                        ApiClient.getJSON(ApiClient.getUrl('Library/VirtualFolders')).catch(function () { return []; })
                     ]).then(function (results) {
                         loadConfig(results[0]);
                         renderPlugins(results[1]);
                         renderUsers(results[2]);
                         renderStatus(results[3]);
+                        renderSimilarLibraries(results[4], results[0].SimilarProviderLibraryIds);
                         Dashboard.hideLoadingMsg();
                     }, function () {
                         Dashboard.hideLoadingMsg();
@@ -368,6 +405,10 @@
                         config.SimilarRowSize = Math.max(1, Math.round(readNumber('#rrSimilarRowSize', config.SimilarRowSize)));
                         config.ShowSimilarRow = q('#rrShowSimilarRow').checked;
                         config.ShowMenuEntry = q('#rrShowMenuEntry').checked;
+                        if (!q('#rrSimilarProviderBlock').hidden) {
+                            config.SimilarProviderLibraryIds = Array.prototype.filter.call(page.querySelectorAll('.rrSimilarLibrary'), function (c) { return c.checked; })
+                                .map(function (c) { return c.getAttribute('data-id'); });
+                        }
                         config.SeriesAverageSeasonWeight = readNumber('#rrAverageSeasonWeight', config.SeriesAverageSeasonWeight);
                         ApiClient.updatePluginConfiguration(pluginId, config).then(function (result) {
                             Dashboard.processPluginConfigurationUpdateResult(result);
