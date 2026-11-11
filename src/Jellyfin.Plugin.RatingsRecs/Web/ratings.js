@@ -1165,6 +1165,96 @@
 
             modernHome.parentNode.insertBefore(clone, modernHome.nextSibling);
         }
+
+        hideDuplicateDrawerEntries();
+        addModernTopBarEntry();
+        addModernUserMenuEntry();
+    }
+
+    function setButtonContent(button, text) {
+        // Keeps the MUI start-icon span, replaces its SVG with our thumb and the label text.
+        var icon = button.querySelector('.MuiButton-startIcon, .MuiListItemIcon-root');
+        if (icon) {
+            icon.innerHTML = svg(THUMB_UP, false);
+        }
+
+        var label = button.querySelector('.MuiListItemText-primary, .MuiTypography-root');
+        if (label) {
+            label.textContent = text;
+            return;
+        }
+
+        for (var i = button.childNodes.length - 1; i >= 0; i--) {
+            if (button.childNodes[i].nodeType === 3) {
+                button.removeChild(button.childNodes[i]);
+            }
+        }
+
+        button.appendChild(document.createTextNode(text));
+    }
+
+    function addModernTopBarEntry() {
+        // Modern layout on wide screens has no side menu: the libraries are buttons in the top bar.
+        var bar = document.querySelector('.MuiAppBar-root .MuiToolbar-root .MuiStack-root');
+        if (!bar || bar.querySelector('.rr-appbar-foryou')) {
+            return;
+        }
+
+        var model = bar.querySelector('a.MuiButton-root[href="#/home?tab=1"]') || bar.querySelector('a.MuiButton-root[href^="#/"]:not([href="#/"])');
+        if (!model) {
+            return;
+        }
+
+        var button = model.cloneNode(true);
+        button.classList.add('rr-appbar-foryou');
+        button.setAttribute('href', '#/ratingsrecs');
+        button.removeAttribute('aria-current');
+        setButtonContent(button, t('forYou.title'));
+        bar.insertBefore(button, model);
+    }
+
+    function hideDuplicateDrawerEntries() {
+        // Our own drawer entry is already there: hide the Plugin Pages copy ("For you" in the server language).
+        var drawers = document.querySelectorAll('.mainDrawer, .MuiDrawer-root');
+        for (var i = 0; i < drawers.length; i++) {
+            if (!drawers[i].querySelector('.rr-menu-foryou')) {
+                continue;
+            }
+
+            var copies = drawers[i].querySelectorAll('a[href*="RatingsRecs/Web/foryou"]');
+            for (var j = 0; j < copies.length; j++) {
+                copies[j].classList.add('rr-hidden-duplicate');
+            }
+        }
+    }
+
+    function addModernUserMenuEntry() {
+        var menu = document.getElementById('app-user-menu');
+        if (!menu) {
+            return;
+        }
+
+        // Plugin Pages adds "For you" in the server language: show it in the user's language.
+        var pluginPagesItem = menu.querySelector('a[href*="RatingsRecs/Web/foryou"]');
+        if (pluginPagesItem) {
+            if (!pluginPagesItem.getAttribute('data-rr-label')) {
+                pluginPagesItem.setAttribute('data-rr-label', '1');
+                setButtonContent(pluginPagesItem, t('forYou.title'));
+            }
+
+            return;
+        }
+
+        var settings = menu.querySelector('a[href="#/mypreferencesmenu"]');
+        if (!settings || menu.querySelector('.rr-usermenu-foryou')) {
+            return;
+        }
+
+        var item = settings.cloneNode(true);
+        item.classList.add('rr-usermenu-foryou');
+        item.setAttribute('href', '#/ratingsrecs');
+        setButtonContent(item, t('forYou.title'));
+        settings.parentNode.insertBefore(item, settings.nextSibling);
     }
 
     function handlePluginPagesRoute() {

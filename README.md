@@ -59,12 +59,37 @@ shows how to add the script manually.
 
 ## Home rows and the "For you" page
 
-- **With Home Screen Sections**: the administrator enables Home Screen Sections in its own settings; each user then opens
-  *Modular Home* (side menu), enables it and ticks **Recommended for you** and **Rate these**, choosing their position.
-- **Without Home Screen Sections** (or when it is not drawing the home): the plugin script adds both rows at the top of
-  the home by itself. "Rate these" disappears after 15 ratings (configurable).
-- The **For you** page (Movies / Series, with explanations) opens from the side menu, from the row titles, or from
-  Plugin Pages if installed. Movie and series pages get a **Similar, picked for you** row under "More like this".
+### With Home Screen Sections
+
+Install **Home Screen Sections** and **Plugin Pages** (Plugin Pages adds the *Modular Home* entry users need), then:
+
+1. **Administrator:** Dashboard → Plugins → **Home Screen Sections** → *Global Settings*:
+   - **Enabled by Default** turns the modular home on for every user (it is off after installation, so otherwise each
+     user has to switch it on);
+   - **Allow User Override** (on by default) lets users switch it on or off and pick their sections.
+
+   The *Section Settings* tab chooses which sections exist, their default order and whether users may change each one
+   ("Let the user override this section"). Save; reload the web client with Ctrl+F5.
+2. **Each user** (needed when *Enabled by Default* is off, or to choose sections): open **Modular Home**:
+   - **Legacy layout** (Jellyfin 10.11, or 12 with Settings → Display → Layout "Desktop (legacy)"): side menu;
+   - **Modern layout** (Jellyfin 12 default): the avatar menu at the top right (on a phone: side menu ☰).
+3. Tick **Enable "Modular Home"**, then under **Enabled Sections** tick **Recommended for you** and **Rate these**
+   (and the other sections you want) → **Save** → go back to the home.
+
+### Without Home Screen Sections
+
+The plugin script adds both rows at the top of the home by itself (also when Home Screen Sections is installed but not
+enabled). "Rate these" disappears after 15 ratings (configurable).
+
+### Where to find the "For you" page
+
+| Layout | Entry point |
+|---|---|
+| Legacy (10.11, 12 "Desktop (legacy)") | side menu, under Home |
+| Modern, wide window (12 default) | top bar, before the libraries, and the avatar menu |
+| Modern, narrow window / phone | side menu (☰), under Home |
+
+The row titles open it too. Movie and series pages get a **Similar, picked for you** row under "More like this".
 
 ## Configuration
 

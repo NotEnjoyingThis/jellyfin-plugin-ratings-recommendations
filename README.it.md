@@ -60,12 +60,39 @@ spiega come aggiungere lo script a mano.
 
 ## Righe in home e pagina "Per te"
 
-- **Con Home Screen Sections**: l'amministratore attiva Home Screen Sections nelle sue impostazioni; ogni utente apre
-  *Modular Home* (menu laterale), la attiva e spunta **Consigliati per te** e **Valuta questi**, scegliendo la posizione.
-- **Senza Home Screen Sections** (o se non sta disegnando la home): lo script del plugin aggiunge da solo le due righe
-  in cima alla home. "Valuta questi" sparisce dopo 15 voti (configurabile).
-- La pagina **Per te** (Film / Serie, con le spiegazioni) si apre dal menu laterale, dal titolo delle righe o da
-  Plugin Pages se installato. Le pagine di film e serie hanno la riga **Simili, scelti per te** sotto "Altri come questo".
+### Con Home Screen Sections
+
+Installa **Home Screen Sections** e **Plugin Pages** (Plugin Pages aggiunge la voce *Modular Home* che serve agli
+utenti), poi:
+
+1. **Amministratore:** Pannello di controllo → Plugin → **Home Screen Sections** → *Global Settings*:
+   - **Enabled by Default** attiva la home modulare per tutti gli utenti (dopo l'installazione è spento, quindi
+     altrimenti ogni utente deve attivarla da sé);
+   - **Allow User Override** (acceso di default) permette agli utenti di attivarla o spegnerla e di scegliere le sezioni.
+
+   La scheda *Section Settings* sceglie quali sezioni esistono, l'ordine predefinito e se gli utenti possono cambiarle
+   una per una ("Let the user override this section"). Salva; ricarica il client web con Ctrl+F5.
+2. **Ogni utente** (serve se *Enabled by Default* è spento, o per scegliere le sezioni): apri **Modular Home**:
+   - **layout Legacy** (Jellyfin 10.11, oppure 12 con Impostazioni → Schermo → Layout "Desktop (legacy)"): menu laterale;
+   - **layout Modern** (predefinito in Jellyfin 12): menu dell'avatar in alto a destra (sul telefono: menu laterale ☰).
+3. Spunta **Enable "Modular Home"**, poi sotto **Enabled Sections** spunta **Consigliati per te** e **Valuta questi**
+   (e le altre sezioni che vuoi) → **Save** → torna alla home.
+
+### Senza Home Screen Sections
+
+Lo script del plugin aggiunge da solo le due righe in cima alla home (anche quando Home Screen Sections è installato ma
+non attivato). "Valuta questi" sparisce dopo 15 voti (configurabile).
+
+### Dove trovare la pagina "Per te"
+
+| Layout | Punto di accesso |
+|---|---|
+| Legacy (10.11, 12 "Desktop (legacy)") | menu laterale, sotto Home |
+| Modern, finestra larga (predefinito in 12) | barra in alto, prima delle librerie, e menu dell'avatar |
+| Modern, finestra stretta / telefono | menu laterale (☰), sotto Home |
+
+Ci si arriva anche dal titolo delle righe. Le pagine di film e serie hanno la riga **Simili, scelti per te** sotto
+"Altri come questo".
 
 ## Configurazione
 

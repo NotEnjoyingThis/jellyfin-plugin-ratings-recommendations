@@ -70,9 +70,8 @@ assets/                            logo.png (render-logo.ps1)
 
 ## Current status
 - Last milestone committed: M4 (`2cd8810`). See docs/NOTES.md → "Stato attuale" for the user's manual test results.
-- Open issues from M4 manual tests: (1) no visible "For you" entry in the Modern layout (Jellyfin 12 default: no side menu
-  for the user) → add an always-visible entry point (top bar / user menu), test both layouts; (2) users do not see
-  "Modular Home" of Home Screen Sections → find the required option / Modern access path and document it in the READMEs.
+- M4 manual-test issues fixed: "For you" in the Modern top bar and avatar menu; "Modular Home" is in the avatar menu in
+  Modern (needs Plugin Pages) and HSS "Enabled by Default" is off after install — steps in the READMEs. Next: M5.
 - Web client checks must always cover **Legacy and Modern** layouts on 12 (Settings → Display → layout: `auto` = Modern,
   `desktop-legacy` = Legacy) plus 10.11.
 

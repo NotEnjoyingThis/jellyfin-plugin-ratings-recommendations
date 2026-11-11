@@ -44,6 +44,7 @@ Ogni scelta che cambia o precisa `docs/DESIGN.md`. Da tenere aggiornata.
 | 30 | "Riga home: auto / Home Screen Sections / script / off" | Con "Auto" o "Home Screen Sections" lo script disegna comunque le righe **se la home non è resa da HSS** (nessuna sezione HSS `[data-page]` nella pagina): HSS non installato, disattivato o non funzionante; se la home è di HSS non aggiunge nulla (le sezioni le aggiunge l'utente) | Degradare senza rompere | M4 |
 | 31 | "Simili": "candidati limitati ai 200 media con più caratteristiche in comune, poi punteggio col profilo di gusto" | Profilo e indice tenuti in cache dal calcolo in background (nessuna lettura della libreria nella richiesta); i 200 candidati con più caratteristiche in comune sono ordinati con la formula di 5.3 (gusto normalizzato sui 200, penalità di vicinanza, qualità, esplorazione); esclusi il media aperto e i media votati negativamente (anche dopo l'ultimo calcolo); vista "Serie intera" anche in modalità per stagione | Mai calcoli pesanti nella richiesta HTTP | M4 |
 | 32 | Plugin Pages | La pagina registrata è `/RatingsRecs/Web/foryou.html`; quando Plugin Pages apre `#/userpluginsettings.html?pageUrl=…foryou…` lo script porta a `#/ratingsrecs` | Plugin Pages carica pagine HTML; la pagina "Per te" è disegnata dallo script | M4 |
+| 33 | Voce "Per te" "nel menu laterale" | Oltre al menu laterale (Legacy e Modern stretto): pulsante nella barra in alto del Modern largo (prima delle librerie) e voce nel menu dell'avatar (se c'è Plugin Pages la sua voce viene rietichettata nella lingua dell'utente, altrimenti lo script ne aggiunge una dopo "Impostazioni"); nel menu laterale la copia di Plugin Pages è nascosta. Tutte rispettano l'opzione "voce di menu" | Il Modern largo di Jellyfin 12 non ha menu laterale | M4 (fix) |
 
 ## Stato attuale (11/11/2026)
 
@@ -59,6 +60,17 @@ Esito delle prove manuali dell'utente su M4:
 
 Stato dei server di prova: File Transformation, Plugin Pages e Home Screen Sections installati (HSS reinstallato e attivato dall'utente).
 
+**Correzioni dopo le prove (verificate nel browser come `rrfamily`):**
+- Modern largo (12, 1280 px): nessun drawer; "Per te" ora è un pulsante nella barra in alto (copia del pulsante "Preferiti") e una voce del
+  menu dell'avatar `#app-user-menu`; il clic porta a `#/ratingsrecs`. Modern stretto (375 px): voce nel drawer. 12 Legacy e 10.11: voce nel
+  menu laterale, copia "For you" di Plugin Pages nascosta.
+- **"Modular Home" esiste, ma nel Modern largo è nel menu dell'avatar** (insieme a "For you"), non in un menu laterale: è la voce aggiunta
+  da Plugin Pages, che quindi serve. Nel Legacy è nel menu laterale. `/PluginPages/User` la elenca per `rrfamily` su entrambi i server.
+- Opzioni HSS (pagina impostazioni, *Global Settings*): **Enabled by Default** (chiave `Enabled`, `false` dopo l'installazione — così è
+  su entrambi i server di prova) attiva Modular Home per tutti; **Allow User Override** (`AllowUserOverride`, `true`) permette all'utente di
+  attivarla da sé. Scheda *Section Settings*: sezioni, ordine, "Let the user override this section". Pagina utente
+  (`/ModularHomeViews/settings`): `Enable "Modular Home"`, `Enabled Sections`, `Save`. Passaggi documentati nei README.
+
 ## Home, menu e righe (M4)
 - **File Transformation raggruppa le trasformazioni per testo del pattern** e cerca prima la chiave esatta (`WebFileTransformationService.RunTransformation`):
   HSS e Plugin Pages usano `index.html`, quindi il nostro pattern deve essere **esattamente `index.html`** (con `index\.html$` la nostra
@@ -66,8 +78,8 @@ Stato dei server di prova: File Transformation, Plugin Pages e Home Screen Secti
 - **Home Screen Sections 3.0.4.0** (stessa API su 10.11.11 e 12.4): `PluginInterface.RegisterSection(JObject)`; la classe dei risultati è creata
   con DI (`ActivatorUtilities`), metodo d'istanza con parametro `{ UserId, AdditionalData }` e ritorno `QueryResult<BaseItemDto>`.
   Le sezioni compaiono in `GET /ModularHomeViews/Sections` e nelle impostazioni utente "Modular Home"; `GET /HomeScreen/Section/{id}` restituisce
-  i nostri risultati (verificato su entrambi i server). Per vederle in home servono: HSS **attivato dall'amministratore** (`Enabled` nella sua
-  configurazione, di default `false`), "Modular Home" attivato dall'utente e le nostre sezioni spuntate.
+  i nostri risultati (verificato su entrambi i server). Per vederle in home servono: "Modular Home" attiva per l'utente (dall'amministratore con
+  *Enabled by Default*, chiave `Enabled`, di default `false`; oppure dall'utente se *Allow User Override*) e le nostre sezioni spuntate.
 - Sui server di prova la home modulare di HSS restava vuota/in caricamento anche con le sole sezioni predefinite (anche svuotando la cache del
   browser): non è stato possibile vedere la resa grafica delle nostre sezioni dentro HSS → verifica manuale. Con HSS installato e utente con
   "Modular Home" attivo, la home standard non compare più (è HSS a disegnarla).
@@ -75,6 +87,10 @@ Stato dei server di prova: File Transformation, Plugin Pages e Home Screen Secti
 - Home standard: `.homeSectionsContainer` con `.verticalSection.section0…` (10.11 e 12). Le righe dello script vanno in cima.
 - Menu laterale: Legacy `.mainDrawer a.navMenuOption[href="#/home"]` (icone `material-icons <nome>`); Modern `.MuiDrawer-root a[href="#/home"]`
   (`a.MuiListItemButton-root` con `.MuiListItemIcon-root` e `.MuiListItemText-primary`): la voce "Per te" è una copia senza gestori React.
+  Il drawer Modern esiste solo a finestra stretta; a finestra larga i pulsanti delle librerie sono
+  `.MuiAppBar-root .MuiToolbar-root .MuiStack-root a.MuiButton-root` (es. `#/home?tab=1` Preferiti) e il menu dell'avatar è `#app-user-menu`
+  (Profilo, `#/mypreferencesmenu` Impostazioni, voci di Plugin Pages, Connessione rapida, Esci). Le copie sono link semplici: il router
+  segue l'hash.
 - Pagina dettaglio: "Altri come questo" = `#similarCollapsible`; contenitore 10.11 `.detailPageContent`, 12 `.detailPageSecondaryContainer`.
 
 ## Stagioni (M3b)

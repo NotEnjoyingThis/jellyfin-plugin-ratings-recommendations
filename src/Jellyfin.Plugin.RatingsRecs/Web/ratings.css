@@ -383,3 +383,14 @@
     width: 1.5em;
     height: 1.5em;
 }
+
+.rr-appbar-foryou .rr-icon,
+.rr-usermenu-foryou .rr-icon,
+[data-rr-label] .rr-icon {
+    width: 1.25em;
+    height: 1.25em;
+}
+
+.rr-hidden-duplicate {
+    display: none !important;
+}
