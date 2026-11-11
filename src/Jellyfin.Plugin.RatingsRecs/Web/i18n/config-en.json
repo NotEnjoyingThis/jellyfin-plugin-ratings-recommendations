@@ -75,7 +75,6 @@
   "engine.DiversityLambda": "Diversity λ",
   "engine.ProximityPenalty": "Proximity penalty",
   "engine.ColdStartThreshold": "Cold start below N ratings",
-  "engine.OnboardingHideAfter": "\"Rate these\" hidden after N ratings",
   "excludeHatedCollections": "Exclude the other chapters of a saga rated -3",
   "engine.hint": "Changes apply at the next computation (Recompute now, or within 6 hours).",
   "save": "Save",

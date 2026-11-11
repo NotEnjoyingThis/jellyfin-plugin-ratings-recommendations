@@ -6,7 +6,7 @@ using MediaBrowser.Model.Dto;
 namespace Jellyfin.Plugin.RatingsRecs.Api;
 
 /// <summary>
-/// Response of <c>GET /RatingsRecs/Recommendations</c> and <c>GET /RatingsRecs/Onboarding</c>: standard
+/// Response of <c>GET /RatingsRecs/Recommendations</c>, <c>/RateThese</c> and <c>/Similar</c>: standard
 /// <see cref="BaseItemDto"/> items (drawn as normal cards) plus one explanation per item, in the same order.
 /// </summary>
 public sealed record RecommendationsResponse
@@ -15,7 +15,7 @@ public sealed record RecommendationsResponse
     [JsonPropertyName("Items")]
     public IReadOnlyList<BaseItemDto> Items { get; init; } = [];
 
-    /// <summary>Gets the explanations, aligned with <see cref="Items"/> (empty for onboarding).</summary>
+    /// <summary>Gets the explanations, aligned with <see cref="Items"/> (empty for "Rate these").</summary>
     [JsonPropertyName("Explanations")]
     public IReadOnlyList<ExplanationDto> Explanations { get; init; } = [];
 
@@ -42,8 +42,4 @@ public sealed record RecommendationsResponse
     /// <summary>Gets the number of explicit ratings of the user.</summary>
     [JsonPropertyName("ExplicitRatingCount")]
     public int ExplicitRatingCount { get; init; }
-
-    /// <summary>Gets a value indicating whether the "Rate these" row should be hidden (enough ratings).</summary>
-    [JsonPropertyName("Hidden")]
-    public bool Hidden { get; init; }
 }

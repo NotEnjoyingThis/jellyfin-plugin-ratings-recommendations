@@ -14,7 +14,8 @@ and get recommendations built from what you liked *and* what you disliked. Every
 
 ## Features
 
-- 4-level thumbs selector in the web client instead of the heart (detail pages and card overlays).
+- 4-level thumbs selector in the web client instead of the heart, on the item page: the only place where a rating is
+  given, changed or removed. Cards show a small read-only badge on the items you rated, and nothing on the others.
 - Ratings mirrored onto Jellyfin's own `Likes`, `Rating` and Favourite fields, so they survive an uninstall.
 - Personal, content-based recommendations (genres, directors, actors, writers, tags, studios, decades, collections),
   with explanations such as "Because you loved *X*".
@@ -78,7 +79,13 @@ Install **Home Screen Sections** and **Plugin Pages** (Plugin Pages adds the *Mo
 ### Without Home Screen Sections
 
 The plugin script adds both rows at the top of the home by itself (also when Home Screen Sections is installed but not
-enabled). "Rate these" disappears after 15 ratings (configurable).
+enabled).
+
+**"Rate these"** lists what you have watched but not rated yet — including what you watched before installing the
+plugin (Jellyfin's own "played" state): movies you finished, series with at least one episode watched ("Whole series"
+mode) and seasons with every episode watched ("Per season" mode; "Both" shows series and seasons). Most recently
+watched first. Open an item and rate it from its page: it leaves the row at the next load. When there is nothing to
+rate, the row is not shown.
 
 ### Where to find the "For you" page
 

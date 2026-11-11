@@ -18,8 +18,8 @@ public sealed record UserRecommendations
     /// <summary>Gets the item kinds by id.</summary>
     public IReadOnlyDictionary<Guid, string> Kinds { get; init; } = new Dictionary<Guid, string>();
 
-    /// <summary>Gets the "Rate these" items.</summary>
-    public IReadOnlyList<Guid> Onboarding { get; init; } = [];
+    /// <summary>Gets the "Rate these" items: watched but not rated, most recent first (<see cref="RateTheseList"/>).</summary>
+    public IReadOnlyList<Guid> RateThese { get; init; } = [];
 
     /// <summary>Gets the number of explicit ratings at compute time.</summary>
     public int ExplicitRatingCount { get; init; }

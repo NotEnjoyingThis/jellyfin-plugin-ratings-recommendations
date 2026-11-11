@@ -61,7 +61,7 @@ public class HomeSectionResults
             return Empty();
         }
 
-        var response = _presenter.Onboarding(user, Math.Max(1, _config.Current.HomeRowSize));
+        var response = _presenter.RateThese(user, Math.Max(1, _config.Current.HomeRowSize));
         return new QueryResult<BaseItemDto>(response.Items) { TotalRecordCount = response.Items.Count };
     }
 

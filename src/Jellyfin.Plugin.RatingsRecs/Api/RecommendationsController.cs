@@ -83,14 +83,14 @@ public class RecommendationsController : ControllerBase
     }
 
     /// <summary>
-    /// Gets the "Rate these" items (cold start); <c>Hidden</c> is true once the user has enough ratings.
+    /// Gets the "Rate these" items: watched but not rated yet, most recently watched first; empty when there is nothing to rate.
     /// </summary>
     /// <param name="limit">Number of items (default 20).</param>
     /// <param name="userId">Optional target user (administrators only).</param>
     /// <returns>The items.</returns>
-    [HttpGet("Onboarding")]
+    [HttpGet("RateThese")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    public async Task<ActionResult<RecommendationsResponse>> GetOnboarding([FromQuery] int limit = 20, [FromQuery] Guid? userId = null)
+    public async Task<ActionResult<RecommendationsResponse>> GetRateThese([FromQuery] int limit = 20, [FromQuery] Guid? userId = null)
     {
         var (user, error) = await _resolver.ResolveAsync(this, userId).ConfigureAwait(false);
         if (user is null)
@@ -98,6 +98,6 @@ public class RecommendationsController : ControllerBase
             return error!;
         }
 
-        return _presenter.Onboarding(user, limit);
+        return _presenter.RateThese(user, limit);
     }
 }

@@ -42,6 +42,26 @@ public class SettingsTranslationTests
     }
 
     [Fact]
+    public void WebClientTexts_AreValidJson_WithTheSameKeysInEnglishAndItalian()
+    {
+        HashSet<string> WebKeys(string language)
+        {
+            var json = WebAssets.ReadText("i18n." + language + ".json");
+            Assert.NotNull(json);
+            using var doc = JsonDocument.Parse(json!);
+            return doc.RootElement.EnumerateObject().Select(p => p.Name).ToHashSet(StringComparer.Ordinal);
+        }
+
+        var en = WebKeys("en");
+        var it = WebKeys("it");
+
+        Assert.Empty(en.Except(it));
+        Assert.Empty(it.Except(en));
+        Assert.Contains("forYou.rateEmpty", en);
+        Assert.Contains("currentRating", en);
+    }
+
+    [Fact]
     public void EveryKeyUsedByTheSettingsPage_IsTranslated()
     {
         var page = SettingsPage();

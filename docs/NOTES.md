@@ -28,7 +28,7 @@ Ogni scelta che cambia o precisa `docs/DESIGN.md`. Da tenere aggiornata.
 | 16 | Penalità di vicinanza: "punteggio di gusto × 0,5" (5.4) | Applicata al gusto **normalizzato** | Moltiplicare per 0,5 un gusto grezzo negativo lo alzerebbe (−1 → −0,5), l'opposto dell'intento | M3 |
 | 17 | "Altri capitoli di una saga votata -3 (opzione)" | Opzione `ExcludeHatedCollections`, **attiva** di default | È elencata tra le esclusioni dure; il default non è indicato | M3 |
 | 18 | "Esclusioni: media votati" | Esclusi anche i media con un segnale implicito (Preferito da altri client, visto, abbandonato) | Sono già visti o iniziati; un Preferito implicito equivale a un voto | M3 |
-| 19 | "Valuta questi": i più noti per "CommunityRating e numero di voti" | Ordine: visti non votati, poi `CommunityRating`; giro a turno per genere principale (un titolo per genere prima di ripetere) | Jellyfin non ha il numero di voti; il giro a turno realizza "coprire generi diversi" | M3 |
+| 19 | "Valuta questi": i più noti per "CommunityRating e numero di voti" | ~~Ordine: visti non votati, poi `CommunityRating`; giro a turno per genere principale~~ **Sostituita dalla 44** (solo media visti e non votati) | Jellyfin non ha il numero di voti; il giro a turno realizza "coprire generi diversi" | M3 |
 | 20 | Serie "abbandonata" | Quota di episodi visti < 20% e ultimo episodio visto da 30+ giorni (stessa regola della stagione in 4.1) | Le serie non hanno una posizione di riproduzione | M3 |
 | 21 | Risposta consigli = `BaseItemDto` + "un campo con la spiegazione" | `{ Items: BaseItemDto[], Explanations: [...] }` con le spiegazioni nello stesso ordine, più `Status`, `TotalRecordCount`, `IsColdStart` | Aggiungere un campo dentro `BaseItemDto` richiederebbe di riserializzarlo; così i `BaseItemDto` restano standard | M3 |
 | 22 | Pagina "Per te" a tutto schermo | Disegnata dallo script nella vista "pagina non trovata" di jellyfin-web sul percorso `#/ratingsrecs` (`?type=Movie|Series`), con intestazione e menu normali | jellyfin-web non permette di aggiungere percorsi; il percorso sconosciuto mostra `#fallbackPage` senza reindirizzare, in 10.11 e 12 (Legacy e Modern) | M3 |
@@ -56,6 +56,10 @@ Ogni scelta che cambia o precisa `docs/DESIGN.md`. Da tenere aggiornata.
 | 42 | `CHANGELOG.md` | La sezione `Unreleased` è stata riscritta come note di rilascio per gli utenti (prima era la cronologia dello sviluppo) | Diventa il testo della Release e del campo `changelog` del manifest | M6 |
 | 37 | "Simili" nativi | Stesso tipo del media aperto (film → film, serie → serie, come il provider di Jellyfin); la riga "Simili, scelti per te" dello script resta mista. Nessuna cache lato Jellyfin (`CacheDuration = null`): tutto dalla cache dei consigli | Coerenza con i "Simili" standard | M5 |
 
+| 43 | Selettore "nelle pagine dettaglio e sulle card" (M2) | **Il voto si dà solo dalla pagina del media** (richiesta dell'utente prima del rilascio): il selettore con popup a 4 livelli resta solo lì (clic sul livello attivo = togli il voto). Su **tutte** le card (home, librerie, "Per te", "Simili", "Valuta questi", Home Screen Sections) nessun pollice sui media non votati e, su quelli votati, un **badge di sola lettura** in alto a destra (cerchio scuro semitrasparente, `title` e `aria-label` "Il tuo voto: …", non focalizzabile). Il clic sul badge apre il media come il resto della card. Sui media votabili il cuore della card resta nascosto (varrebbe come voto); episodi e musica tengono il cuore | Votare dalle locandine era troppo facile per errore; la pagina del media è il punto unico | Rilascio 1.0 |
+| 44 | "Valuta questi" = onboarding a freddo con media noti e vari, nascosto dopo N voti (5.5) | **Media visti e non ancora votati** dallo stato "visto" di Jellyfin (comprende la cronologia precedente all'installazione): film `Played`; serie con almeno un episodio visto ("Serie intera", "Entrambe"); stagioni con tutti gli episodi visti ("Per stagione", "Entrambe"); esclusi i media con un voto (anche implicito). Ordine: `LastPlayedDate` più recente prima, quelli senza data in fondo per titolo. Calcolata in background con i consigli (`RateTheseList`) e filtrata al momento della richiesta dai voti dati dopo il calcolo; un "visto" (fine riproduzione o segna come visto) fa ricalcolare l'utente dopo 30 s. Riga nascosta se vuota; nella pagina "Per te" messaggio "Non hai media visti da valutare…". Tolti la soglia `OnboardingHideAfter` (15 voti) e la selezione `Onboarding` del motore. Endpoint rinominato `GET /RatingsRecs/RateThese` (`/Onboarding` non esiste più, nessuna versione pubblicata lo usava). Sostituisce la 19 | Richiesta dell'utente: votare ciò che si è visto davvero. Il segnale implicito "visto senza voto = +0,5" resta | Rilascio 1.0 |
+| 45 | Colori dei livelli (rosso, arancione, verde, blu) | **Icone monocromatiche**: pollice a solo contorno spesso (`stroke` 2,3; 2,8 nei badge), senza riempimento e senza colori; doppio pollice affiancato con poca sovrapposizione per restare leggibile piccolo. Nel badge bianco su cerchio `rgba(0,0,0,0.6)`; nella pagina del media e nel popup il colore del testo del tema (bianco nei temi scuri di Jellyfin, scuro in quelli chiari). Livello non votato: stesso contorno attenuato | Richiesta dell'utente | Rilascio 1.0 |
+
 ## Provider "Simili" di Jellyfin 12 (M5)
 - `SimilarItemsManager` (12.4, `Emby.Server.Implementations/Library/SimilarItems/`): i provider **locali** (`ILocalSimilarItemsProvider`)
   sono sempre usati, filtrati solo da `Supports(item.GetType())`; i remoti solo se elencati in `TypeOptions.SimilarItemProviders`.
@@ -76,6 +80,22 @@ Ogni scelta che cambia o precisa `docs/DESIGN.md`. Da tenere aggiornata.
   primo; acceso → ordine del gusto (come la riga "Simili, scelti per te" filtrata ai film), con limite 5 nessun titolo negativo, con
   limite 12 i titoli negativi in fondo (libreria di 12 film); spento di nuovo → ordine standard. Pagina dettaglio "Altri come questo"
   con l'ordine nostro in Modern e Legacy. Controlli ripetuti in `docker/test-api.ps1` (solo 12).
+
+## Voto solo dalla pagina del media, badge e "Valuta questi" (prima del rilascio 1.0)
+- **Card di jellyfin-web 12**: l'immagine (`.cardImageContainer` dentro `.cardContent`) ha `contain: strict`, che crea un contesto di
+  sovrapposizione chiuso; sopra c'è il link trasparente `.cardOverlayContainer > a.cardImageContainer`. Un elemento dentro l'immagine
+  (anche gli indicatori di Jellyfin, `z-index: 1`) non riceve mai il mouse: per avere il tooltip il badge è aggiunto a `.cardScalable`
+  dopo il link, in alto a destra, spostato a sinistra degli indicatori di Jellyfin (spunta "visto", numero di episodi) misurandoli; il suo
+  clic viene passato al link della card (`openCardFromBadge`). Verificato su 12 Modern, 12 Legacy e 10.11: badge sopra il link (tooltip),
+  nessuna sovrapposizione con gli indicatori (4 px di distanza, centrati), clic = pagina del media, nessun popup.
+- `UserDataSaveReason.PlaybackFinished` / `TogglePlayed` → ricalcolo dell'utente (debounce 30 s): sui server di prova la riga si è
+  riempita 9–15 s dopo aver segnato i media come visti (il primo ricalcolo era già in coda).
+- Prove sui server di prova (`rrfamily`, film segnati visti con `datePlayed` diversi + un episodio di "Harbour Precinct", "Laughing Gas"
+  visto e votato): riga = The Quiet Harbour (10/11), Harbour Precinct (9/11), Neon Rain (8/11), senza Laughing Gas; votato "Bello" dalla
+  pagina del media, The Quiet Harbour esce dalla riga al ricaricamento; con tutto votato la riga sparisce dalla home e la pagina "Per te"
+  mostra il messaggio. Tastiera nella pagina del media (simulata: Invio = clic con `detail 0`, frecce, Esc): apertura col fuoco sul livello
+  corrente, frecce, Invio salva e riporta il fuoco, Esc chiude senza cambiare. Il pannello del browser era nascosto: niente screenshot,
+  controlli fatti su DOM e geometria.
 
 ## Rifinitura (M6)
 - **Override 10.11**: azioni verificate nei metadati di `Jellyfin.Api.dll` 10.11.11: `SuggestionsController.GetSuggestions` /

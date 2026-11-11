@@ -112,21 +112,17 @@ public sealed class RecommendationPresenter
     }
 
     /// <summary>
-    /// Gets the "Rate these" items; hidden once the user has enough explicit ratings.
+    /// Gets the "Rate these" items: watched but not rated, most recently watched first (computed in the background
+    /// from Jellyfin's played state; items rated since then are left out at once). Empty when there is nothing to rate.
     /// </summary>
     /// <param name="user">The user.</param>
     /// <param name="limit">The number of items.</param>
     /// <returns>The response.</returns>
-    public RecommendationsResponse Onboarding(User user, int limit)
+    public RecommendationsResponse RateThese(User user, int limit)
     {
         ArgumentNullException.ThrowIfNull(user);
         var ratings = _store.GetAll(user.Id);
         var explicitCount = ratings.Count(r => r.IsExplicit);
-        if (explicitCount >= _config.Current.OnboardingHideAfter)
-        {
-            return new RecommendationsResponse { Hidden = true, ExplicitRatingCount = explicitCount };
-        }
-
         var cached = _service.Get(user.Id);
         if (cached is null)
         {
@@ -134,9 +130,10 @@ public sealed class RecommendationPresenter
             return new RecommendationsResponse { Status = "Computing", ExplicitRatingCount = explicitCount };
         }
 
-        var rated = ratings.Where(r => r.IsExplicit).Select(r => r.ItemId).ToHashSet();
+        var rated = ratings.Select(r => r.ItemId).ToHashSet();
+        var remaining = cached.RateThese.Where(id => !rated.Contains(id)).ToList();
         var items = new List<BaseItem>();
-        foreach (var id in cached.Onboarding.Where(id => !rated.Contains(id)))
+        foreach (var id in remaining)
         {
             if (items.Count >= Math.Clamp(limit, 1, MaxLimit))
             {
@@ -153,7 +150,7 @@ public sealed class RecommendationPresenter
         return new RecommendationsResponse
         {
             Items = ToDtos(user, items),
-            TotalRecordCount = items.Count,
+            TotalRecordCount = remaining.Count,
             ComputedUtc = cached.ComputedUtc,
             IsColdStart = explicitCount < _config.Current.ColdStartThreshold,
             ExplicitRatingCount = explicitCount,

@@ -196,8 +196,37 @@ foreach ($name in $targets) {
     Check 'type=Series returns only series' (@($seriesRecs.Items | Where-Object { $_.Type -ne 'Series' }).Count -eq 0)
     $status = Get-Status { Invoke-Jf -Srv $srv -Method Get -Path ('/RatingsRecs/Recommendations?userId=' + $admin.Id) -Token $family.Token }
     Check 'non-admin cannot read recommendations of another user (403)' ($status -eq 403) "got $status"
-    $onboarding = Invoke-Jf -Srv $srv -Method Get -Path '/RatingsRecs/Onboarding?limit=20' -Token $family.Token
-    Check 'onboarding answers (items or hidden)' ($onboarding.Hidden -or @($onboarding.Items).Count -gt 0)
+    # "Rate these": watched but not rated, most recently watched first (NOTES deviation 43).
+    $older = Find-Item $srv $family 'Movie' 'Under the Ice'
+    $newer = Find-Item $srv $family 'Movie' 'Sing Me Home'
+    $unwatched = Find-Item $srv $family 'Movie' 'Sing Me Home Again'
+    $before = @{}
+    foreach ($id in @($older, $newer, $unwatched)) {
+        $before[$id] = (Get-Native $srv $family $id).Played
+        Invoke-Jf -Srv $srv -Method Delete -Path ('/RatingsRecs/Ratings/' + $id) -Token $family.Token | Out-Null
+    }
+    Invoke-Jf -Srv $srv -Method Delete -Path ('/UserPlayedItems/' + $unwatched + '?userId=' + $family.Id) -Token $family.Token | Out-Null
+    Invoke-Jf -Srv $srv -Method Post -Path ('/UserPlayedItems/' + $older + '?userId=' + $family.Id + '&datePlayed=2026-01-02T20:00:00Z') -Token $family.Token | Out-Null
+    Invoke-Jf -Srv $srv -Method Post -Path ('/UserPlayedItems/' + $newer + '?userId=' + $family.Id + '&datePlayed=2026-01-05T20:00:00Z') -Token $family.Token | Out-Null
+    # Marking as watched schedules a recomputation (30 s debounce): wait for it.
+    $rateIds = @()
+    for ($wait = 0; $wait -lt 45; $wait++) {
+        $rateIds = @((Invoke-Jf -Srv $srv -Method Get -Path '/RatingsRecs/RateThese?limit=100' -Token $family.Token).Items | ForEach-Object { $_.Id })
+        if (($rateIds -contains $older) -and ($rateIds -contains $newer)) { break }
+        Start-Sleep -Seconds 2
+    }
+    Check 'Rate these: watched and not rated items appear (recomputed after "watched")' (($rateIds -contains $older) -and ($rateIds -contains $newer)) "items=$($rateIds.Count)"
+    Check 'Rate these: most recently watched first' ([array]::IndexOf($rateIds, $newer) -ge 0 -and [array]::IndexOf($rateIds, $newer) -lt [array]::IndexOf($rateIds, $older))
+    Check 'Rate these: an unwatched item never appears' (-not ($rateIds -contains $unwatched))
+    Invoke-Jf -Srv $srv -Method Put -Path ('/RatingsRecs/Ratings/' + $newer) -Token $family.Token -Body @{ value = 1 } | Out-Null
+    $afterRating = @((Invoke-Jf -Srv $srv -Method Get -Path '/RatingsRecs/RateThese?limit=100' -Token $family.Token).Items | ForEach-Object { $_.Id })
+    Check 'Rate these: a rated item leaves the list at once' ((-not ($afterRating -contains $newer)) -and ($afterRating -contains $older))
+    $status = Get-Status { Invoke-Jf -Srv $srv -Method Get -Path '/RatingsRecs/Onboarding' -Token $family.Token }
+    Check 'the old /Onboarding endpoint is gone (404)' ($status -eq 404) "got $status"
+    foreach ($id in @($older, $newer, $unwatched)) {
+        Invoke-Jf -Srv $srv -Method Delete -Path ('/RatingsRecs/Ratings/' + $id) -Token $family.Token | Out-Null
+        if (-not $before[$id]) { Invoke-Jf -Srv $srv -Method Delete -Path ('/UserPlayedItems/' + $id + '?userId=' + $family.Id) -Token $family.Token | Out-Null }
+    }
     $times = @()
     for ($i = 0; $i -lt 7; $i++) {
         $sw = [Diagnostics.Stopwatch]::StartNew()

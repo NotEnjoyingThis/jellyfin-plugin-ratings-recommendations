@@ -15,7 +15,8 @@ Tutto viene calcolato sul tuo server.
 
 ## Funzioni
 
-- Selettore a 4 pollici nel client web al posto del cuore (pagine dettaglio e card).
+- Selettore a 4 livelli nel client web al posto del cuore, nella pagina del media: è l'unico punto in cui si aggiunge,
+  cambia o toglie un voto. Le locandine mostrano un piccolo badge di sola lettura sui media votati, nulla sugli altri.
 - Voti rispecchiati sui campi nativi di Jellyfin `Likes`, `Rating` e Preferiti: non si perdono disinstallando il plugin.
 - Consigli personali basati sui contenuti (generi, registi, attori, sceneggiatori, tag, studi, decenni, saghe),
   con spiegazioni come "Perché hai amato *X*".
@@ -80,7 +81,13 @@ utenti), poi:
 ### Senza Home Screen Sections
 
 Lo script del plugin aggiunge da solo le due righe in cima alla home (anche quando Home Screen Sections è installato ma
-non attivato). "Valuta questi" sparisce dopo 15 voti (configurabile).
+non attivato).
+
+**"Valuta questi"** elenca ciò che hai visto ma non hai ancora votato, anche quello visto prima di installare il plugin
+(lo stato "visto" di Jellyfin): film visti, serie con almeno un episodio visto (modalità "Serie intera") e stagioni con
+tutti gli episodi visti (modalità "Per stagione"; con "Entrambe" serie e stagioni). Prima i visti più di recente. Apri
+il media e votalo dalla sua pagina: uscirà dalla riga al prossimo caricamento. Se non c'è nulla da votare, la riga
+non compare.
 
 ### Dove trovare la pagina "Per te"
 

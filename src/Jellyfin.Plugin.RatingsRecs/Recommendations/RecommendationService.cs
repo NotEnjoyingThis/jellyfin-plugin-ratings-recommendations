@@ -20,11 +20,6 @@ namespace Jellyfin.Plugin.RatingsRecs.Recommendations;
 /// </summary>
 public sealed class RecommendationService : IDisposable
 {
-    /// <summary>
-    /// How many "Rate these" items are kept.
-    /// </summary>
-    public const int OnboardingSize = 40;
-
     private readonly ConcurrentDictionary<Guid, UserRecommendations> _cache = new();
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly IUserGateway _users;
@@ -149,7 +144,8 @@ public sealed class RecommendationService : IDisposable
 
         var engine = Stopwatch.StartNew();
         var result = RecommendationEngine.Recommend(request);
-        var onboarding = Onboarding.Select(request with { Ratings = signals.Where(s => s.IsExplicit).ToList() }, OnboardingSize);
+        var rated = _store.GetAll(user.Id).Select(r => r.ItemId).ToHashSet();
+        var rateThese = RateTheseList.Build(snapshot.Facts, snapshot.Items, mode, rated);
         var context = EngineContext.Create(request);
         engine.Stop();
         total.Stop();
@@ -159,7 +155,7 @@ public sealed class RecommendationService : IDisposable
             ComputedUtc = now,
             Ranked = result.Items,
             Kinds = snapshot.Kinds,
-            Onboarding = onboarding,
+            RateThese = rateThese,
             ExplicitRatingCount = result.ExplicitRatingCount,
             IsColdStart = result.IsColdStart,
             EngineDuration = engine.Elapsed,

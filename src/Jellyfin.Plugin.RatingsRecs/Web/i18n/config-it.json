@@ -75,7 +75,6 @@
   "engine.DiversityLambda": "λ diversità",
   "engine.ProximityPenalty": "Penalità di vicinanza",
   "engine.ColdStartThreshold": "Partenza a freddo sotto N voti",
-  "engine.OnboardingHideAfter": "\"Valuta questi\" nascosto dopo N voti",
   "excludeHatedCollections": "Escludi gli altri capitoli di una saga votata -3",
   "engine.hint": "Le modifiche valgono dal prossimo calcolo (Ricalcola ora, o entro 6 ore).",
   "save": "Salva",

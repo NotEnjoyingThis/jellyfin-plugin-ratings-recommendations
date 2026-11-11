@@ -304,31 +304,6 @@ public class RecommendationEngineTests
         Assert.All(warm.Items, i => Assert.Equal((0.75 * i.Taste) + (0.15 * i.Quality) + (0.10 * i.Exploration), i.Score, 9));
     }
 
-    [Fact]
-    public void Onboarding_PrefersWatchedUnrated_ThenWellRated_AndCoversGenres()
-    {
-        var library = new List<MediaItem>
-        {
-            Movie("Watched drama", ["Drama"], rating: 6, played: true),
-            Movie("Watched comedy", ["Comedy"], rating: 5, played: true),
-            Movie("Rated watched", ["Horror"], rating: 9, played: true),
-            Movie("Top drama", ["Drama"], rating: 9.5),
-            Movie("Second drama", ["Drama"], rating: 9.4),
-            Movie("Top western", ["Western"], rating: 8),
-            Movie("War film", ["War"], rating: 7),
-        };
-        var ratings = new List<UserRating> { Rate("Rated watched", 1) };
-        var request = new RecommendationRequest { Library = library, Ratings = ratings, UserKey = "u", NowUtc = Now };
-
-        var four = Onboarding.Select(request, 4);
-        var six = Onboarding.Select(request, 6);
-
-        // Watched-but-unrated first, then the best rated, one per genre before repeating a genre.
-        Assert.Equal(new[] { Id("Watched drama"), Id("Watched comedy"), Id("Top western"), Id("War film") }, four);
-        Assert.Equal(new[] { Id("Top drama"), Id("Second drama") }, six.Skip(4));
-        Assert.DoesNotContain(Id("Rated watched"), six);
-    }
-
     // ---------- Performance ----------
 
     [Fact]

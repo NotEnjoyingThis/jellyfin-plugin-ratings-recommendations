@@ -43,5 +43,6 @@
   "similarSeason": "La stagione {0} somiglia alla stagione {1} di {2}, che hai trovato {3}",
   "sharedFeature": "stesso {0}: {1}",
   "startFrom": "Inizia dalla stagione {0}",
-  "similar.title": "Simili, scelti per te"
+  "similar.title": "Simili, scelti per te",
+  "forYou.rateEmpty": "Non hai media visti da valutare. Guarda qualcosa e votalo dalla sua pagina."
 }

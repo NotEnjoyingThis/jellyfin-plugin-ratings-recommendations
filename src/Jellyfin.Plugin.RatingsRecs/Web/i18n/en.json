@@ -43,5 +43,6 @@
   "similarSeason": "Season {0} is like season {1} of {2}, which you rated {3}",
   "sharedFeature": "same {0}: {1}",
   "startFrom": "Start from season {0}",
-  "similar.title": "Similar, picked for you"
+  "similar.title": "Similar, picked for you",
+  "forYou.rateEmpty": "You have no watched titles to rate. Watch something, then rate it from its page."
 }

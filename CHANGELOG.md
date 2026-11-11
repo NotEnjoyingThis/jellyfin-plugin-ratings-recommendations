@@ -14,10 +14,13 @@ First release. Requires Jellyfin 10.11.9+ or 12.0+.
 
 ### Added
 - 4-level rating (Hate it -3, Watchable -1, Good +1, Amazing +3) instead of the Favourite heart in the web client,
-  on detail pages and cards, in the Legacy and Modern layouts (needs File Transformation).
+  given on the item page only, in the Legacy and Modern layouts (needs File Transformation). Monochrome outline icons.
+- Cards everywhere (home, libraries, "For you", similar rows) show a small read-only badge with your rating; unrated
+  items show nothing.
 - Ratings mirrored onto Jellyfin's `Rating`/`Likes` and Favourites; a heart set in other apps counts as +3.
 - Local, content-based recommendations from what you liked and disliked (genres, directors, actors, writers, tags,
-  studios, decades, collections), with explanations, diversity and a cold start with "Rate these".
+  studios, decades, collections), with explanations and diversity.
+- "Rate these": what you watched but have not rated yet (also before installing the plugin), most recent first.
 - "For you" page, "Recommended for you" and "Rate these" home rows (Home Screen Sections or the plugin script) and a
   "Similar, picked for you" row on detail pages.
 - TV series rating modes: whole series, per season or both, with per-season features from the episodes' credits.
@@ -26,4 +29,4 @@ First release. Requires Jellyfin 10.11.9+ or 12.0+.
 - Settings page in English and Italian: rating names and values, engine weights, delivery options, status of every
   integration, startup compatibility check; tools to import Favourites, export/import ratings as CSV, recompute and
   preview recommendations.
-- REST API under `/RatingsRecs` (ratings, recommendations, onboarding, similar items, preferences, CSV).
+- REST API under `/RatingsRecs` (ratings, recommendations, "rate these", similar items, preferences, CSV).

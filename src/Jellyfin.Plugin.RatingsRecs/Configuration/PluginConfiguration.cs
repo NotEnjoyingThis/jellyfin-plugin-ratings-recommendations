@@ -170,7 +170,4 @@ public class PluginConfiguration : BasePluginConfiguration
 
     /// <summary>Gets or sets a value indicating whether other chapters of a saga rated -3 are excluded.</summary>
     public bool ExcludeHatedCollections { get; set; } = true;
-
-    /// <summary>Gets or sets the number of explicit ratings after which "Rate these" disappears.</summary>
-    public int OnboardingHideAfter { get; set; } = 15;
 }

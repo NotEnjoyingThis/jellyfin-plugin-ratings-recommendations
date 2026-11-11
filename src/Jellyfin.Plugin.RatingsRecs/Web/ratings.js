@@ -22,8 +22,9 @@
         { value: 1, cls: 'good', icon: 'up' },
         { value: 3, cls: 'amazing', icon: 'up2' }
     ];
-    var THUMB_UP = 'M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z';
-    var THUMB_UP_OUTLINE = 'M13.11 5.72l-.57 2.89c-.12.59.04 1.2.42 1.66.38.46.94.73 1.54.73H20v1.08L17.43 18H9.34c-.18 0-.34-.16-.34-.34V10.8l4.11-5.08M14 2L7.59 8.41C7.21 8.79 7 9.3 7 9.83v7.83C7 18.95 8.05 20 9.34 20h8.1c.71 0 1.36-.37 1.72-.97l2.67-6.15c.11-.25.17-.52.17-.8V11c0-1.1-.9-2-2-2h-5.5l.92-4.65c.05-.22.02-.46-.08-.66-.23-.45-.52-.86-.88-1.22L14 2zM4 9H2v11h2c.55 0 1-.45 1-1v-9c0-.55-.45-1-1-1z';
+    // Monochrome outline thumb drawn with a thick stroke (no fill, no colours): readable down to badge size,
+    // also when two are drawn side by side ("Hate it" / "Amazing").
+    var THUMB_UP = 'M7.5 10.5l3.4-6.6c.2-.5.7-.8 1.2-.8 1.2 0 2.1 1.1 1.9 2.3L13.6 9h5.3c1.3 0 2.2 1.2 1.9 2.5l-1.5 6.3c-.3 1.3-1.4 2.2-2.7 2.2H7.5zM3.2 10.5h4.3V20H3.2z';
 
     /*
      * DOM adapters. Verified on 10.11.11 (Legacy) and 12.4 (Legacy and Modern): the item detail page and the
@@ -258,6 +259,22 @@
             copies[k].parentNode.removeChild(copies[k]);
         }
 
+        // Cards: rateable types depend on the mode too.
+        var hidden = document.querySelectorAll('.card .rr-hidden-heart');
+        for (var m = 0; m < hidden.length; m++) {
+            hidden[m].classList.remove('rr-hidden-heart');
+        }
+
+        var badges = document.querySelectorAll('.rr-badge');
+        for (var n = 0; n < badges.length; n++) {
+            badges[n].parentNode.removeChild(badges[n]);
+        }
+
+        var cards = document.querySelectorAll('[data-rr-card]');
+        for (var p = 0; p < cards.length; p++) {
+            cards[p].removeAttribute('data-rr-card');
+        }
+
         schedule();
     }
 
@@ -318,7 +335,8 @@
     /* ---------- rendering ---------- */
 
     function svg(path, down) {
-        return '<svg class="rr-icon' + (down ? ' rr-down' : '') + '" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="' + path + '"/></svg>';
+        return '<svg class="rr-icon' + (down ? ' rr-down' : '') + '" viewBox="0 0 24 24" aria-hidden="true" focusable="false">'
+            + '<path fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round" stroke-linecap="round" d="' + path + '"/></svg>';
     }
 
     function icon(kind) {
@@ -327,7 +345,7 @@
             case 'down': return svg(THUMB_UP, true);
             case 'up2': return '<span class="rr-double">' + svg(THUMB_UP, false) + svg(THUMB_UP, false) + '</span>';
             case 'down2': return '<span class="rr-double">' + svg(THUMB_UP, true) + svg(THUMB_UP, true) + '</span>';
-            default: return svg(THUMB_UP_OUTLINE, false);
+            default: return '<span class="rr-empty">' + svg(THUMB_UP, false) + '</span>';
         }
     }
 
@@ -409,6 +427,99 @@
         var widgets = document.querySelectorAll('.rr-rating[data-rr-item="' + itemId + '"]');
         for (var i = 0; i < widgets.length; i++) {
             render(widgets[i]);
+        }
+
+        var cards = document.querySelectorAll('[data-rr-card="' + itemId + '"]');
+        for (var j = 0; j < cards.length; j++) {
+            renderBadge(cards[j]);
+        }
+    }
+
+    /*
+     * The badge sits above jellyfin-web's transparent card link (so that its tooltip shows on hover): a click on it is
+     * handed to that link, so it opens the item exactly like a click anywhere else on the card. Inside a link or a
+     * button (our own cards, other layouts) the click already reaches it.
+     */
+    function openCardFromBadge(e) {
+        var badge = e.currentTarget;
+        if (badge.parentNode && badge.parentNode.closest && badge.parentNode.closest('a[href], button, .itemAction')) {
+            return;
+        }
+
+        var card = badge.closest ? badge.closest('.card') : null;
+        var link = card && (card.querySelector('a.cardImageContainer[href]') || card.querySelector('a[href*="details"]') || card.querySelector('.itemAction[data-action="link"]'));
+        if (link) {
+            e.preventDefault();
+            e.stopPropagation();
+            link.click();
+        }
+    }
+
+    /*
+     * Card badge: read-only, top right, only when the item is rated. No popup and no handlers: a click on it is a
+     * click on the card, which opens the item as usual. Ratings are only given on the item's own page.
+     */
+    function renderBadge(card) {
+        var itemId = card.getAttribute('data-rr-card');
+        var value = state.ratings[itemId];
+        var level = levelOf(value);
+        // jellyfin-web cards: in .cardScalable, after the image and the link layer. The image container has
+        // `contain: strict` (its own stacking context), so a badge inside it could never get the hover for its tooltip.
+        var scalable = card.querySelector('.cardScalable');
+        var host = scalable || card.querySelector('.rr-card-image');
+        if (!host) {
+            return;
+        }
+
+        var badge = host.querySelector('.rr-badge');
+        if (!level) {
+            if (badge) {
+                badge.parentNode.removeChild(badge);
+            }
+
+            return;
+        }
+
+        if (!badge) {
+            badge = document.createElement('span');
+            badge.className = 'rr-badge';
+            badge.setAttribute('role', 'img');
+            badge.addEventListener('click', openCardFromBadge);
+            host.appendChild(badge);
+        }
+
+        if (badge.getAttribute('data-value') !== String(value)) {
+            var label = t('currentRating', levelName(value));
+            badge.setAttribute('data-value', String(value));
+            badge.innerHTML = icon(level.icon);
+            badge.title = label;
+            badge.setAttribute('aria-label', label);
+        }
+
+        if (scalable) {
+            placeBesideIndicators(card, scalable, badge);
+        }
+    }
+
+    function placeBesideIndicators(card, scalable, badge) {
+        // Top right, to the left of jellyfin-web's own indicators (played check, unplayed count) when there are some.
+        var indicators = card.querySelector('.cardIndicators');
+        var box = indicators && indicators.children.length ? indicators.getBoundingClientRect() : null;
+        if (!box || box.width === 0) {
+            badge.style.right = '';
+            badge.style.top = '';
+            return;
+        }
+
+        var outer = scalable.getBoundingClientRect();
+        var right = Math.round(outer.right - box.left + 4) + 'px';
+        var top = Math.round(box.top - outer.top + ((box.height - badge.offsetHeight) / 2)) + 'px';
+        if (badge.style.right !== right) {
+            badge.style.right = right;
+        }
+
+        if (badge.style.top !== top) {
+            badge.style.top = top;
         }
     }
 
@@ -827,6 +938,8 @@
     }
 
     function scanCards(adapter, root) {
+        // Cards never rate: the heart of rateable items is hidden (it would count as a rating) and rated items
+        // get a read-only badge. Other items (episodes, music...) keep their heart.
         var hearts = queryAll(root, adapter.cardHeart);
         for (var i = 0; i < hearts.length; i++) {
             var heart = hearts[i];
@@ -834,13 +947,31 @@
                 continue;
             }
 
-            var card = heart.closest ? heart.closest('.card') : null;
-            var itemId = normId(heart.getAttribute('data-id') || (card && card.getAttribute('data-id')));
-            var type = heart.getAttribute('data-itemtype') || (card && card.getAttribute('data-type'));
-            if (itemId && type) {
-                attach(heart, itemId, true, type);
+            var owner = heart.closest ? heart.closest('.card') : null;
+            var heartType = heart.getAttribute('data-itemtype') || (owner && owner.getAttribute('data-type'));
+            if (isRateable(heartType)) {
+                heart.classList.add('rr-hidden-heart');
             }
         }
+
+        var cards = root.querySelectorAll ? root.querySelectorAll('.card[data-id]') : [];
+        var ids = [];
+        for (var j = 0; j < cards.length; j++) {
+            var card = cards[j];
+            if (!isRateable(card.getAttribute('data-type'))) {
+                continue;
+            }
+
+            var itemId = normId(card.getAttribute('data-id'));
+            if (card.getAttribute('data-rr-card') !== itemId) {
+                card.setAttribute('data-rr-card', itemId);
+            }
+
+            ids.push(itemId);
+            renderBadge(card);
+        }
+
+        loadRatings(ids);
     }
 
     function activePage(adapter) {
@@ -951,11 +1082,10 @@
             card.appendChild(el('div', 'rr-card-why', why));
         }
 
+        // Same as every card: a read-only badge when rated, nothing otherwise (ratings are given on the item's page).
         if (isRateable(item.Type)) {
-            var fakeHeart = { className: 'paper-icon-button-light' };
-            var widget = createWidget(id, fakeHeart, true);
-            widget.classList.add('rr-card-rating');
-            card.appendChild(widget);
+            card.setAttribute('data-rr-card', id);
+            renderBadge(card);
             loadRatings([id]);
         }
 
@@ -1023,7 +1153,7 @@
         state.homeLoading = true;
         Promise.all([
             request('GET', 'Recommendations?limit=' + (BOOT.homeRowSize || 20)),
-            request('GET', 'Onboarding?limit=' + (BOOT.homeRowSize || 20)).catch(function () { return { Hidden: true }; })
+            request('GET', 'RateThese?limit=' + (BOOT.homeRowSize || 20)).catch(function () { return { Items: [] }; })
         ]).then(function (results) {
             state.homeLoading = false;
             var block = el('div', 'rr-home-rows');
@@ -1032,7 +1162,8 @@
                 block.appendChild(rowSection('rr-home-recommended', t('forYou.recommended'), SECTION_LINK.recommended, results[0], true));
             }
 
-            if (!results[1].Hidden && results[1].Items && results[1].Items.length) {
+            // Watched but not rated yet: no row when there is nothing to rate.
+            if (results[1].Items && results[1].Items.length) {
                 block.appendChild(rowSection('rr-home-ratethese', t('rateThese'), SECTION_LINK.rate, results[1], false));
             }
 
@@ -1390,7 +1521,7 @@
 
         Promise.all([
             request('GET', 'Recommendations?limit=100&type=' + type),
-            request('GET', 'Onboarding?limit=20').catch(function () { return { Hidden: true }; })
+            request('GET', 'RateThese?limit=40').catch(function () { return { Items: [] }; })
         ]).then(function (results) {
             if (host.getAttribute('data-rr-foryou') !== key) {
                 return;
@@ -1414,8 +1545,15 @@
                 body.appendChild(el('p', 'rr-foryou-note', t('forYou.coldStart', String(recs.ExplicitRatingCount || 0))));
             }
 
-            if (!onboarding.Hidden && onboarding.Items && onboarding.Items.length) {
+            if (onboarding.Items && onboarding.Items.length) {
                 renderSection(body, t('rateThese'), onboarding, false, 'rate');
+            } else {
+                // Nothing watched left to rate: say how to get there (also the target of #/ratingsrecs?section=rate).
+                var empty = el('section', 'rr-section');
+                empty.id = 'rr-section-rate';
+                empty.appendChild(el('h2', 'rr-section-title', t('rateThese')));
+                empty.appendChild(el('p', 'rr-foryou-status', t('forYou.rateEmpty')));
+                body.appendChild(empty);
             }
 
             if (recs.Items && recs.Items.length) {
