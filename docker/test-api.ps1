@@ -16,7 +16,7 @@
 #>
 [CmdletBinding()]
 param(
-    [ValidateSet('10.11', '12', 'all')][string]$Server = 'all',
+    [ValidateSet('10.11', '12', 'all', 'clean-10.11', 'clean-12')][string]$Server = 'all',
     [switch]$SkipRestart
 )
 
@@ -331,7 +331,7 @@ foreach ($name in $targets) {
     Check 'Similar on an unknown item -> 404' ($status -eq 404) "got $status"
 
     # Jellyfin 12 native "similar items" provider, per library (design M5).
-    if ($name -eq '12') {
+    if ($srv.BuildId -eq 'jf12') {
         $pluginPath = '/Plugins/4d56ae7e38cb431cbff8e135c2087aa5/Configuration'
         $config = Invoke-Jf -Srv $srv -Method Get -Path $pluginPath -Token $admin.Token
         $savedIds = @($config.SimilarProviderLibraryIds)
@@ -373,7 +373,7 @@ foreach ($name in $targets) {
     }
 
     # Jellyfin 10.11 optional override of /Items/Suggestions and /Movies/Recommendations (design M6).
-    if ($name -eq '10.11') {
+    if ($srv.BuildId -eq 'jf10.11') {
         $pluginPath = '/Plugins/4d56ae7e38cb431cbff8e135c2087aa5/Configuration'
         $config = Invoke-Jf -Srv $srv -Method Get -Path $pluginPath -Token $admin.Token
         $savedOverride = [bool]$config.OverrideSuggestions

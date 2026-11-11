@@ -7,13 +7,13 @@
     (or docker/.env.example). Compatible with Windows PowerShell 5.1 and PowerShell 7+.
 
 .PARAMETER Server
-    "10.11" or "12".
+    "10.11" or "12" (development servers), "clean-10.11" or "clean-12" (release acceptance tests).
 
 .EXAMPLE
     .\docker\setup-server.ps1 -Server 10.11
 #>
 [CmdletBinding()]
-param([Parameter(Mandatory = $true)][ValidateSet('10.11', '12')][string]$Server)
+param([Parameter(Mandatory = $true)][ValidateSet('10.11', '12', 'clean-10.11', 'clean-12')][string]$Server)
 
 . "$PSScriptRoot\common.ps1"
 

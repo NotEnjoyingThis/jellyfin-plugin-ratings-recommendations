@@ -28,7 +28,14 @@ function Get-TestServer([string]$Server) {
     if ($Server -eq '12') {
         return New-Object PSObject -Property @{ Name = '12'; Port = 8812; Container = 'rr-jellyfin-12'; Compose = (Join-Path $script:DockerDir 'compose.12.yml'); DataDir = (Join-Path $script:DockerDir '.data/12'); BuildId = 'jf12' }
     }
-    throw "Unknown server '$Server' (use 10.11 or 12)"
+    # Clean servers for release acceptance tests: the plugin comes from the published catalog.
+    if ($Server -eq 'clean-10.11') {
+        return New-Object PSObject -Property @{ Name = 'clean-10.11'; Port = 8821; Container = 'rr-jellyfin-clean-10.11'; Compose = (Join-Path $script:DockerDir 'compose.clean-10.11.yml'); DataDir = (Join-Path $script:DockerDir '.data/clean-10.11'); BuildId = 'jf10.11' }
+    }
+    if ($Server -eq 'clean-12') {
+        return New-Object PSObject -Property @{ Name = 'clean-12'; Port = 8822; Container = 'rr-jellyfin-clean-12'; Compose = (Join-Path $script:DockerDir 'compose.clean-12.yml'); DataDir = (Join-Path $script:DockerDir '.data/clean-12'); BuildId = 'jf12' }
+    }
+    throw "Unknown server '$Server' (use 10.11, 12, clean-10.11 or clean-12)"
 }
 
 function Get-AuthHeader([string]$Token) {

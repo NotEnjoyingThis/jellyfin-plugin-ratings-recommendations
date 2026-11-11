@@ -6,7 +6,7 @@
     .\docker\status.ps1
 #>
 [CmdletBinding()]
-param([ValidateSet('10.11', '12', 'all')][string]$Server = 'all')
+param([ValidateSet('10.11', '12', 'all', 'clean-10.11', 'clean-12')][string]$Server = 'all')
 
 . "$PSScriptRoot\common.ps1"
 

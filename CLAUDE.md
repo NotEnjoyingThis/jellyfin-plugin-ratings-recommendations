@@ -43,6 +43,10 @@ Test servers (Docker, bound to 127.0.0.1; credentials in `docker/.env.example`, 
 .\docker\status.ps1                       # plugin version/status, config page, log errors
 .\docker\test-api.ps1                     # end-to-end API checks on both servers (-SkipRestart to go faster)
 docker compose -f docker/compose.10.11.yml down   # stop (state kept in docker/.data)
+# Clean servers for release acceptance (plugin from the published catalog, never deployed from the tree):
+.\docker\setup-server.ps1 -Server clean-12        # http://localhost:8822 (clean-10.11: :8821)
+.\docker\install-deps.ps1 -Server clean-12 -Plugins 'File Transformation,Ratings & Recommendations'
+.\docker\test-api.ps1 -Server clean-12
 ```
 Docker helper scripts are PowerShell only (use `pwsh` on Linux/macOS). Keep `.ps1` files ASCII-only and compatible with
 Windows PowerShell 5.1 (no `&&`, `??`, ternary; wrap native commands with `Invoke-Native`).
@@ -71,8 +75,9 @@ scripts/                           release.mjs (+ tests: node --test scripts/rel
 - `manifest.json` is only modified by the release pipeline; jf12 entry always before jf10.11 for the same version.
 
 ## Current status
-- **v1.0.0 released** (2026-11-11): GitHub Release + `manifest.json` updated by the workflow. Left from the M6 acceptance
-  test: install from the catalog on clean 10.11 and 12 servers, and a v1.0.1 test release showing as an update.
+- **v1.0.0 released** (2026-11-11): GitHub Release + `manifest.json` updated by the workflow. Install from the catalog on
+  clean servers passed (`clean-10.11` :8821, `clean-12` :8822). Left from the M6 acceptance test: a v1.0.1 test release
+  showing as an update.
   New releases: CONTRIBUTING → Releases (CHANGELOG section, push `main`, tag). Push and tag only when the user asks.
 - M6: 10.11 override (`Override/`, registered only in the 10.11 build), `Compatibility` hook, settings page texts in
   `Web/i18n/config-<lang>.json`, release tooling in `scripts/release.mjs` + `.github/workflows/release.yml`.

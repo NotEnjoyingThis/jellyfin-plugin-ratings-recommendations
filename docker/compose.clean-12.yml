@@ -1,0 +1,19 @@
+# CLEAN Jellyfin 12.x server for release acceptance tests: the plugin is installed from the published catalog,
+# never deployed from the working tree. Reachable only from this machine: http://localhost:8822
+# Prepare:  .\docker\setup-server.ps1 -Server clean-12
+#           .\docker\install-deps.ps1 -Server clean-12 -Plugins 'File Transformation','Ratings & Recommendations'
+# Start over: docker compose -f docker/compose.clean-12.yml down, then delete docker/.data/clean-12
+name: rr-jf-clean-12
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:${JF12_TAG:-12.4}
+    container_name: rr-jellyfin-clean-12
+    ports:
+      - "127.0.0.1:8822:8096"
+    environment:
+      - TZ=UTC
+    volumes:
+      - ./.data/clean-12/config:/config
+      - ./.data/clean-12/cache:/cache
+      - ./sample-library:/media:ro
+    restart: "no"

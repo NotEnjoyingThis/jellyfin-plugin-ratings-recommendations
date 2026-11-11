@@ -73,4 +73,14 @@ tests, builds both zips (version `X.Y.Z.0`, reproducible), publishes the GitHub 
 and finally downloads the zips again to check their MD5 against the manifest. Never edit `manifest.json` by hand.
 The workflow needs permission to push to `main` (allow GitHub Actions in the branch protection rules, if any).
 
+After a release, check it like a new user would on two clean servers (ports 8821 and 8822, separate data folders):
+
+```powershell
+.\docker\setup-server.ps1 -Server clean-10.11
+.\docker\install-deps.ps1 -Server clean-10.11 -Plugins 'File Transformation,Ratings & Recommendations'
+.\docker\test-api.ps1 -Server clean-10.11
+```
+
+(the same with `clean-12`). The plugin comes from the published manifest, never from the working tree.
+
 The helpers are in `scripts/release.mjs` (Node, no dependencies); `node --test scripts/release.test.mjs` runs their tests.

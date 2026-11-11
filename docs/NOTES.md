@@ -142,8 +142,19 @@ Release https://github.com/NotEnjoyingThis/jellyfin-plugin-ratings-recommendatio
 con Node 24 su Linux (su Windows con Node 26 sì) → ora `node --test scripts/release.test.mjs`. Verifiche dopo il rilascio: manifest
 pubblico uguale a quello del repository, MD5 degli zip scaricati uguali al manifest, logo raggiungibile; aggiunto il repository al
 catalogo dei server di prova: 10.11 vede solo la build 10.11, 12 vede entrambe con la jf12 prima.
-Restano dal controllo di accettazione di M6: installazione dal catalogo su server **puliti** 10.11 e 12, e una seconda release di
-prova (v1.0.1) che compare come aggiornamento.
+**Installazione dal catalogo su server puliti (11/11/2026): superata.** Due server nuovi (`clean-10.11` su 8821 con 10.11.11,
+`clean-12` su 8822 con 12.4.0; `docker/compose.clean-*.yml`, dati in `docker/.data/clean-*`): wizard, utenti, librerie, poi solo i due
+repository (il nostro manifest e quello di File Transformation) e installazione dal catalogo con
+`install-deps.ps1 -Server clean-… -Plugins 'File Transformation,Ratings & Recommendations'`. Ogni server ha scaricato la build giusta
+(`targetAbi` 10.11.9.0 / 12.0.0.0), plugin Active, controllo di compatibilità attivo, script iniettato. `test-api.ps1`: 68/68 su
+clean-10.11, 70/70 su clean-12 (riavvio compreso). Nel browser: home con le righe disegnate dallo script (senza Home Screen Sections),
+voce "Per te" (barra in alto in 12 Modern, menu laterale in 10.11), "Già visti, da valutare" che si riempie da sola dopo un "visto",
+badge di sola lettura e clic che apre il media, pagina del media con tastiera e mouse, popup monocromatico, pagina impostazioni
+tradotta con lo stato corretto (opzionali "non installato", provider 12 spento di default, opzione 10.11 spenta). Errori nel log solo di
+Jellyfin (scansione annullata dal riavvio, prima dell'installazione del plugin). Nota: nella libreria di 12 Modern il riquadro
+trasparente del gruppo di pulsanti "Riproduci tutti/filtri" copre in parte la prima riga a destra, quindi su quella card il tooltip del
+badge non compare (il badge si vede e il clic funziona).
+Resta dal controllo di accettazione di M6: una seconda release di prova (v1.0.1) che compare come aggiornamento.
 
 Esito delle prove manuali dell'utente su M4:
 - **10.11 (Legacy)**: righe in home, "Per te" nel menu laterale, "Simili, scelti per te": tutto funziona.
