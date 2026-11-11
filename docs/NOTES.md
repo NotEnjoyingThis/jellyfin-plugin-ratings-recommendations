@@ -92,7 +92,8 @@ Corretto anche il titolo "Pagina non trovata" nell'intestazione Legacy (`.skinHe
   ha già `no-cache` e il nostro script.
 - Riprodotto nel browser di prova (fetch del bundle durante il riavvio → poi `transfer=0`, indirizzo senza `.html`, "Pagina non
   trovata"); risolto sostituendo la copia in cache (`fetch(url, {cache:'reload'})` + ricarica). Ctrl+F5 inviato al pannello del browser
-  non ha forzato la ricarica: non verificato su Chrome reale.
+  non ha forzato la ricarica: non verificato su Chrome reale. **L'utente ha confermato che dopo aver svuotato la cache "Modular Home"
+  si apre su 12.**
 - È un limite di Jellyfin/File Transformation (nessun `Cache-Control` sui file del client web prima che le trasformazioni siano
   registrate), non di Plugin Pages né nostro.
 - Con il nostro plugin **disattivato** (12, Modern e Legacy) "Modular Home" funziona; con il nostro plugin attivo pure. Il nostro script
