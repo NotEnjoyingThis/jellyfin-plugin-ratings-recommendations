@@ -68,6 +68,14 @@ assets/                            logo.png (render-logo.ps1)
 - No new NuGet/JS dependency without asking. Hooks (web injection, HSS, 12 provider, 10.11 override) must self-disable on failure, log it and show it on the settings page.
 - `manifest.json` is only modified by the release pipeline; jf12 entry always before jf10.11 for the same version.
 
+## Current status
+- Last milestone committed: M4 (`2cd8810`). See docs/NOTES.md → "Stato attuale" for the user's manual test results.
+- Open issues from M4 manual tests: (1) no visible "For you" entry in the Modern layout (Jellyfin 12 default: no side menu
+  for the user) → add an always-visible entry point (top bar / user menu), test both layouts; (2) users do not see
+  "Modular Home" of Home Screen Sections → find the required option / Modern access path and document it in the READMEs.
+- Web client checks must always cover **Legacy and Modern** layouts on 12 (Settings → Display → layout: `auto` = Modern,
+  `desktop-legacy` = Legacy) plus 10.11.
+
 ## Milestones (docs/DESIGN.md §9)
 M0 skeleton ✅ → M1 store + API ✅ → M2 web thumbs ✅ → M3 engine ✅ → M3b seasons ✅ → M4 home rows ✅ → M5 JF12 provider → M6 polish/release.
 Stop after each milestone and wait for the user's go-ahead.

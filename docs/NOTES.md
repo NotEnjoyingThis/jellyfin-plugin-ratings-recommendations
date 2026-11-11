@@ -45,6 +45,20 @@ Ogni scelta che cambia o precisa `docs/DESIGN.md`. Da tenere aggiornata.
 | 31 | "Simili": "candidati limitati ai 200 media con più caratteristiche in comune, poi punteggio col profilo di gusto" | Profilo e indice tenuti in cache dal calcolo in background (nessuna lettura della libreria nella richiesta); i 200 candidati con più caratteristiche in comune sono ordinati con la formula di 5.3 (gusto normalizzato sui 200, penalità di vicinanza, qualità, esplorazione); esclusi il media aperto e i media votati negativamente (anche dopo l'ultimo calcolo); vista "Serie intera" anche in modalità per stagione | Mai calcoli pesanti nella richiesta HTTP | M4 |
 | 32 | Plugin Pages | La pagina registrata è `/RatingsRecs/Web/foryou.html`; quando Plugin Pages apre `#/userpluginsettings.html?pageUrl=…foryou…` lo script porta a `#/ratingsrecs` | Plugin Pages carica pagine HTML; la pagina "Per te" è disegnata dallo script | M4 |
 
+## Stato attuale (11/11/2026)
+
+Milestone completate e committate: M0, M1, M2, M3, M3b, M4 (`2cd8810`). Prossima: M5 (provider nativo di Jellyfin 12), poi M6.
+
+Esito delle prove manuali dell'utente su M4:
+- **10.11 (Legacy)**: righe in home, "Per te" nel menu laterale, "Simili, scelti per te": tutto funziona.
+- **12 (Modern, layout predefinito)**: le righe e "Simili, scelti per te" funzionano, ma **nel layout Modern l'utente non ha il menu
+  laterale**, quindi la voce "Per te" non è raggiungibile. Nelle mie prove il drawer MUI esisteva nel DOM (probabilmente solo in certe
+  larghezze o aperto dall'icona ☰): serve un punto di accesso sempre visibile nel Modern (barra in alto e/o menu utente) — **da correggere**.
+- **Home Screen Sections**: attivato dall'amministratore senza problemi su entrambi, ma come `rrfamily` **la voce "Modular Home" non
+  compare** — **da indagare** (quale opzione la rende disponibile, come si raggiunge nel Modern) e da documentare nel README.
+
+Stato dei server di prova: File Transformation, Plugin Pages e Home Screen Sections installati (HSS reinstallato e attivato dall'utente).
+
 ## Home, menu e righe (M4)
 - **File Transformation raggruppa le trasformazioni per testo del pattern** e cerca prima la chiave esatta (`WebFileTransformationService.RunTransformation`):
   HSS e Plugin Pages usano `index.html`, quindi il nostro pattern deve essere **esattamente `index.html`** (con `index\.html$` la nostra
