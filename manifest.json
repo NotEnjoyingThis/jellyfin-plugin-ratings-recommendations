@@ -7,6 +7,23 @@
     "owner": "NotEnjoyingThis",
     "category": "General",
     "imageUrl": "https://raw.githubusercontent.com/NotEnjoyingThis/jellyfin-plugin-ratings-recommendations/main/assets/logo.png",
-    "versions": []
+    "versions": [
+      {
+        "version": "1.0.0.0",
+        "changelog": "First release. Requires Jellyfin 10.11.9+ or 12.0+.\n\n### Added\n- 4-level rating (Hate it -3, Watchable -1, Good +1, Amazing +3) instead of the Favourite heart in the web client,\n  given on the item page only, in the Legacy and Modern layouts (needs File Transformation). Monochrome outline icons.\n- Cards everywhere (home, libraries, \"For you\", similar rows) show a small read-only badge with your rating; unrated\n  items show nothing.\n- Ratings mirrored onto Jellyfin's `Rating`/`Likes` and Favourites; a heart set in other apps counts as +3.\n- Local, content-based recommendations from what you liked and disliked (genres, directors, actors, writers, tags,\n  studios, decades, collections), with explanations and diversity.\n- \"Watched, to rate\": what you watched but have not rated yet (also before installing the plugin), most recent first.\n- \"For you\" page, \"Recommended for you\" and \"Watched, to rate\" home rows (Home Screen Sections or the plugin script) and a\n  \"Similar, picked for you\" row on detail pages.\n- TV series rating modes: whole series, per season or both, with per-season features from the episodes' credits.\n- Jellyfin 12: native \"More like this\" provider ranked with each user's taste (also in TV and mobile apps), per library.\n- Jellyfin 10.11: optional override of Jellyfin's suggestions (off by default).\n- Settings page in English and Italian: rating names and values, engine weights, delivery options, status of every\n  integration, startup compatibility check; tools to import Favourites, export/import ratings as CSV, recompute and\n  preview recommendations.\n- REST API under `/RatingsRecs` (ratings, recommendations, \"rate these\", similar items, preferences, CSV).",
+        "targetAbi": "12.0.0.0",
+        "sourceUrl": "https://github.com/NotEnjoyingThis/jellyfin-plugin-ratings-recommendations/releases/download/v1.0.0/ratings-recommendations_1.0.0.0_jf12.zip",
+        "checksum": "d75d4b6cdc0ec68f5e903c1ca898c215",
+        "timestamp": "2026-11-11T17:11:07Z"
+      },
+      {
+        "version": "1.0.0.0",
+        "changelog": "First release. Requires Jellyfin 10.11.9+ or 12.0+.\n\n### Added\n- 4-level rating (Hate it -3, Watchable -1, Good +1, Amazing +3) instead of the Favourite heart in the web client,\n  given on the item page only, in the Legacy and Modern layouts (needs File Transformation). Monochrome outline icons.\n- Cards everywhere (home, libraries, \"For you\", similar rows) show a small read-only badge with your rating; unrated\n  items show nothing.\n- Ratings mirrored onto Jellyfin's `Rating`/`Likes` and Favourites; a heart set in other apps counts as +3.\n- Local, content-based recommendations from what you liked and disliked (genres, directors, actors, writers, tags,\n  studios, decades, collections), with explanations and diversity.\n- \"Watched, to rate\": what you watched but have not rated yet (also before installing the plugin), most recent first.\n- \"For you\" page, \"Recommended for you\" and \"Watched, to rate\" home rows (Home Screen Sections or the plugin script) and a\n  \"Similar, picked for you\" row on detail pages.\n- TV series rating modes: whole series, per season or both, with per-season features from the episodes' credits.\n- Jellyfin 12: native \"More like this\" provider ranked with each user's taste (also in TV and mobile apps), per library.\n- Jellyfin 10.11: optional override of Jellyfin's suggestions (off by default).\n- Settings page in English and Italian: rating names and values, engine weights, delivery options, status of every\n  integration, startup compatibility check; tools to import Favourites, export/import ratings as CSV, recompute and\n  preview recommendations.\n- REST API under `/RatingsRecs` (ratings, recommendations, \"rate these\", similar items, preferences, CSV).",
+        "targetAbi": "10.11.9.0",
+        "sourceUrl": "https://github.com/NotEnjoyingThis/jellyfin-plugin-ratings-recommendations/releases/download/v1.0.0/ratings-recommendations_1.0.0.0_jf10.11.zip",
+        "checksum": "129142db473ee16c1f329e9af7a98e2d",
+        "timestamp": "2026-11-11T17:11:07Z"
+      }
+    ]
   }
 ]
