@@ -52,3 +52,4 @@ The section of each version is used for the GitHub Release notes and the `change
 - The "Recommended for you" and "Rate these" row titles now open the matching section of the "For you" page
   (`#/ratingsrecs?section=recommended|rate`) instead of its top.
 - The Legacy header showed "Page not found" on the "For you" page.
+- README: how to fix "Page not found" for Plugin Pages entries (stale cached web client after a Jellyfin start).

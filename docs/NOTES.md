@@ -82,14 +82,25 @@ Corretto anche il titolo "Pagina non trovata" nell'intestazione Legacy (`.skinHe
 - jellyfin-web 10.11 e 12 hanno un `FallbackRoute`: un indirizzo `….html` che non corrisponde a nessuna rotta viene riscritto **senza
   `.html`** ("deprecated URL format") e poi mostra "Pagina non trovata" (provato: `#/qualcosa.html?x=1` → `#/qualcosa?x=1`). Quindi
   l'indirizzo visto dall'utente compare solo se **nel browser manca la rotta di Plugin Pages**.
-- Riavviando 12, per circa 3 s il client web viene servito **senza** le modifiche dei plugin (né la rotta né `inject.js`): chi carica la
-  pagina in quel momento (o prima dell'installazione di Plugin Pages) ottiene un client senza la rotta. ETag costante di File
-  Transformation (`"e3b0c44298fc1c14"`) ma il server risponde 200 alle richieste condizionali; nel browser di prova, però, una
-  navigazione normale ha riusato `index.html` e lo script dalla cache finché non sono stati ricaricati a forza.
+- **Causa confermata (dati dal browser dell'utente, Chrome 157):** `main.jellyfin.bundle.js` caricato con `transferSize=0` (dalla cache,
+  senza richiesta al server) e senza la rotta, mentre il server la serve (`serverBundleHasRoute: true`).
+- Meccanismo: per ~3 s a ogni avvio (misurato da 6 a 8 s dopo `docker restart`) il bundle è servito **non modificato, senza
+  `Cache-Control` e con `Last-Modified`** (come tutti i file del client web che nessun plugin trasforma, es. `1133.bundle.js`). Senza
+  `Cache-Control` Chrome usa la freschezza euristica (~10% dell'età del file: file del 26/10 → ~1,5 giorni) e lo riusa senza
+  rivalidare, anche con F5; aggiungere `.html` non serve perché la rotta manca. Dopo la registrazione delle trasformazioni il file è
+  servito con `Cache-Control: no-cache` e ETag del contenuto modificato (rivalidazione corretta, 304/200). `index.html` nella finestra
+  ha già `no-cache` e il nostro script.
+- Riprodotto nel browser di prova (fetch del bundle durante il riavvio → poi `transfer=0`, indirizzo senza `.html`, "Pagina non
+  trovata"); risolto sostituendo la copia in cache (`fetch(url, {cache:'reload'})` + ricarica). Ctrl+F5 inviato al pannello del browser
+  non ha forzato la ricarica: non verificato su Chrome reale.
+- È un limite di Jellyfin/File Transformation (nessun `Cache-Control` sui file del client web prima che le trasformazioni siano
+  registrate), non di Plugin Pages né nostro.
 - Con il nostro plugin **disattivato** (12, Modern e Legacy) "Modular Home" funziona; con il nostro plugin attivo pure. Il nostro script
   non tocca quei link (rietichetta solo la voce di Plugin Pages del nostro "Per te").
-- Rimedio documentato nei README (FAQ): attendere l'avvio completo e Ctrl+F5, altrimenti cancellare i dati del sito; rimedio veloce:
-  aggiungere `.html` nell'indirizzo. Non modifichiamo il comportamento di Plugin Pages / HSS.
+- Rimedio documentato nei README (FAQ): con il server avviato, "Svuota la cache e ricarica forzatamente" (F12, clic destro sul
+  pulsante di ricarica), oppure cancellare i dati del sito, oppure il comando `fetch(..., {cache:'reload'})` nella console. Il primo
+  rimedio scritto (Ctrl+F5 o aggiungere `.html`) era sbagliato: l'utente ha confermato che `.html` non funziona. Non modifichiamo il
+  comportamento di Plugin Pages / HSS.
 
 **Home modulare vuota (rotellina) sui server di prova: problema di Home Screen Sections.** Su 10.11 `rrfamily` ha Modular Home attiva
 (MyMedia, ContinueWatching, LatestMovies + le nostre due sezioni). `GET /HomeScreen/Sections` risponde alla prima chiamata dopo l'avvio

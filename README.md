@@ -134,13 +134,19 @@ Ctrl+F5. Open the browser console (F12) and look for lines starting with `[Ratin
 in those apps use your ratings.
 
 **"Modular Home" (or another Plugin Pages entry) shows "Page not found", and the address is
-`#/userpluginsettings?pageUrl=…` without `.html`.** This is not caused by this plugin: the browser is running a copy of
-the web client that does not contain the route added by Plugin Pages (`userpluginsettings.html`), and Jellyfin's web
-client rewrites unknown `….html` addresses without `.html`. It happens when the page was loaded while Jellyfin was still
-starting (for a few seconds the plugins have not modified the web client yet) or before Plugin Pages was installed.
-Fix: wait until the server has fully started and reload with **Ctrl+F5**; if it persists, clear the site data of your
-Jellyfin address in the browser and sign in again. Quick workaround: add `.html` after `userpluginsettings` in the
-address bar.
+`#/userpluginsettings?pageUrl=…` without `.html`.** This is not caused by this plugin. Your browser is running an old
+copy of `main.jellyfin.bundle.js` without the page that Plugin Pages adds (`userpluginsettings.html`), and the web
+client rewrites unknown `….html` addresses without `.html`. For a few seconds after every Jellyfin start (and before
+Plugin Pages is installed) that file is served unmodified and **without `Cache-Control`**: the browser may then keep
+it for a day or more without asking the server again, so a normal reload does not help and neither does adding `.html`.
+Fix, once Jellyfin has fully started:
+- Chrome / Edge: open the developer tools (F12), right-click the reload button → **Empty cache and hard reload**;
+- or clear the browser's site data for your Jellyfin address (you will have to sign in again);
+- or, in the developer tools console on the Jellyfin page, run:
+  ```js
+  fetch([...document.scripts].find(s => /main\.jellyfin\.bundle/.test(s.src)).src, { cache: 'reload' }).then(() => location.reload())
+  ```
+Avoid opening the web client in the first seconds after restarting Jellyfin.
 
 **Can other users see my ratings?** No. Every user has separate ratings and recommendations; only administrators can
 export other users' ratings.

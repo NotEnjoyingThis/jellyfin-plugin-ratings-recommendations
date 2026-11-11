@@ -138,13 +138,20 @@ Ctrl+F5. Apri la console del browser (F12) e cerca le righe che iniziano con `[R
 di quelle app usano i tuoi voti.
 
 **"Modular Home" (o un'altra voce di Plugin Pages) mostra "Pagina non trovata" e l'indirizzo è
-`#/userpluginsettings?pageUrl=…` senza `.html`.** Non dipende da questo plugin: il browser sta usando una copia del
-client web che non contiene la pagina aggiunta da Plugin Pages (`userpluginsettings.html`), e il client web di Jellyfin
-riscrive gli indirizzi `….html` sconosciuti togliendo `.html`. Succede se la pagina è stata caricata mentre Jellyfin si
-stava avviando (per qualche secondo i plugin non hanno ancora modificato il client web) o prima di installare Plugin
-Pages. Soluzione: aspetta che il server sia avviato del tutto e ricarica con **Ctrl+F5**; se resta, cancella i dati del
-sito per l'indirizzo di Jellyfin nel browser e accedi di nuovo. Rimedio veloce: aggiungi `.html` dopo
-`userpluginsettings` nella barra degli indirizzi.
+`#/userpluginsettings?pageUrl=…` senza `.html`.** Non dipende da questo plugin. Il browser sta usando una copia
+vecchia di `main.jellyfin.bundle.js` senza la pagina aggiunta da Plugin Pages (`userpluginsettings.html`), e il client
+web riscrive gli indirizzi `….html` sconosciuti togliendo `.html`. Per qualche secondo dopo ogni avvio di Jellyfin (e
+prima di installare Plugin Pages) quel file viene servito non modificato e **senza `Cache-Control`**: il browser può
+tenerlo un giorno o più senza richiederlo al server, quindi una ricarica normale non basta e aggiungere `.html` nemmeno.
+Soluzione, con Jellyfin avviato del tutto:
+- Chrome / Edge: apri gli strumenti per sviluppatori (F12), clic destro sul pulsante di ricarica →
+  **Svuota la cache e ricarica forzatamente**;
+- oppure cancella i dati del sito per l'indirizzo di Jellyfin nel browser (dovrai accedere di nuovo);
+- oppure, nella console degli strumenti per sviluppatori sulla pagina di Jellyfin, esegui:
+  ```js
+  fetch([...document.scripts].find(s => /main\.jellyfin\.bundle/.test(s.src)).src, { cache: 'reload' }).then(() => location.reload())
+  ```
+Evita di aprire il client web nei primi secondi dopo il riavvio di Jellyfin.
 
 **Gli altri utenti vedono i miei voti?** No. Ogni utente ha voti e consigli separati; solo gli amministratori possono
 esportare i voti degli altri.
